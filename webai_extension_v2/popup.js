@@ -1,4 +1,4 @@
-import * as transformers from "./transformers.min.js";
+import * as transformers from "./transformers300.js";
 
 const { pipeline, env, Florence2ForConditionalGeneration, AutoProcessor, AutoTokenizer, RawImage } = transformers;
 
@@ -12,13 +12,21 @@ const imageDescriptor = (function () {
     let outputElement = undefined;
     let screenshotBtn = undefined;
 
-    let task = '<CAPTION>';
+    let task = '<MORE_DETAILED_CAPTION>';
     let debug = false;
     let loadedCallback = undefined;
 
     async function loadModels() {
-        const model_id = 'onnx-community/Florence-2-base-ft';
-        model = await Florence2ForConditionalGeneration.from_pretrained(model_id, { dtype: 'fp32', device: 'webgpu' });
+        const model_id = 'onnx-community/Florence-2-large-ft';
+        model = await Florence2ForConditionalGeneration.from_pretrained(model_id, {
+            dtype: {
+                embed_tokens: 'fp16',
+                vision_encoder: 'fp16',
+                encoder_model: 'q4',
+                decoder_model_merged: 'q4',
+            },
+            device: 'webgpu'
+        });
         processor = await AutoProcessor.from_pretrained(model_id);
         tokenizer = await AutoTokenizer.from_pretrained(model_id);
         if (debug) {
@@ -33,7 +41,7 @@ const imageDescriptor = (function () {
         const file = event.target.files[0];
         if (file) {
             const reader = new FileReader();
-            reader.onload = async function(e) {
+            reader.onload = async function (e) {
                 imageRenderer.innerHTML = `<img src="${e.target.result}" style="max-width: 100%;">`;
                 await describeImage(e.target.result);
             }
@@ -42,7 +50,7 @@ const imageDescriptor = (function () {
     }
 
     async function handleScreenshot() {
-        chrome.runtime.sendMessage({action: "takeScreenshot"}, async function(response) {
+        chrome.runtime.sendMessage({ action: "takeScreenshot" }, async function (response) {
             if (response && response.imageDataUrl) {
                 imageRenderer.innerHTML = `<img src="${response.imageDataUrl}" style="max-width: 100%;">`;
                 await describeImage(response.imageDataUrl);
@@ -60,7 +68,7 @@ const imageDescriptor = (function () {
             const generated_ids = await model.generate({
                 ...text_inputs,
                 ...vision_inputs,
-                max_new_tokens: 500,
+                max_new_tokens: 1000,
             });
 
             const generated_text = tokenizer.batch_decode(generated_ids, { skip_special_tokens: false })[0];
@@ -85,7 +93,7 @@ const imageDescriptor = (function () {
             'lang': 'en-US',
             'rate': 1.0,
             'pitch': 1.0,
-            'onEvent': function(event) {
+            'onEvent': function (event) {
                 if (event.type === 'error') {
                     console.error('TTS 錯誤:', event);
                 }
@@ -133,7 +141,7 @@ const OUTPUT_ELEMENT = 'output';
 const SCREENSHOT_BTN = 'screenshotBtn';
 
 const CONFIG = {
-    task: '<CAPTION>',
+    task: '<MORE_DETAILED_CAPTION>',
     debugLogs: true
 };
 
