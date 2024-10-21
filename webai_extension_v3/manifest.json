@@ -20,7 +20,7 @@
     "service_worker": "background.js"
   },
   "web_accessible_resources": [{
-    "resources": ["transformers.min.js"],
+    "resources": ["transformers300.js"],
     "matches": ["<all_urls>"]
   }],
   "content_scripts": [
