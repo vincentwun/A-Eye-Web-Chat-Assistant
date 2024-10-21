@@ -17,16 +17,8 @@ const imageDescriptor = (function () {
     let loadedCallback = undefined;
 
     async function loadModels() {
-        const model_id = 'onnx-community/Florence-2-large-ft';
-        model = await Florence2ForConditionalGeneration.from_pretrained(model_id, {
-            dtype: {
-                embed_tokens: 'fp16',
-                vision_encoder: 'fp16',
-                encoder_model: 'q4',
-                decoder_model_merged: 'q4',
-            },
-            device: 'webgpu'
-        });
+        const model_id = 'onnx-community/Florence-2-base-ft';
+        model = await Florence2ForConditionalGeneration.from_pretrained(model_id, { dtype: 'fp32', device: 'webgpu' });
         processor = await AutoProcessor.from_pretrained(model_id);
         tokenizer = await AutoTokenizer.from_pretrained(model_id);
         if (debug) {
@@ -50,12 +42,15 @@ const imageDescriptor = (function () {
     }
 
     async function handleScreenshot() {
-        chrome.runtime.sendMessage({ action: "takeScreenshot" }, async function (response) {
+        try {
+            const response = await chrome.runtime.sendMessage({ action: "takeScreenshot" });
             if (response && response.imageDataUrl) {
                 imageRenderer.innerHTML = `<img src="${response.imageDataUrl}" style="max-width: 100%;">`;
                 await describeImage(response.imageDataUrl);
             }
-        });
+        } catch (error) {
+            console.error("截圖過程中發生錯誤:", error);
+        }
     }
 
     async function describeImage(imageUrl) {

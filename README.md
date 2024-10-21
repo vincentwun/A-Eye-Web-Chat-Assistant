@@ -1,5 +1,3 @@
-# Extension的版本為V2, 將來會升級至V3
-
 ## Extension混合了Chrome (Developer)版本中的Gemini Nano API, 建議使用Chrome (Developer)版本進行安裝
 
 ### How to use?
