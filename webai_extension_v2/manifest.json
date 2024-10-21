@@ -1,0 +1,31 @@
+{
+  "manifest_version": 2,
+  "name": "Image Description AI with Screenshot and TTS",
+  "version": "1.2",
+  "description": "上傳圖片或截取螢幕，並使用本地 AI 模型生成描述，然後用語音讀出。",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "<all_urls>",
+    "tabs",
+    "tts"
+  ],
+  "browser_action": {
+    "default_popup": "popup.html",
+    "default_title": "圖像描述 AI"
+  },
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+  "web_accessible_resources": [
+    "transformers.min.js"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "content_security_policy": "script-src 'self' 'unsafe-eval' 'wasm-eval'; object-src 'self'"
+}
