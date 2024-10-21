@@ -20,8 +20,9 @@
 2. 選Enable
 
 # 草稿:
-## Enable the API
-## Extension混合了Chrome (Developer)版本中的Gemini Nano API, 建議使用Chrome (Developer)版本進行安裝
+Enable the API
+Extension混合了Chrome (Developer)版本中的Gemini Nano API, 建議使用Chrome (Developer)版本進行安裝
+
 ### Prompt API
 Navigate to chrome://flags/#optimization-guide-on-device-model
 Select Enabled BypassPerfRequirement
