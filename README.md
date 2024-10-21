@@ -1,4 +1,4 @@
-### How to use?
+# How to use?
 
 步驟 1:啟用開發人員模式
 1. 打開 Chrome 瀏覽器
