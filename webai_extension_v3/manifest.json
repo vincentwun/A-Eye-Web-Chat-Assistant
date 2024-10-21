@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Image Description AI with Screenshot and TTS",
-  "version": "1.3",
+  "version": "1.6",
   "description": "上傳圖片或截取螢幕，並使用本地 AI 模型生成描述，然後用語音讀出。",
   "permissions": [
     "activeTab",
@@ -17,7 +17,8 @@
     "default_title": "圖像描述 AI"
   },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "web_accessible_resources": [{
     "resources": ["transformers300.js"],

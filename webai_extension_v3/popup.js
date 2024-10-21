@@ -1,33 +1,10 @@
-import * as transformers from "./transformers300.js";
-
-const { pipeline, env, Florence2ForConditionalGeneration, AutoProcessor, AutoTokenizer, RawImage } = transformers;
-
 const imageDescriptor = (function () {
-    let model = undefined;
-    let processor = undefined;
-    let tokenizer = undefined;
-
     let imageUploader = undefined;
     let imageRenderer = undefined;
     let outputElement = undefined;
     let screenshotBtn = undefined;
-
-    let task = '<MORE_DETAILED_CAPTION>';
-    let debug = false;
-    let loadedCallback = undefined;
-
-    async function loadModels() {
-        const model_id = 'onnx-community/Florence-2-base-ft';
-        model = await Florence2ForConditionalGeneration.from_pretrained(model_id, { dtype: 'fp32', device: 'webgpu' });
-        processor = await AutoProcessor.from_pretrained(model_id);
-        tokenizer = await AutoTokenizer.from_pretrained(model_id);
-        if (debug) {
-            console.log('模型已加載完成!');
-        }
-        if (loadedCallback) {
-            loadedCallback();
-        }
-    }
+    let preloader = undefined;
+    let keepAliveInterval;
 
     async function handleImageUpload(event) {
         const file = event.target.files[0];
@@ -50,36 +27,25 @@ const imageDescriptor = (function () {
             }
         } catch (error) {
             console.error("截圖過程中發生錯誤:", error);
+            outputElement.innerText = "截圖失敗。請稍後再試。";
         }
     }
 
     async function describeImage(imageUrl) {
         try {
-            const image = await RawImage.fromURL(imageUrl);
-            const vision_inputs = await processor(image);
-            const prompts = processor.construct_prompts(task);
-            const text_inputs = tokenizer(prompts);
-
-            const generated_ids = await model.generate({
-                ...text_inputs,
-                ...vision_inputs,
-                max_new_tokens: 1000,
-            });
-
-            const generated_text = tokenizer.batch_decode(generated_ids, { skip_special_tokens: false })[0];
-            const result = processor.post_process_generation(generated_text, task, image.size);
-            let imgDesc = result[task];
-
-            outputElement.innerText = imgDesc;
-
-            speakDescription(imgDesc);
-
-            if (debug) {
-                console.log("圖片描述: " + imgDesc);
+            preloader.style.display = 'block';
+            const response = await chrome.runtime.sendMessage({ action: "describeImage", imageUrl: imageUrl });
+            if (response.error) {
+                outputElement.innerText = response.error;
+            } else {
+                outputElement.innerText = response.description;
+                speakDescription(response.description);
             }
         } catch (error) {
             console.error("圖片描述過程中發生錯誤:", error);
             outputElement.innerText = "無法生成圖片描述。請稍後再試。";
+        } finally {
+            preloader.style.display = 'none';
         }
     }
 
@@ -96,28 +62,47 @@ const imageDescriptor = (function () {
         });
     }
 
-    async function initiate(imageUploaderID, imageRendererID, outputElementID, screenshotBtnID, config, callback) {
-        env.allowLocalModels = false;
-        env.backends.onnx.wasm.proxy = false;
+    function startKeepAlive() {
+        keepAliveInterval = setInterval(() => {
+            chrome.runtime.sendMessage({ action: "keepAlive" }, (response) => {
+                if (chrome.runtime.lastError) {
+                    console.log("Keep-alive message failed, restarting interval");
+                    clearInterval(keepAliveInterval);
+                    startKeepAlive();
+                }
+            });
+        }, 25000);  // 每25秒發送一次
+    }
 
+    async function initiate(imageUploaderID, imageRendererID, outputElementID, screenshotBtnID, preloaderID) {
         imageUploader = document.getElementById(imageUploaderID);
         imageRenderer = document.getElementById(imageRendererID);
         outputElement = document.getElementById(outputElementID);
         screenshotBtn = document.getElementById(screenshotBtnID);
+        preloader = document.getElementById(preloaderID);
 
         imageUploader.addEventListener('change', handleImageUpload);
         screenshotBtn.addEventListener('click', handleScreenshot);
 
-        if (config) {
-            task = config.task ? config.task : task;
-            debug = config.debugLogs ? config.debugLogs : debug;
-        }
+        // 檢查model是否已加載
+        chrome.runtime.sendMessage({ action: "getModelStatus" }, function (response) {
+            if (response && response.loaded) {
+                preloader.style.display = 'none';
+            } else {
+                preloader.innerHTML = '<h2>正在加載 AI 模型，請稍候...</h2>';
+                // 監聽model加載
+                chrome.runtime.onMessage.addListener((message) => {
+                    if (message.action === "modelLoaded") {
+                        preloader.style.display = 'none';
+                    }
+                });
+            }
+        });
 
-        if (callback) {
-            loadedCallback = callback;
-        }
+        startKeepAlive();
 
-        await loadModels();
+        // 保持與 background script 的連接
+        chrome.runtime.connect();
     }
 
     return {
@@ -125,19 +110,12 @@ const imageDescriptor = (function () {
     };
 })();
 
-function loaded() {
-    let preloader = document.getElementById('preloader');
-    preloader.style.display = 'none';
-}
+document.addEventListener('DOMContentLoaded', () => {
+    const IMAGE_UPLOADER = 'imageUpload';
+    const IMAGE_RENDERER = 'imageRenderer';
+    const OUTPUT_ELEMENT = 'output';
+    const SCREENSHOT_BTN = 'screenshotBtn';
+    const PRELOADER = 'preloader';
 
-const IMAGE_UPLOADER = 'imageUpload';
-const IMAGE_RENDERER = 'imageRenderer';
-const OUTPUT_ELEMENT = 'output';
-const SCREENSHOT_BTN = 'screenshotBtn';
-
-const CONFIG = {
-    task: '<MORE_DETAILED_CAPTION>',
-    debugLogs: true
-};
-
-imageDescriptor.init(IMAGE_UPLOADER, IMAGE_RENDERER, OUTPUT_ELEMENT, SCREENSHOT_BTN, CONFIG, loaded);
+    imageDescriptor.init(IMAGE_UPLOADER, IMAGE_RENDERER, OUTPUT_ELEMENT, SCREENSHOT_BTN, PRELOADER);
+});
