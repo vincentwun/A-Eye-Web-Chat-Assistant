@@ -24,9 +24,46 @@ const imageDescriptor = (function () {
         }
     }
 
-    class OpenYouTubeCommand extends Command {
+    class NavigateWebsiteCommand extends Command {
+        constructor(website) {
+            super();
+            this.website = website.toLowerCase();
+        }
+
         execute() {
-            chrome.tabs.create({ url: "https://www.youtube.com" });
+            let url;
+            // 處理常見網站的 URL
+            switch (this.website) {
+                case 'youtube':
+                    url = 'https://www.youtube.com';
+                    break;
+                case 'google':
+                    url = 'https://www.google.com';
+                    break;
+                case 'vtc':
+                    url = 'https://www.vtc.edu.hk';
+                    break;
+                case 'facebook':
+                    url = 'https://www.facebook.com';
+                    break;
+                case 'twitter':
+                    url = 'https://www.twitter.com';
+                    break;
+                case 'instagram':
+                    url = 'https://www.instagram.com';
+                    break;
+                default:
+                    // 對於未預設的網站，嘗試添加基本的 https://www. 前綴
+                    url = `https://www.${this.website}.com`;
+            }
+
+            chrome.tabs.create({ url: url });
+            outputElement.innerText = `正在前往 ${this.website} 網站...`;
+            chrome.tts.speak(`正在前往 ${this.website} 網站`, {
+                'lang': 'zh-HK',
+                'rate': 1.0,
+                'pitch': 1.0
+            });
         }
     }
 
@@ -44,13 +81,31 @@ const imageDescriptor = (function () {
     const commandMap = {
         "截圖": new ScreenshotCommand(),
         "幫我截圖": new ScreenshotCommand(),
-        "我想去youtube": new OpenYouTubeCommand(),
-        "想去youTube": new OpenYouTubeCommand()
-        // 可以在此處添加更多指令
     };
 
     function getCommand(text) {
-        return commandMap[text] || new UnknownCommand();
+        // 檢查是否是截圖命令
+        if (commandMap[text]) {
+            return commandMap[text];
+        }
+
+        // 使用正則表達式匹配"我想去xxx網站"或"前往xxx網站"等模式
+        const websitePatterns = [
+            /我想去\s*([a-zA-Z0-9]+)\s*網站/i,
+            /前往\s*([a-zA-Z0-9]+)\s*網站/i,
+            /打開\s*([a-zA-Z0-9]+)\s*網站/i,
+            /開啟\s*([a-zA-Z0-9]+)\s*網站/i,
+            /去\s*([a-zA-Z0-9]+)\s*網站/i
+        ];
+
+        for (const pattern of websitePatterns) {
+            const match = text.match(pattern);
+            if (match && match[1]) {
+                return new NavigateWebsiteCommand(match[1]);
+            }
+        }
+
+        return new UnknownCommand();
     }
 
     async function handleScreenshot() {
@@ -127,7 +182,6 @@ const imageDescriptor = (function () {
         });
     }
 
-    // 語音輸入相關函數
     function initSpeechRecognition() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
@@ -226,7 +280,6 @@ const imageDescriptor = (function () {
         fullScreenshotBtn = document.getElementById(fullScreenshotBtnID);
         fullOutputElement = document.getElementById(fullOutputID);
 
-        // 語音輸入相關元素
         voiceInputBtn = document.getElementById('voiceInputBtn');
         voiceIndicator = document.getElementById('voiceIndicator');
         transcriptElement = document.getElementById('transcript');
@@ -249,7 +302,6 @@ const imageDescriptor = (function () {
 
         chrome.runtime.connect();
 
-        // 初始化語音識別
         recognition = initSpeechRecognition();
         if (recognition) {
             setupRecognitionListeners();
