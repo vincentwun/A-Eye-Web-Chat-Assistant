@@ -6,6 +6,53 @@ const imageDescriptor = (function () {
     let fullScreenshotBtn = undefined;
     let fullOutputElement = undefined;
 
+    // 語音輸入相關變量
+    let voiceInputBtn = undefined;
+    let voiceIndicator = undefined;
+    let transcriptElement = undefined;
+    let isListening = false;
+    let recognition = null;
+
+    // 命令模式相關
+    class Command {
+        execute() { }
+    }
+
+    class ScreenshotCommand extends Command {
+        execute() {
+            screenshotBtn.click();
+        }
+    }
+
+    class OpenYouTubeCommand extends Command {
+        execute() {
+            chrome.tabs.create({ url: "https://www.youtube.com" });
+        }
+    }
+
+    class UnknownCommand extends Command {
+        execute() {
+            outputElement.innerText = "抱歉，我無法理解您的指令。";
+            chrome.tts.speak("抱歉，我無法理解您的指令。", {
+                'lang': 'zh-HK',
+                'rate': 1.0,
+                'pitch': 1.0
+            });
+        }
+    }
+
+    const commandMap = {
+        "截圖": new ScreenshotCommand(),
+        "幫我截圖": new ScreenshotCommand(),
+        "我想去youtube": new OpenYouTubeCommand(),
+        "想去youTube": new OpenYouTubeCommand()
+        // 可以在此處添加更多指令
+    };
+
+    function getCommand(text) {
+        return commandMap[text] || new UnknownCommand();
+    }
+
     async function handleScreenshot() {
         try {
             const response = await chrome.runtime.sendMessage({ action: "takeScreenshot" });
@@ -61,7 +108,7 @@ const imageDescriptor = (function () {
 
     function speakDescription(text) {
         chrome.tts.speak(text, {
-            'lang': 'en-US',
+            'lang': 'zh-HK',
             'rate': 1.0,
             'pitch': 1.0,
             'onEvent': function (event) {
@@ -80,6 +127,97 @@ const imageDescriptor = (function () {
         });
     }
 
+    // 語音輸入相關函數
+    function initSpeechRecognition() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            alert("您的瀏覽器不支持語音識別。請使用支持的瀏覽器，如最新版本的 Chrome。");
+            return null;
+        }
+
+        const recog = new SpeechRecognition();
+        recog.lang = 'zh-HK';
+        recog.interimResults = true;
+        recog.continuous = false;
+
+        recog.onstart = () => {
+            isListening = true;
+            voiceIndicator.innerText = "正在聆聽...";
+            chrome.tts.speak("正在聆聽...", {
+                'lang': 'zh-HK',
+                'rate': 1.0,
+                'pitch': 1.0
+            });
+        };
+
+        recog.onresult = (event) => {
+            let interimTranscript = '';
+            let finalTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript.trim();
+                } else {
+                    interimTranscript += event.results[i][0].transcript.trim();
+                }
+            }
+            transcriptElement.innerText = finalTranscript + interimTranscript;
+        };
+
+        recog.onerror = (event) => {
+            console.error("語音識別錯誤:", event.error);
+            voiceIndicator.innerText = "語音識別出錯。";
+            chrome.tts.speak("語音識別出錯。", {
+                'lang': 'zh-HK',
+                'rate': 1.0,
+                'pitch': 1.0
+            });
+            isListening = false;
+            voiceInputBtn.innerText = "開始語音輸入";
+        };
+
+        recog.onend = () => {
+            isListening = false;
+            voiceIndicator.innerText = "語音輸入已結束。";
+            voiceInputBtn.innerText = "開始語音輸入";
+        };
+
+        return recog;
+    }
+
+    function handleVoiceInput() {
+        if (!isListening) {
+            recognition.start();
+            voiceInputBtn.innerText = "結束語音輸入";
+        } else {
+            recognition.stop();
+            voiceInputBtn.innerText = "開始語音輸入";
+        }
+    }
+
+    function processCommand(commandText) {
+        const command = getCommand(commandText);
+        command.execute();
+    }
+
+    function setupRecognitionListeners() {
+        recognition.onresult = (event) => {
+            let interimTranscript = '';
+            let finalTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript.trim();
+                } else {
+                    interimTranscript += event.results[i][0].transcript.trim();
+                }
+            }
+            transcriptElement.innerText = finalTranscript + interimTranscript;
+
+            if (finalTranscript) {
+                processCommand(finalTranscript);
+            }
+        };
+    }
+
     async function initiate(imageRendererID, outputElementID, screenshotBtnID, preloaderID, fullScreenshotBtnID, fullOutputID) {
         imageRenderer = document.getElementById(imageRendererID);
         outputElement = document.getElementById(outputElementID);
@@ -88,8 +226,14 @@ const imageDescriptor = (function () {
         fullScreenshotBtn = document.getElementById(fullScreenshotBtnID);
         fullOutputElement = document.getElementById(fullOutputID);
 
+        // 語音輸入相關元素
+        voiceInputBtn = document.getElementById('voiceInputBtn');
+        voiceIndicator = document.getElementById('voiceIndicator');
+        transcriptElement = document.getElementById('transcript');
+
         screenshotBtn.addEventListener('click', handleScreenshot);
         fullScreenshotBtn.addEventListener('click', handleFullScreenshot);
+        voiceInputBtn.addEventListener('click', handleVoiceInput);
 
         let isLoaded = await checkModelStatus();
         if (isLoaded) {
@@ -104,6 +248,12 @@ const imageDescriptor = (function () {
         }
 
         chrome.runtime.connect();
+
+        // 初始化語音識別
+        recognition = initSpeechRecognition();
+        if (recognition) {
+            setupRecognitionListeners();
+        }
     }
 
     return {
