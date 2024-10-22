@@ -1,24 +1,32 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant">
+
 <head>
-    <meta charset="UTF-8">
-    <title>Web AI</title>
+  <meta charset="UTF-8">
+  <title>Web AI</title>
 </head>
+
 <body>
-    <h1>Image Description</h1>
+  <h1>Image Description</h1>
 
-    <h2>選擇圖片來源:</h2>
-    <button id="screenshotBtn">截取當前頁面</button>
-    <input type="file" id="imageUpload" accept="image/*" />
-    <div id="imageRenderer"></div>
+  <h2>網頁截圖:</h2>
+  <button id="screenshotBtn">網頁截圖</button>
+  <div id="imageRenderer"></div>
 
-    <h2>圖片描述將顯示在這裡:</h2>
-    <div id="output"></div>
+  <h2>圖片描述將顯示在這裡:</h2>
+  <div id="output"></div>
 
-    <div id="preloader">
-      <h2>請稍候。正在檢查 AI 模型狀態。</h2>
-    </div>
+  <h2>全網頁截圖:</h2>
+  <button id="fullScreenshotBtn">全網頁截圖</button>
 
-    <script src="popup.js"></script>
+  <h2>全網頁截圖內容:</h2>
+  <div id="fullOutput"></div>
+
+  <div id="preloader">
+    <h2>請稍候。正在檢查 AI 模型狀態。</h2>
+  </div>
+
+  <script src="popup.js"></script>
 </body>
+
 </html>

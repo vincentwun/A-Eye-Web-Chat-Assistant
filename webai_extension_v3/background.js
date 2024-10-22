@@ -4,51 +4,120 @@ const { Florence2ForConditionalGeneration, AutoProcessor, AutoTokenizer, env } =
 
 let model, processor, tokenizer;
 let isModelLoaded = false;
-let keepAliveInterval;
+let loadingPromise = null;
 
 async function loadModels() {
   if (isModelLoaded) return;
+  if (loadingPromise) return loadingPromise;
 
-  env.allowLocalModels = false;
-  env.backends.onnx.wasm.proxy = false;
+  loadingPromise = (async () => {
+    try {
+      env.allowLocalModels = false;
+      env.backends.onnx.wasm.proxy = false;
 
-  const model_id = 'onnx-community/Florence-2-base-ft';
-  model = await Florence2ForConditionalGeneration.from_pretrained(model_id, { dtype: 'fp32', device: 'webgpu' });
-  processor = await AutoProcessor.from_pretrained(model_id);
-  tokenizer = await AutoTokenizer.from_pretrained(model_id);
-  
-  isModelLoaded = true;
-  console.log('模型已加載完成!');
-  
-  chrome.runtime.sendMessage({ action: "modelLoaded" });
+      const model_id = 'onnx-community/Florence-2-base-ft';
+      model = await Florence2ForConditionalGeneration.from_pretrained(model_id, { dtype: 'fp32', device: 'webgpu' });
+      processor = await AutoProcessor.from_pretrained(model_id);
+      tokenizer = await AutoTokenizer.from_pretrained(model_id);
+
+      isModelLoaded = true;
+      console.log('模型已加載完成!');
+
+      chrome.runtime.sendMessage({ action: "modelLoaded" });
+    } catch (error) {
+      console.error('模型加載失敗:', error);
+      isModelLoaded = false;
+    } finally {
+      loadingPromise = null;
+    }
+  })();
+
+  return loadingPromise;
 }
 
-// 在安裝或更新extension時加載模型
 chrome.runtime.onInstalled.addListener(() => {
   loadModels();
-  startKeepAlive();
 });
 
-// 處理來自 popup 的消息
+loadModels();
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "getModelStatus") {
     sendResponse({ loaded: isModelLoaded });
+    if (!isModelLoaded) {
+      loadModels();
+    }
   } else if (request.action === "takeScreenshot") {
-    chrome.tabs.captureVisibleTab(null, {format: "png"}, (dataUrl) => {
-      sendResponse({imageDataUrl: dataUrl});
+    chrome.tabs.captureVisibleTab(null, { format: "png" }, (dataUrl) => {
+      sendResponse({ imageDataUrl: dataUrl });
     });
     return true;
   } else if (request.action === "describeImage") {
     if (!isModelLoaded) {
-      sendResponse({ error: "模型尚未加載完成,請稍後再試。" });
+      loadModels().then(() => {
+        describeImage(request.imageUrl).then(sendResponse);
+      });
     } else {
       describeImage(request.imageUrl).then(sendResponse);
-      return true;
     }
-  } else if (request.action === "keepAlive") {
-    sendResponse({ status: "alive" });
+    return true;
+  } else if (request.action === "fullScreenshot") {
+    handleFullScreenshot(request, sender, sendResponse);
+    return true;
   }
 });
+
+async function handleFullScreenshot(request, sender, sendResponse) {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ['content.js']
+    });
+
+    const { totalHeight, viewportHeight } = await chrome.tabs.sendMessage(tab.id, { action: "getPageInfo" });
+
+    const scrollStep = Math.floor(viewportHeight);
+    const maxScroll = totalHeight;
+    let scrollPosition = 0;
+    const descriptions = [];
+    const capturedPositions = new Set();
+
+    while (scrollPosition < maxScroll) {
+      if (!capturedPositions.has(scrollPosition)) {
+        capturedPositions.add(scrollPosition);
+
+        await chrome.tabs.sendMessage(tab.id, { action: "scrollTo", position: scrollPosition });
+
+        await sleep(100);
+
+        const dataUrl = await new Promise((resolve) => {
+          chrome.tabs.captureVisibleTab(null, { format: "png" }, (dataUrl) => {
+            resolve(dataUrl);
+          });
+        });
+
+        const descriptionResponse = await describeImage(dataUrl);
+        if (descriptionResponse.error) {
+          descriptions.push("描述失敗。");
+        } else {
+          descriptions.push(descriptionResponse.description);
+        }
+      }
+
+      scrollPosition += scrollStep;
+    }
+
+    await chrome.tabs.sendMessage(tab.id, { action: "scrollToTop" });
+
+    sendResponse({ descriptions: descriptions });
+
+  } catch (error) {
+    console.error("全網頁截圖過程中發生錯誤:", error);
+    sendResponse({ error: "全網頁截圖失敗。請稍後再試。" });
+  }
+}
 
 async function describeImage(imageUrl) {
   try {
@@ -72,23 +141,13 @@ async function describeImage(imageUrl) {
   }
 }
 
-function startKeepAlive() {
-  keepAliveInterval = setInterval(() => {
-    console.log("Keeping service worker alive");
-    chrome.runtime.sendMessage({ action: "keepAlive" }, (response) => {
-      if (chrome.runtime.lastError) {
-        console.log("Keep-alive message failed, restarting interval");
-        clearInterval(keepAliveInterval);
-        startKeepAlive();
-      }
-    });
-  }, 25000);  // 每25秒發送一次
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// 保持 service worker 活躍
-chrome.runtime.onConnect.addListener(function(port) {
+chrome.runtime.onConnect.addListener(function (port) {
   console.log('保持連接活躍');
-  port.onDisconnect.addListener(function() {
+  port.onDisconnect.addListener(function () {
     console.log('連接已斷開');
   });
 });

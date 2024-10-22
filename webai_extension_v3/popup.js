@@ -1,22 +1,10 @@
 const imageDescriptor = (function () {
-    let imageUploader = undefined;
     let imageRenderer = undefined;
     let outputElement = undefined;
     let screenshotBtn = undefined;
     let preloader = undefined;
-    let keepAliveInterval;
-
-    async function handleImageUpload(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = async function (e) {
-                imageRenderer.innerHTML = `<img src="${e.target.result}" style="max-width: 100%;">`;
-                await describeImage(e.target.result);
-            }
-            reader.readAsDataURL(file);
-        }
-    }
+    let fullScreenshotBtn = undefined;
+    let fullOutputElement = undefined;
 
     async function handleScreenshot() {
         try {
@@ -28,6 +16,28 @@ const imageDescriptor = (function () {
         } catch (error) {
             console.error("截圖過程中發生錯誤:", error);
             outputElement.innerText = "截圖失敗。請稍後再試。";
+        }
+    }
+
+    async function handleFullScreenshot() {
+        try {
+            fullOutputElement.innerText = '';
+            preloader.style.display = 'block';
+            const response = await chrome.runtime.sendMessage({ action: "fullScreenshot" });
+            if (response && response.descriptions) {
+                const combinedDescriptions = response.descriptions.join('\n\n');
+                fullOutputElement.innerText = combinedDescriptions;
+            } else if (response && response.error) {
+                fullOutputElement.innerText = response.error;
+            }
+        } catch (error) {
+            console.error("全網頁截圖過程中發生錯誤:", error);
+            fullOutputElement.innerText = "全網頁截圖失敗。請稍後再試。";
+        } finally {
+            preloader.style.display = 'none';
+            chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                chrome.tabs.sendMessage(tabs[0].id, { action: "scrollToTop" });
+            });
         }
     }
 
@@ -62,46 +72,37 @@ const imageDescriptor = (function () {
         });
     }
 
-    function startKeepAlive() {
-        keepAliveInterval = setInterval(() => {
-            chrome.runtime.sendMessage({ action: "keepAlive" }, (response) => {
-                if (chrome.runtime.lastError) {
-                    console.log("Keep-alive message failed, restarting interval");
-                    clearInterval(keepAliveInterval);
-                    startKeepAlive();
-                }
+    async function checkModelStatus() {
+        return new Promise((resolve) => {
+            chrome.runtime.sendMessage({ action: "getModelStatus" }, function (response) {
+                resolve(response && response.loaded);
             });
-        }, 25000);  // 每25秒發送一次
+        });
     }
 
-    async function initiate(imageUploaderID, imageRendererID, outputElementID, screenshotBtnID, preloaderID) {
-        imageUploader = document.getElementById(imageUploaderID);
+    async function initiate(imageRendererID, outputElementID, screenshotBtnID, preloaderID, fullScreenshotBtnID, fullOutputID) {
         imageRenderer = document.getElementById(imageRendererID);
         outputElement = document.getElementById(outputElementID);
         screenshotBtn = document.getElementById(screenshotBtnID);
         preloader = document.getElementById(preloaderID);
+        fullScreenshotBtn = document.getElementById(fullScreenshotBtnID);
+        fullOutputElement = document.getElementById(fullOutputID);
 
-        imageUploader.addEventListener('change', handleImageUpload);
         screenshotBtn.addEventListener('click', handleScreenshot);
+        fullScreenshotBtn.addEventListener('click', handleFullScreenshot);
 
-        // 檢查model是否已加載
-        chrome.runtime.sendMessage({ action: "getModelStatus" }, function (response) {
-            if (response && response.loaded) {
-                preloader.style.display = 'none';
-            } else {
-                preloader.innerHTML = '<h2>正在加載 AI 模型，請稍候...</h2>';
-                // 監聽model加載
-                chrome.runtime.onMessage.addListener((message) => {
-                    if (message.action === "modelLoaded") {
-                        preloader.style.display = 'none';
-                    }
-                });
-            }
-        });
+        let isLoaded = await checkModelStatus();
+        if (isLoaded) {
+            preloader.style.display = 'none';
+        } else {
+            preloader.innerHTML = '<h2>正在加載 AI 模型，請稍候...</h2>';
+            chrome.runtime.onMessage.addListener((message) => {
+                if (message.action === "modelLoaded") {
+                    preloader.style.display = 'none';
+                }
+            });
+        }
 
-        startKeepAlive();
-
-        // 保持與 background script 的連接
         chrome.runtime.connect();
     }
 
@@ -111,11 +112,12 @@ const imageDescriptor = (function () {
 })();
 
 document.addEventListener('DOMContentLoaded', () => {
-    const IMAGE_UPLOADER = 'imageUpload';
     const IMAGE_RENDERER = 'imageRenderer';
     const OUTPUT_ELEMENT = 'output';
     const SCREENSHOT_BTN = 'screenshotBtn';
     const PRELOADER = 'preloader';
+    const FULL_SCREENSHOT_BTN = 'fullScreenshotBtn';
+    const FULL_OUTPUT = 'fullOutput';
 
-    imageDescriptor.init(IMAGE_UPLOADER, IMAGE_RENDERER, OUTPUT_ELEMENT, SCREENSHOT_BTN, PRELOADER);
+    imageDescriptor.init(IMAGE_RENDERER, OUTPUT_ELEMENT, SCREENSHOT_BTN, PRELOADER, FULL_SCREENSHOT_BTN, FULL_OUTPUT);
 });

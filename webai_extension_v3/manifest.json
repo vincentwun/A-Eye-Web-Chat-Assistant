@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Image Description AI with Screenshot and TTS",
-  "version": "1.6",
-  "description": "上傳圖片或截取螢幕，並使用本地 AI 模型生成描述，然後用語音讀出。",
+  "name": "WebAI extension",
+  "version": "1.7",
+  "description": "截取螢幕，並使用本地 AI 模型生成描述，然後用語音讀出。",
   "permissions": [
     "activeTab",
     "scripting",
