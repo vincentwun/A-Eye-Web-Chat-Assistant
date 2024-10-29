@@ -37,6 +37,9 @@ class ImageAnalyzer {
             if (request.type === "toggleVoiceRecording") {
                 this.toggleRecording();
             }
+            if (request.type === "takeScreenshot") {
+                this.handleScreenshot();
+            }
         });
     }
 

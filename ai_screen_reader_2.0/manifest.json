@@ -25,10 +25,16 @@
   "action": {
     "default_title": "Open AI Screen Reader"
   },
-  "web_accessible_resources": [{
-    "resources": ["transformers300.js"],
-    "matches": ["<all_urls>"]
-  }],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "transformers300.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
   "content_security_policy": {
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
   },
@@ -38,6 +44,12 @@
         "default": "Ctrl+Shift+F"
       },
       "description": "Toggle voice recording"
+    },
+    "take-screenshot": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Q"
+      },
+      "description": "Take screenshot"
     }
   }
 }
