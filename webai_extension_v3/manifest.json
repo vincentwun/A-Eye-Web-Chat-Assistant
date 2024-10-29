@@ -1,36 +1,33 @@
 {
   "manifest_version": 3,
-  "name": "WebAI extension",
-  "version": "1.7",
-  "description": "截取螢幕，並使用本地 AI 模型生成描述，然後用語音讀出。",
+  "name": "AI Screen Reader 2.0",
+  "version": "1.0",
+  "description": "AI Screen Reader 2.0",
   "permissions": [
+    "sidePanel",
+    "storage",
     "activeTab",
-    "scripting",
     "tabs",
-    "tts",
-    "microphone"
+    "scripting",
+    "tts"
   ],
   "host_permissions": [
     "<all_urls>"
   ],
-  "action": {
-    "default_popup": "popup.html",
-    "default_title": "圖像描述 AI"
+  "side_panel": {
+    "default_path": "sidepanel.html"
   },
   "background": {
     "service_worker": "background.js",
     "type": "module"
   },
+  "action": {
+    "default_title": "Open AI Screen Reader"
+  },
   "web_accessible_resources": [{
     "resources": ["transformers300.js"],
     "matches": ["<all_urls>"]
   }],
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"]
-    }
-  ],
   "content_security_policy": {
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
   }
