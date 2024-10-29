@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <title>AI Screen Reader 2.0</title>
@@ -9,18 +8,35 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 10px;
-            width: 100%;
+            min-width: 280px;
             height: 100vh;
             box-sizing: border-box;
         }
 
+        button {
+            padding: 8px 15px;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #007bff;
+            transition: opacity 0.2s;
+            white-space: nowrap;
+        }
+
+        button:hover { opacity: 0.9; }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         #conversation {
             border: 1px solid #ccc;
-            padding: 10px;
+            border-radius: 4px;
             height: 50vh;
+            margin: 10px 0;
+            padding: 10px;
             overflow-y: auto;
-            margin-bottom: 10px;
-            border-radius: 5px;
         }
 
         .message {
@@ -30,89 +46,51 @@
             word-wrap: break-word;
         }
 
-        .user {
-            background-color: #f8f9fa;
-        }
-
-        .assistant {
-            background-color: #f0f8f1;
-        }
-
-        .system {
-            color: #dc3545;
-        }
+        .user { background-color: #f8f9fa; }
+        .assistant { background-color: #f0f8f1; }
 
         #input-section {
             display: flex;
+            flex-wrap: wrap;
             gap: 10px;
-            margin-top: 10px;
         }
 
         #user-input {
-            flex: 1;
+            flex: 1 1 150px;
             padding: 8px;
-            font-size: 14px;
             border: 1px solid #ccc;
             border-radius: 4px;
         }
 
-        #send-button {
-            padding: 8px 15px;
-            font-size: 14px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        #send-button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-
         #image-preview {
+            display: none;
             max-width: 100%;
             max-height: 200px;
             margin: 10px 0;
             border-radius: 8px;
-            display: none;
         }
 
-        #screenshot-button {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin: 10px 0;
-        }
-
-        #screenshot-button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-
-        h1 {
-            font-size: 1.5em;
-            margin-bottom: 10px;
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
         }
     </style>
 </head>
-
 <body>
     <h1>AI Screen Reader 2.0</h1>
-
     <button id="screenshot-button">Take Screenshot</button>
+    <button id="rolling-screenshot-button">Take Rolling Screenshot</button>
     <img id="image-preview" src="" alt="Screenshot">
     <div id="conversation"></div>
     <div id="input-section">
-        <input type="text" id="user-input" placeholder="Type your message here..." disabled>
-        <button id="send-button" disabled>Send</button>
+        <input type="text" id="user-input" placeholder="Type your message here...">
+        <div class="button-group">
+            <button id="send-button">Send</button>
+            <button id="voice-button">Voice</button>
+            <button id="reset-button">Reset</button>
+        </div>
     </div>
-
     <script type="module" src="sidepanel.js"></script>
 </body>
-
 </html>

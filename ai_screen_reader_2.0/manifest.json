@@ -9,7 +9,9 @@
     "activeTab",
     "tabs",
     "scripting",
-    "tts"
+    "tts",
+    "notifications",
+    "microphone"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -18,8 +20,7 @@
     "default_path": "sidepanel.html"
   },
   "background": {
-    "service_worker": "background.js",
-    "type": "module"
+    "service_worker": "background.js"
   },
   "action": {
     "default_title": "Open AI Screen Reader"
@@ -30,5 +31,13 @@
   }],
   "content_security_policy": {
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  },
+  "commands": {
+    "toggle-voice": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+F"
+      },
+      "description": "Toggle voice recording"
+    }
   }
 }
