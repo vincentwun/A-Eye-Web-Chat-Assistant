@@ -1,4 +1,4 @@
-import { pipeline, env, AutoProcessor, AutoTokenizer, LlavaForConditionalGeneration, RawImage } from './transformers300.js';
+import { AutoProcessor, AutoTokenizer, LlavaForConditionalGeneration, RawImage } from './transformers300.js';
 
 class ImageAnalyzer {
     constructor() {
@@ -17,7 +17,8 @@ class ImageAnalyzer {
             selectedVoice: null,
             voices: [],
             silenceTimer: null,
-            lastSpeechTime: null
+            lastSpeechTime: null,
+            isInitialized: false
         };
 
         this.elements = {
@@ -28,7 +29,7 @@ class ImageAnalyzer {
             sendButton: document.getElementById('send-button'),
             voiceButton: document.getElementById('voice-button'),
             rollingScreenshotButton: document.getElementById('rolling-screenshot-button'),
-            resetButton: document.getElementById('reset-button')
+            clearbutton: document.getElementById('clear-button')
         };
 
         this.initializeAll();
@@ -59,7 +60,7 @@ class ImageAnalyzer {
         recognition.interimResults = true;
         recognition.lang = 'zh-HK';
 
-        const SILENCE_THRESHOLD = 900;
+        const SILENCE_THRESHOLD = 500;
 
         const handlers = {
             onstart: () => {
@@ -189,7 +190,7 @@ class ImageAnalyzer {
         Object.assign(utterance, {
             voice: this.state.selectedVoice,
             lang: 'zh-HK',
-            rate: 10.0,
+            rate: 2.0,
             pitch: 1.2,
             volume: 1.0
         });
@@ -214,7 +215,7 @@ class ImageAnalyzer {
                 }]
             ],
             'voiceButton': ['click', () => this.toggleRecording()],
-            'resetButton': ['click', () => this.handleReset()]
+            'clearbutton': ['click', () => this.handleClear()]
         };
 
         Object.entries(eventMap).forEach(([elementName, events]) => {
@@ -233,6 +234,12 @@ class ImageAnalyzer {
 
     async handleScreenshot() {
         if (this.state.isProcessing) return;
+
+        if (!this.state.isInitialized) {
+            this.speakText("Please wait for model initialization to complete");
+            this.handleError('Model not initialized', new Error('Please wait for model initialization to complete'));
+            return;
+        }
 
         try {
             this.elements.screenshotButton.disabled = true;
@@ -363,6 +370,7 @@ class ImageAnalyzer {
                 LlavaForConditionalGeneration.from_pretrained(modelId, modelConfig)
             ]);
 
+            this.state.isInitialized = true;
             this.elements.screenshotButton.disabled = false;
         } catch (error) {
             this.handleError('Error initializing model', error);
@@ -370,13 +378,17 @@ class ImageAnalyzer {
     }
 
     async handleImageAnalysis(imageUrl) {
+        if (!this.state.isInitialized) {
+            this.handleError('Model not initialized', new Error('Please wait for model initialization to complete'));
+            return;
+        }
         if (this.state.isProcessing) return;
         this.state.isProcessing = true;
 
         try {
             this.state.messages = [
-                { role: 'system', content: 'Answer the question.' },
-                { role: 'user', content: `<image>\n描述圖片` }
+                { role: 'system', content: 'You are a helpful assistant, please answer the question.' },
+                { role: 'user', content: `<image>\n請用完整,流暢和通順的繁體中文句子去簡單形容圖片中的內容 (請把你的回答字數限制在50字內)` }
             ];
             this.appendMessage('AI', 'Analyzing...');
 
@@ -402,7 +414,7 @@ class ImageAnalyzer {
             ...textInputs,
             ...visionInputs,
             do_sample: false,
-            max_new_tokens: 64,
+            max_new_tokens: 128,
             repetition_penalty: 1.1,
             return_dict_in_generate: true,
         });
@@ -442,6 +454,10 @@ class ImageAnalyzer {
     }
 
     async generateResponse() {
+        if (!this.state.isInitialized) {
+            this.handleError('Model not initialized', new Error('Please wait for model initialization to complete'));
+            return;
+        }
         try {
             const text = this.state.tokenizer.apply_chat_template(this.state.messages, {
                 tokenize: false,
@@ -498,12 +514,19 @@ class ImageAnalyzer {
         this.elements.screenshotButton.disabled = false;
     }
 
-    handleReset() {
+    handleClear() {
         this.elements.conversation.innerHTML = '';
         this.elements.userInput.value = '';
         this.elements.imagePreview.style.display = 'none';
+        this.elements.imagePreview.src = '';
         this.state.messages = [];
         this.state.rollingScreenshotImages = [];
+        this.state.pastKeyValues = null;
+
+        if (this.state.speechSynthesis && this.state.isSpeaking) {
+            this.state.speechSynthesis.cancel();
+            this.state.isSpeaking = false;
+        }
     }
 
     enableInterface() {
