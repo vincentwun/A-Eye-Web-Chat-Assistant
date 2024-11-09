@@ -13,7 +13,7 @@ An advanced Chrome extension leveraging Web AI and Gemini Nano for real-time ima
 
 ## 📑 Table of Contents
 - [Overview](#overview)
-- [Key Features](#key-features)
+- [Key Advantages](#key-advantages)
 - [System Requirements](#system-requirements)
 - [Installation Guide](#installation-guide)
 - [Technical Architecture](#technical-architecture)
@@ -23,13 +23,13 @@ An advanced Chrome extension leveraging Web AI and Gemini Nano for real-time ima
 ## 🎯 Overview
 Web AI Screen Reader is a cutting-edge Chrome extension that integrates advanced AI technologies to provide real-time image descriptions and web content analysis. Powered by Chrome's built-in Gemini Nano, it ensures secure on-device processing for enhanced privacy protection.
 
-## ✨ Key advantages
+## ✨ Key Advantages
 - 🔒 **Privacy-First**: All processing happens locally on your device
 - ⚡ **Real-Time Performance**: Instant image analysis and description
 - 🤖 **Dual AI Models**: Leveraging both Gemini Nano and Moondream2
 - 💻 **Cross-Platform**: Supports Windows, macOS, and Linux
 
-## 💻 System Requirements
+## ⚙️ System Requirements
 
 ### Hardware Requirements
 - **CPU:** Multi-core processor (Intel/AMD)
