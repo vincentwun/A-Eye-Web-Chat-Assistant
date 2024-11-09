@@ -1,67 +1,120 @@
-# Web AI Screen Reader (Beta)
+# Web AI Screen Reader (Beta) 🔍
 
-Experience the power of AI-enhanced web browsing with Web AI Screen Reader 2.0. This Chrome extension leverages Chrome's built-in Gemini Nano API to provide real-time image descriptions and translations, making web content more accessible.
+<div align="center">
 
-![Web AI Screen Reader Logo](updatelater)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Chrome](https://img.shields.io/badge/Chrome-v128.0.6545.0+-green.svg)
+![Platform](https://img.shields.io/badge/platform-Windows%20|%20MacOS%20|%20Linux-lightgrey)
+![Status](https://img.shields.io/badge/status-beta-orange)
 
-## Features
-- Real-time image description using Web AI
-- Multi-language support with Chrome's Translation API
-- Automatic language detection
-- On-device processing for enhanced privacy
+An advanced Chrome extension leveraging Web AI and Gemini Nano for real-time image description with privacy-first approach.
 
-## Architecture
+</div>
 
-### Frontend
-[Update soon...]
+## 📑 Table of Contents
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [System Requirements](#system-requirements)
+- [Installation Guide](#installation-guide)
+- [Technical Architecture](#technical-architecture)
+- [Usage Guide](#usage-guide)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
 
-![Architecture Diagram](updatelater)
+## 🎯 Overview
+Web AI Screen Reader is a cutting-edge Chrome extension that integrates advanced AI technologies to provide real-time image descriptions and web content analysis. Powered by Chrome's built-in Gemini Nano, it ensures secure on-device processing for enhanced privacy protection.
 
-## Installation Guide
+## ✨ Key advantages
+- 🔒 **Privacy-First**: All processing happens locally on your device
+- ⚡ **Real-Time Performance**: Instant image analysis and description
+- 🤖 **Dual AI Models**: Leveraging both Gemini Nano and Moondream2
+- 💻 **Cross-Platform**: Supports Windows, macOS, and Linux
 
-### Prerequisites
-- Google Chrome (Developer Version) recommended for full Gemini Nano API support
-- Minimum 4GB RAM
-- Minimum 22GB storage space
-- Discrete GPU (recommended, NOT necessary)
+## 💻 System Requirements
 
-### Step 1: Enable Developer Mode
-1. Open Google Chrome browser
-2. Click the menu icon (⋮) > Extensions
-3. Enable "Developer mode" in the top-right corner
+### Hardware Requirements
+- **CPU:** Multi-core processor (Intel/AMD)
+- **GPU:** Integrated GPU or discrete GPU
+- **VRAM:** Minimum 4GB
+- **Storage:** 24GB free space
+  - 22GB for Gemini Nano model
+  - 2GB for Moondream2 model
+  - Additional space for cache and temporary files
 
-### Step 2: Load Extension
-1. Click "Load unpacked"
-2. Navigate to and select the `ai_screen_reader_2.0` folder
-3. Click "Select Folder"
+### Software Requirements
+| Operating System | Version |
+|-----------------|---------|
+| Windows | 10 or later |
+| macOS | 13 (Ventura) or later |
+| Linux | Modern distribution with WebGPU support |
 
-### Step 3: Required Chrome Flags Configuration
+### Browser Requirements
+- Google Chrome Dev/Canary Channel (Version ≥ 128.0.6545.0)
+- WebGPU-enabled configuration
 
-#### Enable WebGPU
-1. Navigate to `chrome://flags/#enable-webgpu-developer-features`
-2. Set to "Enabled"
+## 📦 Installation Guide
 
-#### Configure Gemini Nano API
-1. Navigate to `chrome://flags/#optimization-guide-on-device-model`
-2. Select "Enabled BypassPerfRequirement"
-3. Navigate to `chrome://flags/#prompt-api-for-gemini-nano`
-4. Select "Enabled"
-5. Go to `chrome://components`
-6. Find "Optimization Guide On Device Model"
-7. Click "Check for update"
+### Step 1: Extension Download
+```bash
+# Clone the repository
+git clone https://github.com/vincentwun/Web-AI-Screen-Reader-Beta.git
 
-#### Enable Language Detection
-1. Navigate to `chrome://flags/#language-detection-api`
-2. Select "Enabled"
+# Or download directly
+wget https://github.com/vincentwun/Web-AI-Screen-Reader-Beta/archive/refs/heads/main.zip
+```
 
-#### Enable Translation
-1. Navigate to `chrome://flags/#translation-api`
-2. Select "Enabled"
-3. Visit `chrome://on-device-translation-internals/` to manage language packages
+### Step 2: Chrome Configuration
+1. **Enable Developer Mode**
+   - Open Chrome browser
+   - Navigate to `chrome://extensions`
+   - Toggle "Developer mode" in the top-right corner
 
-### Step 4: Verify Installation
-1. Look for the extension icon in your Chrome toolbar
-2. Click the icon to ensure it's working properly
+2. **Load Extension**
+   - Click "Load unpacked"
+   - Select the `Web-AI-Screen-Reader-Beta` folder
+   - Verify successful installation
 
-## Current Limitations
-[Update soon...]
+### Step 3: Required Flags Configuration
+
+#### WebGPU Setup
+```
+chrome://flags/#enable-webgpu-developer-features → Enabled
+```
+
+#### Gemini Nano Configuration
+```
+chrome://flags/#optimization-guide-on-device-model → Enabled BypassPerfRequirement
+chrome://flags/#prompt-api-for-gemini-nano → Enabled
+```
+
+### Step 4: Activate Gemini Nano
+1. Visit the [Prompt API Playground](https://chrome.dev/web-ai-demos/prompt-api-playground/)
+2. Open Developer Console (F12)
+3. Execute:
+   ```javascript
+   await ai.languageModel.create();
+   ```
+4. Update components at `chrome://components`
+
+## 🔧 Technical Architecture
+```
+Web AI Screen Reader
+├── Core Components
+│   ├── Image Processing Engine
+│   ├── Gemini Nano Integration
+│   └── WebGPU Accelerator
+├── Processing Pipeline
+│   ├── Image Capture
+│   ├── AI Analysis
+│   └── Description Generation
+└── User Interface
+    ├── Control Panel
+    └── Output Display
+```
+
+## 📘 Usage Guide
+[Coming Soon]
+
+## 📄 License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
