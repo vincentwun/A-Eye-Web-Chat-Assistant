@@ -1,4 +1,4 @@
-# Web AI Screen Reader (Beta) 🔍
+# Web AI Screen Reader (Beta)
 
 <div align="center">
 
