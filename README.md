@@ -11,108 +11,119 @@ An advanced Chrome extension leveraging Web AI and Gemini Nano for real-time ima
 
 </div>
 
-## 📑 Table of Contents
+## Table of Contents
 - [Overview](#overview)
-- [Key Advantages](#key-advantages)
+- [Key Features](#key-features)
 - [System Requirements](#system-requirements)
-- [Installation Guide](#installation-guide)
+- [Installation](#installation)
 - [Technical Architecture](#technical-architecture)
-- [Usage Guide](#usage-guide)
+- [Usage](#usage)
+- [Current Limitations](#current-limitations)
 - [License](#license)
 
-## 🎯 Overview
+## Overview
 Web AI Screen Reader is a cutting-edge Chrome extension that integrates advanced AI technologies to provide real-time image descriptions and web content analysis. Powered by Chrome's built-in Gemini Nano, it ensures secure on-device processing for enhanced privacy protection.
 
-## ✨ Key Advantages
-- 🔒 **Privacy-First**: All processing happens locally on your device
-- ⚡ **Real-Time Performance**: Instant image analysis and description
-- 🤖 **Dual AI Models**: Leveraging both Gemini Nano and Moondream2
-- 💻 **Cross-Platform**: Supports Windows, macOS, and Linux
+## Key Features
 
-## ⚙️ System Requirements
+| Feature | Description |
+|---------|-------------|
+| Privacy-First | All processing happens locally on your device |
+| Real-Time Performance | Instant image analysis and description |
+| Dual AI Models | Leveraging both Gemini Nano and Moondream2 |
+| Cross-Platform | Supports Windows, macOS, and Linux |
 
-### Hardware Requirements
-- **CPU:** Multi-core processor (Intel/AMD)
-- **GPU:** Integrated GPU or discrete GPU
-- **VRAM:** Minimum 4GB
-- **Storage:** 24GB free space
-  - 22GB for Gemini Nano model
-  - 2GB for Moondream2 model
-  - Additional space for cache and temporary files
+## System Requirements
 
-### Software Requirements
-| Operating System | Version |
-|-----------------|---------|
-| Windows | 10 or later |
-| macOS | 13 (Ventura) or later |
+### Hardware Specifications
+
+| Component | Minimum Requirement |
+|-----------|-------------------|
+| GPU | Integrated GPU or discrete GPU |
+| VRAM | 4GB minimum |
+| Storage | 24GB free space |
+
+### Storage Allocation
+
+| Component | Space Required |
+|-----------|---------------|
+| Gemini Nano | 22GB |
+| Moondream2 | 2GB |
+| Cache & Temp Files | Additional space required |
+
+### Software Specifications
+
+| Component | Requirement |
+|-----------|------------|
+| Windows | Version 10 or later |
+| macOS | Version 13 (Ventura) or later |
 | Linux | Modern distribution with WebGPU support |
+| Chrome | Dev/Canary Channel (≥ 128.0.6545.0) |
+| WebGPU | Enabled configuration required |
 
-### Browser Requirements
-- Google Chrome Dev/Canary Channel (Version ≥ 128.0.6545.0)
-- WebGPU-enabled configuration
+## Installation
 
-## 📦 Installation Guide
+### 0. Full Installation Video Guide (Coming Soon)
 
-### Step 1: Extension Download
-```bash
-# Clone the repository
-git clone https://github.com/vincentwun/Web-AI-Screen-Reader-Beta.git
+### 1. Download Extension
 
-# Or download directly
-wget https://github.com/vincentwun/Web-AI-Screen-Reader-Beta/archive/refs/heads/main.zip
+```
+https://github.com/vincentwun/Web-AI-Screen-Reader-Beta/archive/refs/heads/main.zip
 ```
 
-### Step 2: Chrome Configuration
-1. **Enable Developer Mode**
-   - Open Chrome browser
+### 2. Chrome Configuration
+
+1. Enable Developer Mode
+   - Launch Chrome browser
    - Navigate to `chrome://extensions`
-   - Toggle "Developer mode" in the top-right corner
+   - Enable "Developer mode" (top-right corner)
 
-2. **Load Extension**
-   - Click "Load unpacked"
-   - Select the `Web-AI-Screen-Reader-Beta` folder
-   - Verify successful installation
+2. Load Extension
+   - Select "Load unpacked"
+   - Navigate to `Web-AI-Screen-Reader-Beta` directory
+   - Confirm successful installation
 
-### Step 3: Required Flags Configuration
+### 3. Required Flags Setup
 
-#### WebGPU Setup
-```
-chrome://flags/#enable-webgpu-developer-features → Enabled
-```
+#### WebGPU Configuration
+| Flag | Setting |
+|------|---------|
+| `chrome://flags/#enable-webgpu-developer-features` | Enabled |
 
 #### Gemini Nano Configuration
-```
-chrome://flags/#optimization-guide-on-device-model → Enabled BypassPerfRequirement
-chrome://flags/#prompt-api-for-gemini-nano → Enabled
-```
+| Flag | Setting |
+|------|---------|
+| `chrome://flags/#optimization-guide-on-device-model` | Enabled BypassPerfRequirement |
+| `chrome://flags/#prompt-api-for-gemini-nano` | Enabled |
 
-### Step 4: Activate Gemini Nano
-1. Visit the [Prompt API Playground](https://chrome.dev/web-ai-demos/prompt-api-playground/)
-2. Open Developer Console (F12)
-3. Execute:
+Note: Restart Chrome after modifying these flags for changes to take effect.
+
+### 4. Gemini Nano Activation
+
+1. Access [Prompt API Playground](https://chrome.dev/web-ai-demos/prompt-api-playground/)
+2. Launch Developer Console (F12)
+3. Execute initialization:
    ```javascript
    await ai.languageModel.create();
    ```
-4. Update components at `chrome://components`
+4. Open a new tab in Chrome, go to chrome://components
+5. Confirm that Gemini Nano is either available or is being downloaded
+   - You'll want to see the Optimization Guide On Device Model present with a version greater or equal to 2024.5.21.1031.
+   - If there is no version listed, click on Check for update to force the download.
 
-## 🔧 Technical Architecture
-```
-Web AI Screen Reader
-├── Core Components
-│   ├── Image Processing Engine
-│   ├── Gemini Nano Integration
-│   └── WebGPU Accelerator
-├── Processing Pipeline
-│   ├── Image Capture
-│   ├── AI Analysis
-│   └── Description Generation
-└── User Interface
-    ├── Control Panel
-    └── Output Display
-```
+## Technical Architecture
 
-## 📘 Usage Guide
-[Coming Soon]
+### Core Components
+[Update soon]
 
-## 📄 License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+### Technology Stack
+[Update soon]
+
+## Usage
+[Update soon]
+
+## Current Limitations
+Only supports English language for image description and web content analysis.
+
+## License
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for full details.
