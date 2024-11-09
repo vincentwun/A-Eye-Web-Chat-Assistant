@@ -15,9 +15,8 @@ An advanced Chrome extension leveraging Web AI and Gemini Nano for real-time ima
 - [Overview](#overview)
 - [Key Features](#key-features)
 - [System Requirements](#system-requirements)
-- [Installation](#installation)
+- [Installation Guide](#installation-guide)
 - [Technical Architecture](#technical-architecture)
-- [Usage](#usage)
 - [Current Limitations](#current-limitations)
 - [License](#license)
 
@@ -39,17 +38,10 @@ Web AI Screen Reader is a cutting-edge Chrome extension that integrates advanced
 
 | Component | Minimum Requirement |
 |-----------|-------------------|
+| CPU | Multi-core processor (Intel/AMD) |
 | GPU | Integrated GPU or discrete GPU |
 | VRAM | 4GB minimum |
 | Storage | 24GB free space |
-
-### Storage Allocation
-
-| Component | Space Required |
-|-----------|---------------|
-| Gemini Nano | 22GB |
-| Moondream2 | 2GB |
-| Cache & Temp Files | Additional space required |
 
 ### Software Specifications
 
@@ -61,69 +53,81 @@ Web AI Screen Reader is a cutting-edge Chrome extension that integrates advanced
 | Chrome | Dev/Canary Channel (≥ 128.0.6545.0) |
 | WebGPU | Enabled configuration required |
 
-## Installation
+### Storage Requirements
 
-### 0. Full Installation Video Guide (Coming Soon)
+| Component | Space Required |
+|-----------|---------------|
+| Gemini Nano | 22GB |
+| Moondream2 | 2GB |
+| Cache & Temp Files | Additional space required |
 
-### 1. Download Extension
+## Installation Guide
 
-```
-https://github.com/vincentwun/Web-AI-Screen-Reader-Beta/archive/refs/heads/main.zip
-```
+### Extension Setup
 
-### 2. Chrome Configuration
+1. Download Extension
+   ```
+   https://github.com/vincentwun/Web-AI-Screen-Reader-Beta/archive/refs/heads/main.zip
+   ```
 
-1. Enable Developer Mode
+2. Chrome Configuration
    - Launch Chrome browser
    - Navigate to `chrome://extensions`
    - Enable "Developer mode" (top-right corner)
-
-2. Load Extension
    - Select "Load unpacked"
-   - Navigate to `Web-AI-Screen-Reader-Beta` directory
-   - Confirm successful installation
+   - Navigate to extracted extension directory
+   - Verify successful installation
 
-### 3. Required Flags Setup
+### Required Configuration
 
-#### WebGPU Configuration
-| Flag | Setting |
-|------|---------|
-| `chrome://flags/#enable-webgpu-developer-features` | Enabled |
+#### Chrome Flags Setup
 
-#### Gemini Nano Configuration
-| Flag | Setting |
-|------|---------|
-| `chrome://flags/#optimization-guide-on-device-model` | Enabled BypassPerfRequirement |
-| `chrome://flags/#prompt-api-for-gemini-nano` | Enabled |
+| Category | Flag | Setting |
+|----------|------|---------|
+| WebGPU | `chrome://flags/#enable-webgpu-developer-features` | Enabled |
+| Gemini Nano | `chrome://flags/#optimization-guide-on-device-model` | Enabled BypassPerfRequirement |
+| Prompt API | `chrome://flags/#prompt-api-for-gemini-nano` | Enabled |
 
-Note: Restart Chrome after modifying these flags for changes to take effect.
+Note: Restart Chrome after modifying these flags.
 
-### 4. Gemini Nano Activation
+#### Gemini Nano Setup
 
-1. Access [Prompt API Playground](https://chrome.dev/web-ai-demos/prompt-api-playground/)
-2. Launch Developer Console (F12)
-3. Execute initialization:
-   ```javascript
-   await ai.languageModel.create();
-   ```
-4. Open a new tab in Chrome, go to `chrome://components`
-5. Confirm that Gemini Nano is either available or is being downloaded
-   - You'll want to see the Optimization Guide On Device Model present with a version greater or equal to 2024.5.21.1031.
-   - If there is no version listed, click on Check for update to force the download.
+1. Model Initialization
+   - Visit [Prompt API Playground](https://chrome.dev/web-ai-demos/prompt-api-playground/)
+   - Open DevTools Console (F12)
+   - Execute:
+     ```javascript
+     await ai.languageModel.create();
+     ```
+
+2. Component Verification
+   - Navigate to `chrome://components`
+   - Verify Optimization Guide On Device Model version ≥ 2024.5.21.1031
+   - If needed, click "Check for update"
+
+3. Availability Check
+   - In DevTools Console (F12), execute:
+     ```javascript
+     (await ai.languageModel.capabilities()).available;
+     ```
+   - Confirm return value is "readily"
 
 ## Technical Architecture
 
-### Core Components
-[Update soon]
+### Component Structure
+[Update Soon]
 
 ### Technology Stack
-[Update soon]
-
-## Usage
-[Update soon]
+[Update Soon]
 
 ## Current Limitations
-Only supports English language for image description and web content analysis.
+
+| Limitation | Description |
+|------------|-------------|
+| Language Support | English only |
+| Chrome Version | Requires Dev/Canary Channel |
+| Hardware Requirements | Significant storage space needed |
+| Model Updates | Regular downloads required |
 
 ## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for full details.
