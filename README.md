@@ -106,7 +106,7 @@ Note: Restart Chrome after modifying these flags for changes to take effect.
    ```javascript
    await ai.languageModel.create();
    ```
-4. Open a new tab in Chrome, go to chrome://components
+4. Open a new tab in Chrome, go to `chrome://components`
 5. Confirm that Gemini Nano is either available or is being downloaded
    - You'll want to see the Optimization Guide On Device Model present with a version greater or equal to 2024.5.21.1031.
    - If there is no version listed, click on Check for update to force the download.
