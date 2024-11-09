@@ -1,0 +1,56 @@
+MIT License
+
+Copyright (c) 2024 HKIIT at IVE(LWL) AI Screen Reader Team
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+--------------------------------------------------------------------------------
+
+This software incorporates the following third-party components:
+
+1. Moondream2
+   Licensed under the Apache License 2.0
+   Copyright (c) 2024 Xenova
+   Source: https://huggingface.co/Xenova/moondream2
+   License: https://www.apache.org/licenses/LICENSE-2.0
+
+   You may obtain a copy of the Apache License, Version 2.0 at:
+   https://www.apache.org/licenses/LICENSE-2.0
+
+2. Chrome's Built-in Gemini Nano (Developer Version)
+   This extension utilizes experimental AI features available in Chrome Developer 
+   Version, which are subject to Chrome's terms of service and experimental 
+   features policy.
+
+   Note: Chrome's built-in AI features are experimental and subject to Chrome's 
+   terms of service. These features require Chrome Developer Version and specific 
+   flags to be enabled.
+
+--------------------------------------------------------------------------------
+
+Additional Notices:
+
+1. This software requires Google Chrome Developer Version to function properly.
+2. Some features may be experimental and subject to change.
+3. Any modifications to this software should maintain these notices and comply 
+   with all applicable license terms.
+4. The use of AI models and features is subject to their respective terms of 
+   service and acceptable use policies.
+
+--------------------------------------------------------------------------------

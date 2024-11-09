@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Web AI Screen Reader (Beta)</title>
+    <style>
+        :root {
+            --primary: #007bff;
+            --border: #ccc;
+            --bg-light: #f8f9fa;
+            --bg-assistant: #f0f8f1;
+            --text: #333;
+            --text-secondary: #666;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font: 13px Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-width: 280px;
+            height: 100vh;
+            padding: 8px;
+            overflow: hidden;
+            color: var(--text);
+        }
+
+        button {
+            padding: 6px 12px;
+            color: #fff;
+            background: var(--primary);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .header-section {
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 2;
+            padding-bottom: 8px;
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        #image-preview {
+            display: none;
+            max-width: 100%;
+            max-height: 200px;
+            margin: 8px 0;
+            border-radius: 4px;
+        }
+
+        .mode-indicator {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .content-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 180px);
+            overflow: hidden;
+        }
+
+        #conversation {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+
+        #conversation::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #conversation::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+
+        .message {
+            margin: 6px 0;
+            padding: 8px;
+            border-radius: 4px;
+            word-wrap: break-word;
+        }
+
+        .user {
+            background: var(--bg-light);
+        }
+
+        .assistant {
+            background: var(--bg-assistant);
+        }
+
+        #input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        #user-input {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+        }
+
+        .bottom-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .footer {
+            padding: 8px;
+            border-top: 1px solid #eee;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .developer-info {
+            margin-bottom: 4px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .copyright {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+
+        .footer {
+            padding: 8px;
+            border-top: 1px solid #eee;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-top: auto;
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+
+        .footer a:hover {
+            opacity: 0.8;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 300px) {
+            body {
+                padding: 6px;
+            }
+
+            button {
+                padding: 4px 8px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header-section">
+        <div class="button-group">
+            <button id="screenshot-button">Take Screenshot</button>
+            <button id="rolling-screenshot-button">Take Rolling Screenshot</button>
+            <button id="analyze-content-button">Analyze Content</button>
+        </div>
+        <img id="image-preview" src="" alt="Screenshot">
+        <div class="mode-indicator">Current AI Model: <span id="current-mode">None</span></div>
+    </div>
+
+    <div class="content-wrapper">
+        <div id="conversation"></div>
+        <div id="input-section">
+            <input type="text" id="user-input" placeholder="Type your message here...">
+            <div class="bottom-buttons">
+                <button id="send-button">Send</button>
+                <button id="voice-button">Voice</button>
+                <button id="clear-button">Clear</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="developer-info">
+            Developed by: <a href="https://github.com/vincentwun" target="_blank">Vincent Wun</a> |
+            Development Team: HKIIT at IVE(LWL) AI Screen Reader Team |
+            <a href="https://github.com/your-repo" target="_blank">Open Source Project</a>
+        </div>
+        <div class="model-attribution">
+            Powered by:
+            <a href="https://huggingface.co/Xenova/moondream2" target="_blank">Moondream2</a> and
+            Chrome's built-in Gemini Nano
+        </div>
+        <div class="copyright">
+            © 2024 Web AI Screen Reader | HKIIT at IVE(LWL) |
+            Licensed under <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>
+        </div>
+    </footer>
+    <script type="module" src="sidepanel.js"></script>
+</body>
+
+</html>

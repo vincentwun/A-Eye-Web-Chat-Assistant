@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "AI Screen Reader 2.0",
+  "name": "Web AI Screen Reader (Beta)",
   "version": "1.0",
-  "description": "AI Screen Reader 2.0",
+  "description": "AI powered screen reader and content analyzer with Moondream2 and Gemini Nano",
   "permissions": [
     "sidePanel",
     "storage",
@@ -11,7 +11,8 @@
     "scripting",
     "tts",
     "notifications",
-    "microphone"
+    "microphone",
+    "commands"
   ],
   "host_permissions": [
     "<all_urls>"

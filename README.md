@@ -1,4 +1,4 @@
-# Web AI Screen Reader 2.0
+# Web AI Screen Reader (Beta)
 
 Experience the power of AI-enhanced web browsing with Web AI Screen Reader 2.0. This Chrome extension leverages Chrome's built-in Gemini Nano API to provide real-time image descriptions and translations, making web content more accessible.
 
