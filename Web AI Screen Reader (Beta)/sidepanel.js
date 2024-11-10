@@ -150,7 +150,8 @@ class AIScreenReader {
             return true;
         } catch (error) {
             console.error('Microphone permission error:', error);
-            this.appendMessage('system', 'Please allow microphone access in your browser');
+            this.speakText('Please allow microphone access in your browser.');
+            this.appendMessage('system', 'Please allow microphone access in your browser.');
             return false;
         }
     }
@@ -168,10 +169,7 @@ class AIScreenReader {
 
         try {
             const hasPermission = await this.requestMicrophonePermission();
-            if (!hasPermission) {
-                this.appendMessage('system', 'Please allow microphone access to enable voice features');
-                return;
-            }
+            if (!hasPermission) return;
 
             this.state.isRecording = true;
             this.updateVoiceButtonState(true);
@@ -284,7 +282,8 @@ class AIScreenReader {
 
         try {
             this.elements.screenshotButton.disabled = true;
-            this.speakText("Analyzing");
+            this.speakText("Analyzing Screenshot");
+            this.appendMessage('system', 'Analyzing Screenshot.');
             this.updateMode('moondream');
 
             const screenshot = await chrome.tabs.captureVisibleTab();
@@ -304,7 +303,8 @@ class AIScreenReader {
         try {
             this.elements.rollingScreenshotButton.disabled = true;
             this.state.rollingScreenshotImages = [];
-            this.speakText("Start scrolling screenshot");
+            this.speakText("Analyzing scrolling screenshot.");
+            this.appendMessage('system', 'Analyzing scrolling screenshot.');
             this.updateMode('moondream');
 
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -442,7 +442,6 @@ class AIScreenReader {
         try {
             this.state.messages = [];
             const defaultPrompt = 'Describe the picture in about 50 words';
-            this.appendMessage('AI', 'Analyzing...');
 
             const response = await this.generateImageResponse(imageUrl, defaultPrompt);
             this.handleResponse(response);
@@ -481,6 +480,44 @@ class AIScreenReader {
     cleanResponse(response) {
         return response.split('Answer:').pop()?.trim()
             .replace(/Question:.*Answer:/g, '').trim() || response.trim();
+    }
+
+    async handleContentAnalysis() {
+        if (this.state.isProcessing) return;
+
+        try {
+            this.state.currentMode = 'gemini';
+            this.elements.currentMode.textContent = 'Gemini Nano';
+            this.state.isProcessing = true;
+            this.elements.analyzeContentButton.disabled = true;
+            this.speakText("Analyzing webpage content.");
+            this.appendMessage('assistant', 'Analyzing webpage content.');
+
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            const content = await this.extractPageContent(tab);
+
+            this.showPreview('text', `
+                <strong>Extracted Content Preview:</strong><br>
+                ${this.escapeHTML(content.slice(0, 500))}...
+            `);
+
+            const response = await chrome.runtime.sendMessage({
+                type: 'analyze',
+                text: content
+            });
+
+            if (!response || response.error) {
+                throw new Error(response?.error || 'Analysis failed');
+            }
+
+            this.handleResponse(response.content);
+
+        } catch (error) {
+            this.handleError('Content analysis failed', error);
+        } finally {
+            this.state.isProcessing = false;
+            this.elements.analyzeContentButton.disabled = false;
+        }
     }
 
     // Message handling
@@ -558,44 +595,6 @@ class AIScreenReader {
         } catch (error) {
             console.error('Content extraction error:', error);
             throw new Error('Failed to extract page content');
-        }
-    }
-
-    async handleContentAnalysis() {
-        if (this.state.isProcessing) return;
-
-        try {
-            this.state.currentMode = 'gemini';
-            this.elements.currentMode.textContent = 'Gemini Nano';
-            this.state.isProcessing = true;
-            this.elements.analyzeContentButton.disabled = true;
-            this.speakText("Extracting and analyzing webpage content");
-            this.appendMessage('assistant', 'Extracting and analyzing webpage content...');
-
-            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            const content = await this.extractPageContent(tab);
-
-            this.showPreview('text', `
-                <strong>Extracted Content Preview:</strong><br>
-                ${this.escapeHTML(content.slice(0, 500))}...
-            `);
-
-            const response = await chrome.runtime.sendMessage({
-                type: 'analyze',
-                text: content
-            });
-
-            if (!response || response.error) {
-                throw new Error(response?.error || 'Analysis failed');
-            }
-
-            this.handleResponse(response.content);
-
-        } catch (error) {
-            this.handleError('Content analysis failed', error);
-        } finally {
-            this.state.isProcessing = false;
-            this.elements.analyzeContentButton.disabled = false;
         }
     }
 
