@@ -65,7 +65,8 @@ Web AI Screen Reader is a cutting-edge Chrome extension that integrates advanced
 
 ### Download Chrome 
 
-Download [Chrome Dev](https://www.google.com/chrome/dev/) or [Canary](https://www.google.com/chrome/canary/)
+Download [Chrome Dev](https://www.google.com/chrome/dev/) or [Canary](https://www.google.com/chrome/canary/) and confirm that your version is equal or newer than 128.0.6545.0.
+
 
 ### Extension Setup
 
