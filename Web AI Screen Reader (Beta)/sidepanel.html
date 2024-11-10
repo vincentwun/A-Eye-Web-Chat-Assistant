@@ -6,12 +6,16 @@
     <title>Web AI Screen Reader (Beta)</title>
     <style>
         :root {
-            --primary: #007bff;
-            --border: #ccc;
-            --bg-light: #f8f9fa;
-            --bg-assistant: #f0f8f1;
-            --text: #333;
-            --text-secondary: #666;
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 12px;
+            --color-primary: #007bff;
+            --color-border: #ccc;
+            --color-bg-light: #f8f9fa;
+            --color-bg-assistant: #f0f8f1;
+            --color-text: #333;
+            --color-text-secondary: #666;
+            --border-radius: 4px;
         }
 
         * {
@@ -21,22 +25,22 @@
         }
 
         body {
-            font: 13px Arial, sans-serif;
+            font: 13px/1.5 Arial, sans-serif;
             display: flex;
             flex-direction: column;
             min-width: 280px;
             height: 100vh;
-            padding: 8px;
+            padding: var(--spacing-sm);
+            color: var(--color-text);
             overflow: hidden;
-            color: var(--text);
         }
 
         button {
-            padding: 6px 12px;
+            padding: 6px var(--spacing-md);
             color: #fff;
-            background: var(--primary);
+            background: var(--color-primary);
             border: none;
-            border-radius: 4px;
+            border-radius: var(--border-radius);
             cursor: pointer;
             white-space: nowrap;
         }
@@ -55,27 +59,14 @@
             top: 0;
             background: #fff;
             z-index: 2;
-            padding-bottom: 8px;
+            padding-bottom: var(--spacing-sm);
         }
 
         .button-group {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-
-        #image-preview {
-            display: none;
-            max-width: 100%;
-            max-height: 200px;
-            margin: 8px 0;
-            border-radius: 4px;
-        }
-
-        .mode-indicator {
-            font-size: 12px;
-            color: var(--text-secondary);
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-sm);
         }
 
         .content-wrapper {
@@ -85,13 +76,39 @@
             overflow: hidden;
         }
 
+        #preview-container {
+            display: none;
+            margin: var(--spacing-sm) 0;
+        }
+
+        #preview-image,
+        #preview-text {
+            display: none;
+            max-height: 200px;
+            border-radius: var(--border-radius);
+        }
+
+        #preview-image {
+            max-width: 100%;
+        }
+
+        #preview-text {
+            padding: var(--spacing-sm);
+            border: 1px solid var(--color-border);
+            overflow-y: auto;
+            font-size: 12px;
+            background-color: var(--color-bg-light);
+        }
+
         #conversation {
             flex: 1;
             overflow-y: auto;
-            padding: 8px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            margin-bottom: 8px;
+            padding: var(--spacing-sm);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            margin-bottom: var(--spacing-sm);
+            scrollbar-width: thin;
+            scrollbar-color: #888 transparent;
         }
 
         #conversation::-webkit-scrollbar {
@@ -105,69 +122,51 @@
 
         .message {
             margin: 6px 0;
-            padding: 8px;
-            border-radius: 4px;
+            padding: var(--spacing-sm);
+            border-radius: var(--border-radius);
             word-wrap: break-word;
         }
 
         .user {
-            background: var(--bg-light);
+            background: var(--color-bg-light);
         }
 
         .assistant {
-            background: var(--bg-assistant);
+            background: var(--color-bg-assistant);
         }
 
         #input-section {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            margin-bottom: 8px;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-sm);
         }
 
         #user-input {
             width: 100%;
             padding: 6px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
         }
 
         .bottom-buttons {
             display: flex;
-            gap: 8px;
+            gap: var(--spacing-sm);
             justify-content: flex-end;
         }
 
         .footer {
-            padding: 8px;
+            padding: var(--spacing-sm);
             border-top: 1px solid #eee;
-            color: var(--text-secondary);
-            text-align: center;
-        }
-
-        .developer-info {
-            margin-bottom: 4px;
-            font-size: 12px;
-            line-height: 1.5;
-        }
-
-        .copyright {
-            font-size: 11px;
-            opacity: 0.8;
-        }
-
-        .footer {
-            padding: 8px;
-            border-top: 1px solid #eee;
-            color: var(--text-secondary);
+            color: var(--color-text-secondary);
             text-align: center;
             margin-top: auto;
+            font-size: 11px;
         }
 
         .footer a {
-            color: var(--primary);
+            color: var(--color-primary);
             text-decoration: none;
-            transition: opacity 0.2s;
         }
 
         .footer a:hover {
@@ -181,7 +180,7 @@
             }
 
             button {
-                padding: 4px 8px;
+                padding: var(--spacing-xs) var(--spacing-sm);
                 font-size: 12px;
             }
         }
@@ -195,7 +194,10 @@
             <button id="rolling-screenshot-button">Take Rolling Screenshot</button>
             <button id="analyze-content-button">Analyze Content</button>
         </div>
-        <img id="image-preview" src="" alt="Screenshot">
+        <div id="preview-container">
+            <img id="preview-image" alt="Preview">
+            <div id="preview-text"></div>
+        </div>
         <div class="mode-indicator">Current AI Model: <span id="current-mode">None</span></div>
     </div>
 
@@ -212,20 +214,13 @@
     </div>
 
     <footer class="footer">
-        <div class="developer-info">
-            Developed by: <a href="https://github.com/vincentwun" target="_blank">Vincent Wun</a> |
-            Development Team: HKIIT at IVE(LWL) AI Screen Reader Team |
-            <a href="https://github.com/vincentwun/Web-AI-Screen-Reader-Beta-" target="_blank">Open Source Project</a>
-        </div>
-        <div class="model-attribution">
-            Powered by:
-            <a href="https://huggingface.co/Xenova/moondream2" target="_blank">Moondream2</a> and
-            Chrome's built-in Gemini Nano
-        </div>
-        <div class="copyright">
-            © 2024 Web AI Screen Reader | HKIIT at IVE(LWL) |
-            Licensed under <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>
-        </div>
+        <div>Developed by: <a href="https://github.com/vincentwun" target="_blank">Vincent Wun</a> | HKIIT at IVE(LWL)
+            AI Screen Reader Team | <a href="https://github.com/vincentwun/Web-AI-Screen-Reader-Beta-"
+                target="_blank">Open Source Project</a></div>
+        <div>Powered by: <a href="https://huggingface.co/Xenova/moondream2" target="_blank">Moondream2</a> and Chrome's
+            built-in Gemini Nano</div>
+        <div>© 2024 Web AI Screen Reader | HKIIT at IVE(LWL) | <a href="https://opensource.org/licenses/MIT"
+                target="_blank">MIT License</a></div>
     </footer>
     <script type="module" src="sidepanel.js"></script>
 </body>

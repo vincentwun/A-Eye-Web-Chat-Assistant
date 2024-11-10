@@ -129,5 +129,20 @@ Note: Restart Chrome after modifying these flags.
 | Hardware Requirements | Significant storage space needed |
 | Model Updates | Regular downloads required |
 
+## Dependencies and Acknowledgments
+
+This project utilizes several open-source libraries and technologies:
+
+| Component | License | Description |
+|-----------|---------|-------------|
+| [Moondream2](https://huggingface.co/Xenova/moondream2) | Apache 2.0 | AI model for image analysis |
+| [Readability.js](https://github.com/mozilla/readability) | Apache 2.0 | Web content extraction library |
+| [Transformers.js](https://github.com/xenova/transformers.js) | Apache 2.0 | Machine learning library for the web |
+| Chrome Gemini Nano | Proprietary | Chrome's built-in AI capabilities |
+
+We are grateful to the developers and contributors of these projects for making their work available to the community. All third-party components are used in accordance with their respective licenses.
+
+For detailed license information, please see the [LICENSE](LICENSE) file in the project repository.
+
 ## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for full details.

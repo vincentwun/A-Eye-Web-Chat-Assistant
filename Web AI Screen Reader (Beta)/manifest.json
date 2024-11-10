@@ -29,7 +29,8 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "transformers300.js"
+        "./lib/transformers300.js",
+        "./lib/readability.js"
       ],
       "matches": [
         "<all_urls>"

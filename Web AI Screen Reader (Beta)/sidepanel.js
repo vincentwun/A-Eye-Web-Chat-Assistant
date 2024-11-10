@@ -1,4 +1,4 @@
-import { AutoProcessor, AutoTokenizer, Moondream1ForConditionalGeneration, RawImage } from './transformers300.js';
+import { AutoProcessor, AutoTokenizer, Moondream1ForConditionalGeneration, RawImage } from './lib/transformers300.js';
 
 class AIScreenReader {
     constructor() {
@@ -25,7 +25,9 @@ class AIScreenReader {
 
         this.elements = {
             screenshotButton: document.getElementById('screenshot-button'),
-            imagePreview: document.getElementById('image-preview'),
+            previewContainer: document.getElementById('preview-container'),
+            previewImage: document.getElementById('preview-image'),
+            previewText: document.getElementById('preview-text'),
             conversation: document.getElementById('conversation'),
             userInput: document.getElementById('user-input'),
             sendButton: document.getElementById('send-button'),
@@ -37,16 +39,20 @@ class AIScreenReader {
         };
 
         this.initializeAll();
+        this.setupMessageListener();
+    }
 
+    setupMessageListener() {
         chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             console.log('Message received in sidepanel:', request);
 
-            if (request.type === "toggleVoiceRecording") {
-                this.toggleRecording();
-                return true;
-            }
-            if (request.type === "takeScreenshot") {
-                this.handleScreenshot();
+            const messageHandlers = {
+                toggleVoiceRecording: () => this.toggleRecording(),
+                takeScreenshot: () => this.handleScreenshot()
+            };
+
+            if (messageHandlers[request.type]) {
+                messageHandlers[request.type]();
                 return true;
             }
         });
@@ -58,6 +64,10 @@ class AIScreenReader {
             this.initializeGemini()
         ]);
         this.setupEventListeners();
+        this.initializeSpeechFeatures();
+    }
+
+    initializeSpeechFeatures() {
         this.initializeTTS();
         this.initializeSpeechRecognition();
     }
@@ -76,9 +86,11 @@ class AIScreenReader {
         if (!('webkitSpeechRecognition' in window)) return;
 
         const recognition = new webkitSpeechRecognition();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.lang = 'en-US';
+        Object.assign(recognition, {
+            continuous: true,
+            interimResults: true,
+            lang: 'en-US'
+        });
 
         const SILENCE_THRESHOLD = 800;
 
@@ -114,17 +126,21 @@ class AIScreenReader {
         };
 
         recognition.onend = () => {
-            if (this.state.silenceTimer) {
-                clearTimeout(this.state.silenceTimer);
-                this.state.silenceTimer = null;
-            }
-            if (this.state.isRecording && this.elements.userInput.value.trim()) {
-                this.handleSendMessage();
-            }
-            this.stopRecording();
+            this.handleRecognitionEnd();
         };
 
         this.state.recognition = recognition;
+    }
+
+    handleRecognitionEnd() {
+        if (this.state.silenceTimer) {
+            clearTimeout(this.state.silenceTimer);
+            this.state.silenceTimer = null;
+        }
+        if (this.state.isRecording && this.elements.userInput.value.trim()) {
+            this.handleSendMessage();
+        }
+        this.stopRecording();
     }
 
     async requestMicrophonePermission() {
@@ -181,7 +197,9 @@ class AIScreenReader {
     }
 
     updateVoiceButtonState(isRecording) {
-        this.elements.voiceButton.style.backgroundColor = isRecording ? '#dc3545' : '#007bff';
+        Object.assign(this.elements.voiceButton.style, {
+            backgroundColor: isRecording ? '#dc3545' : '#007bff'
+        });
         this.elements.voiceButton.textContent = isRecording ? 'Stop' : 'Voice';
     }
 
@@ -206,8 +224,8 @@ class AIScreenReader {
         const utterance = new SpeechSynthesisUtterance(text);
         Object.assign(utterance, {
             voice: this.state.selectedVoice,
-            lang: 'en-US',
-            rate: 2.0,
+            lang: 'en-UK',
+            rate: 1.5,
             pitch: 1.2,
             volume: 1.0
         });
@@ -218,9 +236,19 @@ class AIScreenReader {
     }
 
     setupEventListeners() {
-        this.elements.screenshotButton.addEventListener('click', () => this.handleScreenshot());
-        this.elements.rollingScreenshotButton.addEventListener('click', () => this.handleRollingScreenshot());
-        this.elements.sendButton.addEventListener('click', () => this.handleSendMessage());
+        const eventHandlers = {
+            'screenshotButton': () => this.handleScreenshot(),
+            'rollingScreenshotButton': () => this.handleRollingScreenshot(),
+            'sendButton': () => this.handleSendMessage(),
+            'voiceButton': () => this.toggleRecording(),
+            'clearButton': () => this.handleClear(),
+            'analyzeContentButton': () => this.handleContentAnalysis()
+        };
+
+        Object.entries(eventHandlers).forEach(([elementName, handler]) => {
+            this.elements[elementName].addEventListener('click', handler);
+        });
+
         this.elements.userInput.addEventListener('input', () => this.handleInputChange());
         this.elements.userInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -228,31 +256,39 @@ class AIScreenReader {
                 this.handleSendMessage();
             }
         });
-        this.elements.voiceButton.addEventListener('click', () => this.toggleRecording());
-        this.elements.clearButton.addEventListener('click', () => this.handleClear());
-        this.elements.analyzeContentButton.addEventListener('click', () => this.handleContentAnalysis());
     }
 
+    showPreview(type, content) {
+        this.elements.previewContainer.style.display = 'block';
+        this.elements.previewImage.style.display = type === 'image' ? 'block' : 'none';
+        this.elements.previewText.style.display = type === 'text' ? 'block' : 'none';
+
+        if (type === 'image') {
+            this.elements.previewImage.src = content;
+        } else {
+            this.elements.previewText.innerHTML = content;
+        }
+    }
+
+    hidePreview() {
+        Object.assign(this.elements.previewContainer.style, {
+            display: 'none'
+        });
+        this.elements.previewImage.style.display = 'none';
+        this.elements.previewText.style.display = 'none';
+    }
+
+    // Screenshot related
     async handleScreenshot() {
         if (this.state.isProcessing) return;
-
-        if (!this.state.isInitialized) {
-            this.speakText("Please wait for model initialization to complete");
-            this.handleError('Model not initialized', new Error('Please wait for model initialization to complete'));
-            return;
-        }
 
         try {
             this.elements.screenshotButton.disabled = true;
             this.speakText("Analyzing");
-            this.state.currentMode = 'moondream';
-            this.elements.currentMode.textContent = 'Moondream2';
+            this.updateMode('moondream');
 
-            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             const screenshot = await chrome.tabs.captureVisibleTab();
-
-            this.elements.imagePreview.src = screenshot;
-            this.elements.imagePreview.style.display = 'block';
+            this.showPreview('image', screenshot);
 
             await this.handleImageAnalysis(screenshot);
         } catch (error) {
@@ -264,99 +300,40 @@ class AIScreenReader {
 
     async handleRollingScreenshot() {
         if (this.state.isProcessing) return;
-    
+
         try {
             this.elements.rollingScreenshotButton.disabled = true;
             this.state.rollingScreenshotImages = [];
             this.speakText("Start scrolling screenshot");
-            this.state.currentMode = 'moondream';
-            this.elements.currentMode.textContent = 'Moondream2';
-    
+            this.updateMode('moondream');
+
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             if (!tab) throw new Error('No active tab found');
-    
+
             const pageInfo = await this.getPageInfo();
-            console.log('Page dimensions:', pageInfo);
-    
-            if (!pageInfo) {
-                throw new Error('Failed to get page dimensions');
-            }
-    
-            if (!pageInfo.scrollHeight || !pageInfo.clientHeight) {
+            if (!this.validatePageInfo(pageInfo)) {
                 throw new Error('Invalid page dimensions');
             }
-    
-            if (pageInfo.scrollHeight <= pageInfo.clientHeight) {
-                const screenshot = await chrome.tabs.captureVisibleTab(null, { format: 'png' });
-                this.state.rollingScreenshotImages.push(screenshot);
-            } else {
-                await this.captureScrollingScreenshots(tab, pageInfo);
-            }
-    
-            if (this.state.rollingScreenshotImages.length === 0) {
-                throw new Error('No screenshots captured');
-            }
-    
+
+            await this.captureScreenshots(tab, pageInfo);
             const mergedImage = await this.mergeScreenshots(this.state.rollingScreenshotImages);
-            this.elements.imagePreview.src = mergedImage;
-            this.elements.imagePreview.style.display = 'block';
-    
+            this.showPreview('image', mergedImage);
+
             await this.handleImageAnalysis(mergedImage);
         } catch (error) {
-            console.error('Rolling screenshot error:', error);
             this.handleError('Rolling screenshot failed', error);
         } finally {
             this.elements.rollingScreenshotButton.disabled = false;
         }
     }
 
-    async handleContentAnalysis() {
-        if (this.state.isProcessing) return;
+    validatePageInfo(pageInfo) {
+        return pageInfo && pageInfo.scrollHeight && pageInfo.clientHeight;
+    }
 
-        try {
-            this.state.currentMode = 'gemini';
-            this.elements.currentMode.textContent = 'Gemini Nano';
-            this.state.isProcessing = true;
-            this.elements.analyzeContentButton.disabled = true;
-            this.speakText("Analyzing web content");
-            this.appendMessage('assistant', 'Analyzing web content...');
-
-            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            const content = await this.extractPageContent(tab);
-
-            if (!content) {
-                throw new Error('No content found to analyze');
-            }
-
-            const response = await new Promise((resolve) => {
-                chrome.runtime.sendMessage({
-                    type: 'analyze',
-                    text: content
-                }, (response) => {
-                    if (chrome.runtime.lastError) {
-                        resolve({ error: chrome.runtime.lastError.message });
-                    } else {
-                        resolve(response);
-                    }
-                });
-            });
-
-            if (response.error) {
-                throw new Error(response.error);
-            }
-
-            if (!response.content) {
-                throw new Error('No analysis result received');
-            }
-
-            this.appendMessage('assistant', response.content);
-            this.speakText(response.content);
-        } catch (error) {
-            this.handleError('Content analysis failed', error);
-        } finally {
-            this.state.isProcessing = false;
-            this.elements.analyzeContentButton.disabled = false;
-        }
+    updateMode(mode) {
+        this.state.currentMode = mode;
+        this.elements.currentMode.textContent = mode === 'moondream' ? 'Moondream2' : 'Gemini Nano';
     }
 
     async getPageInfo() {
@@ -373,7 +350,7 @@ class AIScreenReader {
         });
     }
 
-    async captureScrollingScreenshots(tab, pageInfo) {
+    async captureScreenshots(tab, pageInfo) {
         const { scrollHeight, clientHeight } = pageInfo;
         let currentScroll = 0;
 
@@ -424,6 +401,7 @@ class AIScreenReader {
         });
     }
 
+    // Model related
     async initializeModel() {
         try {
             const modelId = 'Xenova/moondream2';
@@ -454,16 +432,15 @@ class AIScreenReader {
     }
 
     async handleImageAnalysis(imageUrl) {
-        if (!this.state.isInitialized) {
-            this.handleError('Model not initialized', new Error('Please wait for model initialization to complete'));
+        if (!this.state.isInitialized || this.state.isProcessing) {
+            this.handleError('Model not ready', new Error('Please wait for model initialization'));
             return;
         }
-        if (this.state.isProcessing) return;
+
         this.state.isProcessing = true;
 
         try {
             this.state.messages = [];
-
             const defaultPrompt = 'Describe the picture in about 50 words';
             this.appendMessage('AI', 'Analyzing...');
 
@@ -495,13 +472,18 @@ class AIScreenReader {
                 skip_special_tokens: true
             });
 
-            const cleanedResponse = decoded[0].split('Answer:').pop()?.trim() || decoded[0].trim();
-            return cleanedResponse.replace(/Question:.*Answer:/g, '').trim();
+            return this.cleanResponse(decoded[0]);
         } catch (error) {
             throw new Error(`Failed to generate image response: ${error.message}`);
         }
     }
 
+    cleanResponse(response) {
+        return response.split('Answer:').pop()?.trim()
+            .replace(/Question:.*Answer:/g, '').trim() || response.trim();
+    }
+
+    // Message handling
     async handleSendMessage() {
         const input = this.elements.userInput.value.trim();
         if (!input || this.state.isProcessing) return;
@@ -521,7 +503,7 @@ class AIScreenReader {
                 });
                 this.handleResponse(response.content);
             } else {
-                throw new Error('Please select a mode by either taking a screenshot or analyzing content first');
+                throw new Error('Please select a mode first');
             }
 
             this.elements.userInput.value = '';
@@ -534,32 +516,96 @@ class AIScreenReader {
     }
 
     async generateMoondreamResponse(input) {
-        const response = await this.generateImageResponse(this.elements.imagePreview.src, input);
+        const response = await this.generateImageResponse(this.elements.previewImage.src, input);
         this.handleResponse(response);
     }
 
     async extractPageContent(tab) {
-        const injectionResults = await chrome.scripting.executeScript({
-            target: { tabId: tab.id },
-            function: () => {
-                const content = {
-                    paragraphs: []
-                };
+        try {
+            await chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                files: ['./lib/readability.js']
+            });
 
-                document.querySelectorAll('p:not(footer p):not(ul p)').forEach(paragraph => {
-                    const text = paragraph.textContent.trim();
-                    if (text && text.length > 20) {
-                        content.paragraphs.push({ text });
+            const [{ result }] = await chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                function: () => {
+                    try {
+                        const documentClone = document.cloneNode(true);
+                        const reader = new Readability(documentClone);
+                        const article = reader.parse();
+                        return {
+                            title: article.title,
+                            content: article.textContent,
+                            excerpt: article.excerpt,
+                            byline: article.byline,
+                            success: true
+                        };
+                    } catch (error) {
+                        return {
+                            success: false,
+                            error: error.message
+                        };
                     }
-                });
+                }
+            });
 
-                return content;
+            if (!result.success) {
+                throw new Error(`Content extraction failed: ${result.error}`);
             }
-        });
 
-        return injectionResults[0].result.paragraphs
-            .map(p => p.text)
-            .join('\n\n');
+            return this.formatExtractedContent(result);
+        } catch (error) {
+            console.error('Content extraction error:', error);
+            throw new Error('Failed to extract page content');
+        }
+    }
+
+    async handleContentAnalysis() {
+        if (this.state.isProcessing) return;
+
+        try {
+            this.state.currentMode = 'gemini';
+            this.elements.currentMode.textContent = 'Gemini Nano';
+            this.state.isProcessing = true;
+            this.elements.analyzeContentButton.disabled = true;
+            this.speakText("Extracting and analyzing webpage content");
+            this.appendMessage('assistant', 'Extracting and analyzing webpage content...');
+
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            const content = await this.extractPageContent(tab);
+
+            this.showPreview('text', `
+                <strong>Extracted Content Preview:</strong><br>
+                ${this.escapeHTML(content.slice(0, 500))}...
+            `);
+
+            const response = await chrome.runtime.sendMessage({
+                type: 'analyze',
+                text: content
+            });
+
+            if (!response || response.error) {
+                throw new Error(response?.error || 'Analysis failed');
+            }
+
+            this.handleResponse(response.content);
+
+        } catch (error) {
+            this.handleError('Content analysis failed', error);
+        } finally {
+            this.state.isProcessing = false;
+            this.elements.analyzeContentButton.disabled = false;
+        }
+    }
+
+    formatExtractedContent(result) {
+        return `
+            Title: ${result.title}
+            ${result.byline ? `Author: ${result.byline}\n` : ''}
+            ${result.excerpt ? `Summary: ${result.excerpt}\n` : ''}
+            Content: ${result.content}
+        `.trim();
     }
 
     handleInputChange() {
@@ -590,24 +636,27 @@ class AIScreenReader {
     handleError(message, error) {
         console.error(message, error);
         this.appendMessage('system', `${message}: ${error.message}`);
+        this.resetState();
+    }
 
+    resetState() {
         this.state.isProcessing = false;
         this.state.rollingScreenshotImages = [];
-
-        this.elements.rollingScreenshotButton.disabled = false;
-        this.elements.screenshotButton.disabled = false;
-        this.elements.analyzeContentButton.disabled = false;
+        this.enableInterface();
     }
 
     handleClear() {
         this.elements.conversation.innerHTML = '';
         this.elements.userInput.value = '';
-        this.elements.imagePreview.style.display = 'none';
-        this.elements.imagePreview.src = '';
-        this.state.messages = [];
-        this.state.rollingScreenshotImages = [];
-        this.state.pastKeyValues = null;
-        this.state.currentMode = 'none';
+        this.hidePreview();
+
+        Object.assign(this.state, {
+            messages: [],
+            rollingScreenshotImages: [],
+            pastKeyValues: null,
+            currentMode: 'none'
+        });
+
         this.elements.currentMode.textContent = 'None';
 
         if (this.state.speechSynthesis && this.state.isSpeaking) {
@@ -619,6 +668,9 @@ class AIScreenReader {
     enableInterface() {
         this.elements.userInput.disabled = false;
         this.elements.sendButton.disabled = false;
+        this.elements.screenshotButton.disabled = false;
+        this.elements.analyzeContentButton.disabled = false;
+        this.elements.rollingScreenshotButton.disabled = false;
     }
 
     disableInterface() {
