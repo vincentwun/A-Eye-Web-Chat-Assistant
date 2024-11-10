@@ -66,7 +66,7 @@ Web AI Screen Reader is a cutting-edge Chrome extension that integrates advanced
    - Enable "Developer mode" (top-right corner)
    - Select "Load unpacked"
    - Navigate to extracted extension directory
-   - Verify successful installation
+   - Select 'Web-AI-Screen-Reader-Beta' directory
 
 ### Required Configuration
 
@@ -96,7 +96,8 @@ Note: Restart Chrome after modifying these flags.
    - If needed, click "Check for update"
 
 3. Availability Check
-   - In DevTools Console (F12), execute:
+   - Open DevTools Console (F12)
+   - Execute:
      ```javascript
      (await ai.languageModel.capabilities()).available;
      ```
