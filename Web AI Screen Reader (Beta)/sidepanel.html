@@ -12,7 +12,6 @@
             --color-primary: #007bff;
             --color-border: #ccc;
             --color-bg-light: #f8f9fa;
-            --color-bg-assistant: #f0f8f1;
             --color-text: #333;
             --color-text-secondary: #666;
             --border-radius: 4px;
@@ -120,19 +119,30 @@
             border-radius: 3px;
         }
 
+        #conversation::after {
+            content: '';
+            display: table;
+            clear: both;
+        }
+
         .message {
-            margin: 6px 0;
+            max-width: 80%;
+            margin: 10px 0;
             padding: var(--spacing-sm);
-            border-radius: var(--border-radius);
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
             word-wrap: break-word;
+            position: relative;
+            clear: both;
+            margin-right: 20%;
         }
 
         .user {
-            background: var(--color-bg-light);
+            float: right;
         }
 
         .assistant {
-            background: var(--color-bg-assistant);
+            float: left;
         }
 
         #input-section {
@@ -173,35 +183,24 @@
             opacity: 0.8;
             text-decoration: underline;
         }
-
-        @media (max-width: 300px) {
-            body {
-                padding: 6px;
-            }
-
-            button {
-                padding: var(--spacing-xs) var(--spacing-sm);
-                font-size: 12px;
-            }
-        }
     </style>
 </head>
 
 <body>
-    <div class="header-section">
-        <div class="button-group">
+    <header class="header-section">
+        <nav class="button-group">
             <button id="screenshot-button">Take Screenshot</button>
             <button id="rolling-screenshot-button">Take Rolling Screenshot</button>
             <button id="analyze-content-button">Analyze Content</button>
-        </div>
+        </nav>
         <div id="preview-container">
             <img id="preview-image" alt="Preview">
             <div id="preview-text"></div>
         </div>
         <div class="mode-indicator">Current AI Model: <span id="current-mode">None</span></div>
-    </div>
+    </header>
 
-    <div class="content-wrapper">
+    <main class="content-wrapper">
         <div id="conversation"></div>
         <div id="input-section">
             <input type="text" id="user-input" placeholder="Type your message here...">
@@ -211,16 +210,13 @@
                 <button id="clear-button">Clear</button>
             </div>
         </div>
-    </div>
+    </main>
 
     <footer class="footer">
-        <div>Developed by: <a href="https://github.com/vincentwun" target="_blank">Vincent Wun</a> | HKIIT at IVE(LWL)
-            AI Screen Reader Team | <a href="https://github.com/vincentwun/Web-AI-Screen-Reader-Beta-"
-                target="_blank">Open Source Project</a></div>
-        <div>Powered by: <a href="https://huggingface.co/Xenova/moondream2" target="_blank">Moondream2</a> and Chrome's
-            built-in Gemini Nano</div>
-        <div>© 2024 Web AI Screen Reader | HKIIT at IVE(LWL) | <a href="https://opensource.org/licenses/MIT"
-                target="_blank">MIT License</a></div>
+        <div>Developed by: <a href="https://github.com/vincentwun" target="_blank">Vincent Wun</a> | Student of HKIIT at
+            IVE(LWL) | <a href="https://github.com/vincentwun/Web-AI-Screen-Reader-Beta-" target="_blank">Open Source
+                Project</a></div>
+        <div>© 2024 Web AI Screen Reader | HKIIT at IVE(LWL) | HD in Cloud and Data Centre Administration</div>
     </footer>
     <script type="module" src="sidepanel.js"></script>
 </body>
