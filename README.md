@@ -3,21 +3,23 @@
 <div align="center">
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Chrome](https://img.shields.io/badge/Chrome-v128.0.6545.0+-green.svg)
+![Chrome](https://img.shields.io/badge/Chrome--Dev%2FCanary-v128.0.6545.0%2B-green.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20|%20MacOS%20|%20Linux-lightgrey)
 ![Status](https://img.shields.io/badge/status-beta-orange)
 
 An advanced Chrome extension leveraging Web AI and Gemini Nano for real-time image description with privacy-first approach.
+
+> ⚠️ **Important**: This extension requires Chrome Dev or Canary channel (≥ 128.0.6545.0) to function properly.
 
 </div>
 
 ## Table of Contents
 - [Overview](#overview)
 - [Key Features](#key-features)
-- [System Requirements](#system-requirements)
-- [Installation Guide](#installation-guide)
-- [Technical Architecture](#technical-architecture)
-- [Current Limitations](#current-limitations)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Technical Details](#technical-details)
+- [Limitations](#limitations)
 - [License](#license)
 
 ## Overview
@@ -32,40 +34,23 @@ Web AI Screen Reader is a cutting-edge Chrome extension that integrates advanced
 | Dual AI Models | Leveraging both Gemini Nano and Moondream2 |
 | Cross-Platform | Supports Windows, macOS, and Linux |
 
-## System Requirements
+## Requirements
 
-### Hardware Specifications
+### System Requirements
 
 | Component | Minimum Requirement |
 |-----------|-------------------|
+| Browser | Chrome Dev/Canary (≥ 128.0.6545.0) **REQUIRED** |
+| Operating System | Windows 10+, macOS 13+, or Linux with WebGPU support |
 | CPU | Multi-core processor (Intel/AMD) |
-| GPU | Integrated GPU or discrete GPU |
-| VRAM | 4GB minimum |
-| Storage | 24GB free space |
+| GPU/VRAM | Integrated/Discrete GPU with 4GB+ VRAM |
+| Storage | 24GB free space (22GB Gemini Nano, 2GB Moondream2) |
 
-### Software Specifications
+## Installation
 
-| Component | Requirement |
-|-----------|------------|
-| Windows | Version 10 or later |
-| macOS | Version 13 (Ventura) or later |
-| Linux | Modern distribution with WebGPU support |
-| Chrome | Dev/Canary Channel (≥ 128.0.6545.0) |
-| WebGPU | Enabled configuration required |
-
-### Storage Requirements
-
-| Component | Space Required |
-|-----------|---------------|
-| Gemini Nano | 22GB |
-| Moondream2 | 2GB |
-| Cache & Temp Files | Additional space required |
-
-## Installation Guide
-
-### Download Chrome 
-
-Download [Chrome Dev](https://www.google.com/chrome/dev/) or [Canary](https://www.google.com/chrome/canary/) and confirm that your version is equal or newer than 128.0.6545.0.
+### Browser Setup
+- Download [Chrome Dev](https://www.google.com/chrome/dev/) or [Chrome Canary](https://www.google.com/chrome/canary/)
+- Verify version ≥ 128.0.6545.0 at `chrome://settings/help`
 
 
 ### Extension Setup
