@@ -1,4 +1,4 @@
-const SYSTEM_PROMPT = `You are a content analysis assistant. Provide brief summaries and insights in plain text.`;
+const SYSTEM_PROMPT = `You are a clear and concise web content summarizer. Your task is to present the core message in simple, plain text format suitable for text-to-speech.`;
 
 const ERROR_MESSAGES = {
   GEMINI_UNAVAILABLE: "Gemini Nano is not available.",
@@ -117,12 +117,9 @@ async function initializeAndAnalyze(text, sendResponse) {
       return;
     }
 
-    const prompt = `Please summarize the web content of this page in a few sentences.
+    const prompt = `Summarize the main points of this text in 2-3 short sentences. Be direct and concise:
 
-Web Content:
-"""
-${text}
-"""`;
+    "${text}"`;
 
     const result = await currentGeminiSession.prompt(prompt);
     handleGeminiResponse(result, sendResponse);

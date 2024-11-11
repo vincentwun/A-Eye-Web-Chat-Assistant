@@ -1,224 +1,694 @@
-<!DOCTYPE html>
-<html lang="en">
+import { AutoProcessor, AutoTokenizer, Moondream1ForConditionalGeneration, RawImage } from './lib/transformers300.js';
 
-<head>
-    <meta charset="UTF-8">
-    <title>Web AI Screen Reader (Beta)</title>
-    <style>
-        :root {
-            --spacing-xs: 4px;
-            --spacing-sm: 8px;
-            --spacing-md: 12px;
-            --color-primary: #007bff;
-            --color-border: #ccc;
-            --color-bg-light: #f8f9fa;
-            --color-text: #333;
-            --color-text-secondary: #666;
-            --border-radius: 4px;
+class AIScreenReader {
+    constructor() {
+        this.state = {
+            tokenizer: null,
+            processor: null,
+            model: null,
+            pastKeyValues: null,
+            messages: [],
+            isProcessing: false,
+            isSpeaking: false,
+            isRecording: false,
+            recognition: null,
+            rollingScreenshotImages: [],
+            speechSynthesis: window.speechSynthesis,
+            selectedVoice: null,
+            voices: [],
+            silenceTimer: null,
+            lastSpeechTime: null,
+            isInitialized: false,
+            currentMode: 'none',
+            geminiSession: null
+        };
+
+        this.elements = {
+            screenshotButton: document.getElementById('screenshot-button'),
+            previewContainer: document.getElementById('preview-container'),
+            previewImage: document.getElementById('preview-image'),
+            previewText: document.getElementById('preview-text'),
+            conversation: document.getElementById('conversation'),
+            userInput: document.getElementById('user-input'),
+            sendButton: document.getElementById('send-button'),
+            voiceButton: document.getElementById('voice-button'),
+            rollingScreenshotButton: document.getElementById('rolling-screenshot-button'),
+            clearButton: document.getElementById('clear-button'),
+            analyzeContentButton: document.getElementById('analyze-content-button'),
+            currentMode: document.getElementById('current-mode')
+        };
+
+        this.initializeAll();
+        this.setupMessageListener();
+    }
+
+    setupMessageListener() {
+        chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+            console.log('Message received in sidepanel:', request);
+
+            const messageHandlers = {
+                toggleVoiceRecording: () => this.toggleRecording(),
+                takeScreenshot: () => this.handleScreenshot()
+            };
+
+            if (messageHandlers[request.type]) {
+                messageHandlers[request.type]();
+                return true;
+            }
+        });
+    }
+
+    async initializeAll() {
+        await Promise.all([
+            this.initializeModel(),
+            this.initializeGemini()
+        ]);
+        this.setupEventListeners();
+        this.initializeSpeechFeatures();
+    }
+
+    initializeSpeechFeatures() {
+        this.initializeTTS();
+        this.initializeSpeechRecognition();
+    }
+
+    async initializeGemini() {
+        try {
+            this.state.geminiSession = await chrome.runtime.sendMessage({
+                type: 'initGemini'
+            });
+        } catch (error) {
+            console.error('Failed to initialize Gemini:', error);
+        }
+    }
+
+    initializeSpeechRecognition() {
+        if (!('webkitSpeechRecognition' in window)) return;
+
+        const recognition = new webkitSpeechRecognition();
+        Object.assign(recognition, {
+            continuous: true,
+            interimResults: true,
+            lang: 'en-US'
+        });
+
+        const SILENCE_THRESHOLD = 800;
+
+        recognition.onstart = () => {
+            console.log('Recording started');
+            this.state.lastSpeechTime = Date.now();
+        };
+
+        recognition.onresult = (event) => {
+            let transcript = Array.from(event.results)
+                .map(result => result[0].transcript)
+                .join('');
+
+            this.state.lastSpeechTime = Date.now();
+            if (this.state.silenceTimer) clearTimeout(this.state.silenceTimer);
+
+            this.elements.userInput.value = transcript;
+            this.handleInputChange();
+
+            this.state.silenceTimer = setTimeout(() => {
+                if (Date.now() - this.state.lastSpeechTime >= SILENCE_THRESHOLD) {
+                    if (this.elements.userInput.value.trim()) {
+                        this.handleSendMessage();
+                    }
+                    this.stopRecording();
+                }
+            }, SILENCE_THRESHOLD);
+        };
+
+        recognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            this.stopRecording();
+        };
+
+        recognition.onend = () => {
+            this.handleRecognitionEnd();
+        };
+
+        this.state.recognition = recognition;
+    }
+
+    handleRecognitionEnd() {
+        if (this.state.silenceTimer) {
+            clearTimeout(this.state.silenceTimer);
+            this.state.silenceTimer = null;
+        }
+        if (this.state.isRecording && this.elements.userInput.value.trim()) {
+            this.handleSendMessage();
+        }
+        this.stopRecording();
+    }
+
+    async requestMicrophonePermission() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            stream.getTracks().forEach(track => track.stop());
+            return true;
+        } catch (error) {
+            console.error('Microphone permission error:', error);
+            this.speakText('Please allow microphone access in your browser.');
+            this.appendMessage('system', 'Please allow microphone access in your browser.');
+            return false;
+        }
+    }
+
+    async toggleRecording() {
+        if (this.state.isRecording) {
+            this.stopRecording();
+        } else {
+            await this.startRecording();
+        }
+    }
+
+    async startRecording() {
+        if (!this.state.recognition) return;
+
+        try {
+            const hasPermission = await this.requestMicrophonePermission();
+            if (!hasPermission) return;
+
+            this.state.isRecording = true;
+            this.updateVoiceButtonState(true);
+            this.state.recognition.start();
+        } catch (error) {
+            this.handleError('Failed to start recording', error);
+            this.stopRecording();
+        }
+    }
+
+    stopRecording() {
+        if (!this.state.recognition) return;
+
+        this.state.isRecording = false;
+        this.updateVoiceButtonState(false);
+
+        if (this.state.silenceTimer) {
+            clearTimeout(this.state.silenceTimer);
+            this.state.silenceTimer = null;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        this.state.recognition.stop();
+    }
+
+    updateVoiceButtonState(isRecording) {
+        Object.assign(this.elements.voiceButton.style, {
+            backgroundColor: isRecording ? '#dc3545' : '#007bff'
+        });
+        this.elements.voiceButton.textContent = isRecording ? 'Stop' : 'Voice';
+    }
+
+    initializeTTS() {
+        if (!this.state.speechSynthesis) return;
+
+        this.state.speechSynthesis.addEventListener('voiceschanged', () => {
+            this.state.voices = this.state.speechSynthesis.getVoices();
+            this.state.selectedVoice = this.state.voices.find(voice =>
+                voice.lang.includes('en-US')
+            );
+        });
+    }
+
+    speakText(text) {
+        if (!this.state.speechSynthesis) return;
+
+        if (this.state.isSpeaking) {
+            this.state.speechSynthesis.cancel();
         }
 
-        body {
-            font: 13px/1.5 Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            min-width: 280px;
-            height: 100vh;
-            padding: var(--spacing-sm);
-            color: var(--color-text);
-            overflow: hidden;
+        const utterance = new SpeechSynthesisUtterance(text);
+        Object.assign(utterance, {
+            voice: this.state.selectedVoice,
+            lang: 'en-UK',
+            rate: 1.5,
+            pitch: 1.2,
+            volume: 1.0
+        });
+
+        this.state.isSpeaking = true;
+        utterance.onend = () => this.state.isSpeaking = false;
+        this.state.speechSynthesis.speak(utterance);
+    }
+
+    setupEventListeners() {
+        const eventHandlers = {
+            'screenshotButton': () => this.handleScreenshot(),
+            'rollingScreenshotButton': () => this.handleRollingScreenshot(),
+            'sendButton': () => this.handleSendMessage(),
+            'voiceButton': () => this.toggleRecording(),
+            'clearButton': () => this.handleClear(),
+            'analyzeContentButton': () => this.handleContentAnalysis()
+        };
+
+        Object.entries(eventHandlers).forEach(([elementName, handler]) => {
+            this.elements[elementName].addEventListener('click', handler);
+        });
+
+        this.elements.userInput.addEventListener('input', () => this.handleInputChange());
+        this.elements.userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                this.handleSendMessage();
+            }
+        });
+    }
+
+    showPreview(type, content) {
+        this.elements.previewContainer.style.display = 'block';
+        this.elements.previewImage.style.display = type === 'image' ? 'block' : 'none';
+        this.elements.previewText.style.display = type === 'text' ? 'block' : 'none';
+
+        if (type === 'image') {
+            this.elements.previewImage.src = content;
+        } else {
+            this.elements.previewText.innerHTML = content;
+        }
+    }
+
+    hidePreview() {
+        Object.assign(this.elements.previewContainer.style, {
+            display: 'none'
+        });
+        this.elements.previewImage.style.display = 'none';
+        this.elements.previewText.style.display = 'none';
+    }
+
+    // Screenshot related
+    async handleScreenshot() {
+        if (this.state.isProcessing) return;
+
+        try {
+            this.elements.screenshotButton.disabled = true;
+            this.speakText("Analyzing Screenshot");
+            this.appendMessage('system', 'Analyzing Screenshot.');
+            this.updateMode('moondream');
+
+            const screenshot = await chrome.tabs.captureVisibleTab();
+            this.showPreview('image', screenshot);
+
+            await this.handleImageAnalysis(screenshot);
+        } catch (error) {
+            this.handleError('Error taking screenshot', error);
+        } finally {
+            this.elements.screenshotButton.disabled = false;
+        }
+    }
+
+    async handleRollingScreenshot() {
+        if (this.state.isProcessing) return;
+
+        try {
+            this.elements.rollingScreenshotButton.disabled = true;
+            this.state.rollingScreenshotImages = [];
+            this.speakText("Analyzing scrolling screenshot.");
+            this.appendMessage('system', 'Analyzing scrolling screenshot.');
+            this.updateMode('moondream');
+
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (!tab) throw new Error('No active tab found');
+
+            const pageInfo = await this.getPageInfo();
+            if (!this.validatePageInfo(pageInfo)) {
+                throw new Error('Invalid page dimensions');
+            }
+
+            await this.captureScreenshots(tab, pageInfo);
+            const mergedImage = await this.mergeScreenshots(this.state.rollingScreenshotImages);
+            this.showPreview('image', mergedImage);
+
+            await this.handleImageAnalysis(mergedImage);
+        } catch (error) {
+            this.handleError('Rolling screenshot failed', error);
+        } finally {
+            this.elements.rollingScreenshotButton.disabled = false;
+        }
+    }
+
+    validatePageInfo(pageInfo) {
+        return pageInfo && pageInfo.scrollHeight && pageInfo.clientHeight;
+    }
+
+    updateMode(mode) {
+        this.state.currentMode = mode;
+        this.elements.currentMode.textContent = mode === 'moondream' ? 'Moondream2' : 'Gemini Nano';
+    }
+
+    async getPageInfo() {
+        return new Promise((resolve, reject) => {
+            chrome.runtime.sendMessage({
+                type: 'startRollingScreenshot'
+            }, response => {
+                if (!response) {
+                    reject(new Error('Failed to get page dimensions'));
+                    return;
+                }
+                resolve(response);
+            });
+        });
+    }
+
+    async captureScreenshots(tab, pageInfo) {
+        const { scrollHeight, clientHeight } = pageInfo;
+        let currentScroll = 0;
+
+        await this.executeScroll(tab, 0);
+
+        while (currentScroll < scrollHeight) {
+            const screenshot = await chrome.tabs.captureVisibleTab(null, { format: 'png' });
+            this.state.rollingScreenshotImages.push(screenshot);
+
+            currentScroll += clientHeight;
+            await this.executeScroll(tab, currentScroll);
+            await new Promise(resolve => setTimeout(resolve, 150));
         }
 
-        button {
-            padding: 6px var(--spacing-md);
-            color: #fff;
-            background: var(--color-primary);
-            border: none;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            white-space: nowrap;
+        await this.executeScroll(tab, 0);
+    }
+
+    async executeScroll(tab, scrollPosition) {
+        await chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            function: (scroll) => window.scrollTo({ top: scroll, behavior: 'instant' }),
+            args: [scrollPosition]
+        });
+    }
+
+    async mergeScreenshots(screenshots) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        const firstImage = await this.loadImage(screenshots[0]);
+        canvas.width = firstImage.width;
+        canvas.height = firstImage.height * screenshots.length;
+
+        for (let i = 0; i < screenshots.length; i++) {
+            const image = await this.loadImage(screenshots[i]);
+            ctx.drawImage(image, 0, i * firstImage.height);
         }
 
-        button:hover {
-            opacity: 0.9;
+        return canvas.toDataURL('image/png');
+    }
+
+    loadImage(src) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = src;
+        });
+    }
+
+    // Model related
+    async initializeModel() {
+        try {
+            const modelId = 'Xenova/moondream2';
+            const modelConfig = {
+                dtype: {
+                    embed_tokens: 'fp16',
+                    vision_encoder: 'fp16',
+                    decoder_model_merged: 'q4',
+                },
+                device: 'webgpu',
+            };
+
+            [
+                this.state.tokenizer,
+                this.state.processor,
+                this.state.model
+            ] = await Promise.all([
+                AutoTokenizer.from_pretrained(modelId),
+                AutoProcessor.from_pretrained(modelId),
+                Moondream1ForConditionalGeneration.from_pretrained(modelId, modelConfig)
+            ]);
+
+            this.state.isInitialized = true;
+            this.elements.screenshotButton.disabled = false;
+        } catch (error) {
+            this.handleError('Error initializing model', error);
+        }
+    }
+
+    async handleImageAnalysis(imageUrl) {
+        if (!this.state.isInitialized || this.state.isProcessing) {
+            this.handleError('Model not ready', new Error('Please wait for model initialization'));
+            return;
         }
 
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        this.state.isProcessing = true;
+
+        try {
+            this.state.messages = [];
+            const defaultPrompt = 'Describe the picture in about 50 words';
+
+            const response = await this.generateImageResponse(imageUrl, defaultPrompt);
+            this.handleResponse(response);
+        } catch (error) {
+            this.handleError('Error analyzing screenshot', error);
+        } finally {
+            this.state.isProcessing = false;
         }
+    }
 
-        .header-section {
-            position: sticky;
-            top: 0;
-            background: #fff;
-            z-index: 2;
-            padding-bottom: var(--spacing-sm);
+    async generateImageResponse(imageUrl, prompt) {
+        try {
+            const text = `<image>\n\nQuestion: ${prompt}\n\nAnswer:`;
+            const textInputs = await this.state.tokenizer(text);
+
+            const image = await RawImage.fromURL(imageUrl);
+            const visionInputs = await this.state.processor(image);
+
+            const output = await this.state.model.generate({
+                ...textInputs,
+                ...visionInputs,
+                do_sample: false,
+                max_new_tokens: 64,
+            });
+
+            const decoded = await this.state.tokenizer.batch_decode(output, {
+                skip_special_tokens: true
+            });
+
+            return this.cleanResponse(decoded[0]);
+        } catch (error) {
+            throw new Error(`Failed to generate image response: ${error.message}`);
         }
+    }
 
-        .button-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: var(--spacing-sm);
-            margin-bottom: var(--spacing-sm);
+    cleanResponse(response) {
+        return response.split('Answer:').pop()?.trim()
+            .replace(/Question:.*Answer:/g, '').trim() || response.trim();
+    }
+
+    async handleSendMessage() {
+        const input = this.elements.userInput.value.trim();
+        if (!input || this.state.isProcessing) return;
+
+        this.state.isProcessing = true;
+        this.disableInterface();
+
+        try {
+            this.appendMessage('user', input);
+
+            if (this.state.currentMode === 'moondream') {
+                await this.generateMoondreamResponse(input);
+            } else if (this.state.currentMode === 'gemini') {
+                const response = await chrome.runtime.sendMessage({
+                    type: 'chat',
+                    text: input
+                });
+                this.handleResponse(response.content);
+            } else {
+                throw new Error('Please select a mode first');
+            }
+
+            this.elements.userInput.value = '';
+        } catch (error) {
+            this.handleError('Error sending message', error);
+        } finally {
+            this.state.isProcessing = false;
+            this.enableInterface();
         }
+    }
 
-        .content-wrapper {
-            display: flex;
-            flex-direction: column;
-            height: calc(100vh - 180px);
-            overflow: hidden;
+    async generateMoondreamResponse(input) {
+        const response = await this.generateImageResponse(this.elements.previewImage.src, input);
+        this.handleResponse(response);
+    }
+
+    // Content analysis related
+    async handleContentAnalysis() {
+        if (this.state.isProcessing) return;
+
+        try {
+            this.state.currentMode = 'gemini';
+            this.elements.currentMode.textContent = 'Gemini Nano';
+            this.state.isProcessing = true;
+            this.elements.analyzeContentButton.disabled = true;
+            this.speakText("Analyzing webpage content.");
+            this.appendMessage('assistant', 'Analyzing webpage content.');
+
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            const content = await this.extractPageContent(tab);
+
+            this.showPreview('text', `${this.escapeHTML(content)}`);
+
+            const response = await chrome.runtime.sendMessage({
+                type: 'analyze',
+                text: content
+            });
+
+            if (!response || response.error) {
+                throw new Error(response?.error || 'Analysis failed');
+            }
+
+            this.handleResponse(response.content);
+
+        } catch (error) {
+            this.handleError('Content analysis failed', error);
+        } finally {
+            this.state.isProcessing = false;
+            this.elements.analyzeContentButton.disabled = false;
         }
+    }
 
-        #preview-container {
-            display: none;
-            margin: var(--spacing-sm) 0;
+    async extractPageContent(tab) {
+        try {
+            await chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                files: ['./lib/readability.js']
+            });
+
+            const [{ result }] = await chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                function: () => {
+                    try {
+                        const documentClone = document.cloneNode(true);
+                        const reader = new Readability(documentClone);
+                        const article = reader.parse();
+
+                        return {
+                            title: article.title,
+                            content: article.textContent,
+                            byline: article.byline,
+                            success: true
+                        };
+                    } catch (error) {
+                        return {
+                            success: false,
+                            error: error.message
+                        };
+                    }
+                }
+            });
+
+            const cleanContent = (content) => {
+                return content
+                    .replace(/\s+/g, ' ')
+                    .replace(/\n\s*\n/g, '\n')
+                    .trim();
+            };
+
+            const formatContent = (result) => {
+                const parts = [
+                    `Title: ${result.title || 'No Title'}`,
+                    `Author: ${result.byline || 'Unknown'}`,
+                    `Content: ${cleanContent(result.content || '')}`
+                ];
+                return parts.join('\n\n');
+            };
+
+            if (!result.success) {
+                throw new Error(`Content extraction failed: ${result.error}`);
+            }
+
+            return this.formatExtractedContent(result);
+        } catch (error) {
+            console.error('Content extraction error:', error);
+            throw new Error('Failed to extract page content');
         }
+    }
 
-        #preview-image,
-        #preview-text {
-            display: none;
-            max-height: 200px;
-            border-radius: var(--border-radius);
+    formatExtractedContent(result) {
+        return [
+            result.title || 'No Title',
+            result.byline || '',
+            '',
+            result.content || ''
+        ].filter(Boolean).join('\n\n');
+    }
+
+    // UI related
+    handleInputChange() {
+        this.elements.sendButton.disabled = !this.elements.userInput.value.trim();
+    }
+
+    appendMessage(role, content) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', role);
+        messageDiv.innerHTML = `<strong>${role === 'user' ? 'You' : 'AI'}:</strong> ${this.escapeHTML(content)}`;
+        this.elements.conversation.appendChild(messageDiv);
+        this.elements.conversation.scrollTop = this.elements.conversation.scrollHeight;
+    }
+
+    escapeHTML(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    handleResponse(response) {
+        this.appendMessage('assistant', response);
+        this.state.messages.push({ role: 'assistant', content: response });
+        this.speakText(response);
+        this.enableInterface();
+    }
+
+    handleError(message, error) {
+        console.error(message, error);
+        this.appendMessage('system', `${message}: ${error.message}`);
+        this.resetState();
+    }
+
+    resetState() {
+        this.state.isProcessing = false;
+        this.state.rollingScreenshotImages = [];
+        this.enableInterface();
+    }
+
+    handleClear() {
+        this.elements.conversation.innerHTML = '';
+        this.elements.userInput.value = '';
+        this.hidePreview();
+
+        Object.assign(this.state, {
+            messages: [],
+            rollingScreenshotImages: [],
+            pastKeyValues: null,
+            currentMode: 'none'
+        });
+
+        this.elements.currentMode.textContent = 'None';
+
+        if (this.state.speechSynthesis && this.state.isSpeaking) {
+            this.state.speechSynthesis.cancel();
+            this.state.isSpeaking = false;
         }
+    }
 
-        #preview-image {
-            max-width: 100%;
-        }
+    enableInterface() {
+        this.elements.userInput.disabled = false;
+        this.elements.sendButton.disabled = false;
+        this.elements.screenshotButton.disabled = false;
+        this.elements.analyzeContentButton.disabled = false;
+        this.elements.rollingScreenshotButton.disabled = false;
+    }
 
-        #preview-text {
-            padding: var(--spacing-sm);
-            border: 1px solid var(--color-border);
-            overflow-y: auto;
-            font-size: 12px;
-            background-color: var(--color-bg-light);
-        }
+    disableInterface() {
+        this.elements.sendButton.disabled = true;
+    }
+}
 
-        #conversation {
-            flex: 1;
-            overflow-y: auto;
-            padding: var(--spacing-sm);
-            border: 1px solid var(--color-border);
-            border-radius: var(--border-radius);
-            margin-bottom: var(--spacing-sm);
-            scrollbar-width: thin;
-            scrollbar-color: #888 transparent;
-        }
-
-        #conversation::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        #conversation::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 3px;
-        }
-
-        #conversation::after {
-            content: '';
-            display: table;
-            clear: both;
-        }
-
-        .message {
-            max-width: 80%;
-            margin: 10px 0;
-            padding: var(--spacing-sm);
-            border: 1px solid #e0e0e0;
-            border-radius: 12px;
-            word-wrap: break-word;
-            position: relative;
-            clear: both;
-            margin-right: 20%;
-        }
-
-        .user {
-            float: right;
-        }
-
-        .assistant {
-            float: left;
-        }
-
-        #input-section {
-            display: flex;
-            flex-direction: column;
-            gap: var(--spacing-sm);
-            margin-bottom: var(--spacing-sm);
-        }
-
-        #user-input {
-            width: 100%;
-            padding: 6px;
-            border: 1px solid var(--color-border);
-            border-radius: var(--border-radius);
-        }
-
-        .bottom-buttons {
-            display: flex;
-            gap: var(--spacing-sm);
-            justify-content: flex-end;
-        }
-
-        .footer {
-            padding: var(--spacing-sm);
-            border-top: 1px solid #eee;
-            color: var(--color-text-secondary);
-            text-align: center;
-            margin-top: auto;
-            font-size: 11px;
-        }
-
-        .footer a {
-            color: var(--color-primary);
-            text-decoration: none;
-        }
-
-        .footer a:hover {
-            opacity: 0.8;
-            text-decoration: underline;
-        }
-    </style>
-</head>
-
-<body>
-    <header class="header-section">
-        <nav class="button-group">
-            <button id="screenshot-button">Take Screenshot</button>
-            <button id="rolling-screenshot-button">Take Rolling Screenshot</button>
-            <button id="analyze-content-button">Analyze Content</button>
-        </nav>
-        <div id="preview-container">
-            <img id="preview-image" alt="Preview">
-            <div id="preview-text"></div>
-        </div>
-        <div class="mode-indicator">Current AI Model: <span id="current-mode">None</span></div>
-    </header>
-
-    <main class="content-wrapper">
-        <div id="conversation"></div>
-        <div id="input-section">
-            <input type="text" id="user-input" placeholder="Type your message here...">
-            <div class="bottom-buttons">
-                <button id="send-button">Send</button>
-                <button id="voice-button">Voice</button>
-                <button id="clear-button">Clear</button>
-            </div>
-        </div>
-    </main>
-
-    <footer class="footer">
-        <div>Developed by: <a href="https://github.com/vincentwun" target="_blank">Vincent Wun</a> | Student of HKIIT at
-            IVE(LWL) | <a href="https://github.com/vincentwun/Web-AI-Screen-Reader-Beta-" target="_blank">Open Source
-                Project</a></div>
-        <div>© 2024 Web AI Screen Reader | HKIIT at IVE(LWL) | HD in Cloud and Data Centre Administration</div>
-    </footer>
-    <script type="module" src="sidepanel.js"></script>
-</body>
-
-</html>
+const aiScreenReader = new AIScreenReader();
