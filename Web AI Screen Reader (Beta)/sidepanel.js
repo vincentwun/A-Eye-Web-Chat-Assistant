@@ -482,45 +482,6 @@ class AIScreenReader {
             .replace(/Question:.*Answer:/g, '').trim() || response.trim();
     }
 
-    async handleContentAnalysis() {
-        if (this.state.isProcessing) return;
-
-        try {
-            this.state.currentMode = 'gemini';
-            this.elements.currentMode.textContent = 'Gemini Nano';
-            this.state.isProcessing = true;
-            this.elements.analyzeContentButton.disabled = true;
-            this.speakText("Analyzing webpage content.");
-            this.appendMessage('assistant', 'Analyzing webpage content.');
-
-            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            const content = await this.extractPageContent(tab);
-
-            this.showPreview('text', `
-                <strong>Extracted Content Preview:</strong><br>
-                ${this.escapeHTML(content.slice(0, 500))}...
-            `);
-
-            const response = await chrome.runtime.sendMessage({
-                type: 'analyze',
-                text: content
-            });
-
-            if (!response || response.error) {
-                throw new Error(response?.error || 'Analysis failed');
-            }
-
-            this.handleResponse(response.content);
-
-        } catch (error) {
-            this.handleError('Content analysis failed', error);
-        } finally {
-            this.state.isProcessing = false;
-            this.elements.analyzeContentButton.disabled = false;
-        }
-    }
-
-    // Message handling
     async handleSendMessage() {
         const input = this.elements.userInput.value.trim();
         if (!input || this.state.isProcessing) return;
@@ -557,6 +518,42 @@ class AIScreenReader {
         this.handleResponse(response);
     }
 
+    // Content analysis related
+    async handleContentAnalysis() {
+        if (this.state.isProcessing) return;
+
+        try {
+            this.state.currentMode = 'gemini';
+            this.elements.currentMode.textContent = 'Gemini Nano';
+            this.state.isProcessing = true;
+            this.elements.analyzeContentButton.disabled = true;
+            this.speakText("Analyzing webpage content.");
+            this.appendMessage('assistant', 'Analyzing webpage content.');
+
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            const content = await this.extractPageContent(tab);
+
+            this.showPreview('text', `${this.escapeHTML(content)}`);
+
+            const response = await chrome.runtime.sendMessage({
+                type: 'analyze',
+                text: content
+            });
+
+            if (!response || response.error) {
+                throw new Error(response?.error || 'Analysis failed');
+            }
+
+            this.handleResponse(response.content);
+
+        } catch (error) {
+            this.handleError('Content analysis failed', error);
+        } finally {
+            this.state.isProcessing = false;
+            this.elements.analyzeContentButton.disabled = false;
+        }
+    }
+
     async extractPageContent(tab) {
         try {
             await chrome.scripting.executeScript({
@@ -571,10 +568,10 @@ class AIScreenReader {
                         const documentClone = document.cloneNode(true);
                         const reader = new Readability(documentClone);
                         const article = reader.parse();
+
                         return {
                             title: article.title,
                             content: article.textContent,
-                            excerpt: article.excerpt,
                             byline: article.byline,
                             success: true
                         };
@@ -586,6 +583,22 @@ class AIScreenReader {
                     }
                 }
             });
+
+            const cleanContent = (content) => {
+                return content
+                    .replace(/\s+/g, ' ')
+                    .replace(/\n\s*\n/g, '\n')
+                    .trim();
+            };
+
+            const formatContent = (result) => {
+                const parts = [
+                    `Title: ${result.title || 'No Title'}`,
+                    `Author: ${result.byline || 'Unknown'}`,
+                    `Content: ${cleanContent(result.content || '')}`
+                ];
+                return parts.join('\n\n');
+            };
 
             if (!result.success) {
                 throw new Error(`Content extraction failed: ${result.error}`);
@@ -599,14 +612,15 @@ class AIScreenReader {
     }
 
     formatExtractedContent(result) {
-        return `
-            Title: ${result.title}
-            ${result.byline ? `Author: ${result.byline}\n` : ''}
-            ${result.excerpt ? `Summary: ${result.excerpt}\n` : ''}
-            Content: ${result.content}
-        `.trim();
+        return [
+            result.title || 'No Title',
+            result.byline || '',
+            '',
+            result.content || ''
+        ].filter(Boolean).join('\n\n');
     }
 
+    // UI related
     handleInputChange() {
         this.elements.sendButton.disabled = !this.elements.userInput.value.trim();
     }
