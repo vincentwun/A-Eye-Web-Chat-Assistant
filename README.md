@@ -35,6 +35,21 @@ A-Eye Visual Assistant is a specialized Chrome extension designed to enhance web
 | Cross-Platform | Supports Windows, macOS, and Linux |
 
 ## Technical Architecture
+
+This Chrome extension is built on a modular architecture featuring advanced technologies to deliver a professional and accessible experience. It integrates:
+
+### AI Model Integration
+- **Moondream2**: Accelerates image recognition and description with WebGPU, optimizing performance through FP16 and Q4 quantization.
+- **Gemini Nano**: Enables lightweight and secure text analysis and summarization with on-device AI.
+- **Transformers.js**: Provides seamless browser-based AI inference.
+
+### Voice Interaction System
+- Combines Web Speech API technologies for real-time voice recognition and dynamic text-to-speech synthesis, offering multi-language support and customization.
+
+### Key Technical Features
+- **Performance Optimization**: Utilizes WebGPU for efficient AI acceleration and asynchronous operations for a smooth user experience.
+- **Accessibility-Driven Design**: Integrates intelligent voice control, audio descriptions, and web content summarization for enhanced usability.
+
 ![architecture](/images/architecture.png)
 
 
