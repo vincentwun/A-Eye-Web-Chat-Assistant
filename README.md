@@ -34,6 +34,10 @@ A-Eye Visual Assistant is a specialized Chrome extension designed to enhance web
 | Dual AI Models | Leveraging both Gemini Nano and Moondream2 |
 | Cross-Platform | Supports Windows, macOS, and Linux |
 
+## Technical Architecture
+![Architecture](images/A-Eye Visual Assistant_Architecture.png)
+
+
 ## Requirements
 
 ### System Requirements
@@ -104,15 +108,6 @@ Note: Restart Chrome after modifying these flags.
      ```
    - Confirm the return value is `"readily"`.
 
-
-## Technical Architecture
-
-### Component Structure
-[Update Soon]
-
-### Technology Stack
-[Update Soon]
-
 ## Current Limitations
 
 | Limitation | Description |
@@ -120,7 +115,6 @@ Note: Restart Chrome after modifying these flags.
 | Language Support | English only |
 | Chrome Version | Requires Dev/Canary Channel |
 | Hardware Requirements | Significant storage space needed |
-| Model Updates | Regular downloads required |
 
 ## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for full details.
