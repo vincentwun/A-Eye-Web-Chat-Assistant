@@ -7,19 +7,29 @@ class AIScreenReader {
             processor: null,
             model: null,
             pastKeyValues: null,
-            messages: [],
-            isProcessing: false,
-            isSpeaking: false,
-            isRecording: false,
-            recognition: null,
-            rollingScreenshotImages: [],
-            speechSynthesis: window.speechSynthesis,
-            selectedVoice: null,
-            voices: [],
-            silenceTimer: null,
-            lastSpeechTime: null,
             isInitialized: false,
+            isProcessing: false,
             currentMode: 'none',
+            messages: [],
+            rollingScreenshotImages: [],
+            voice: {
+                input: {
+                    active: false,
+                    recognition: null,
+                    finalTranscript: '',
+                    silenceTimeout: null
+                },
+                control: {
+                    active: false,
+                    recognition: null
+                },
+                synthesis: {
+                    instance: window.speechSynthesis,
+                    selectedVoice: null,
+                    voices: [],
+                    isSpeaking: false
+                }
+            },
             geminiSession: null
         };
 
@@ -38,8 +48,338 @@ class AIScreenReader {
             currentMode: document.getElementById('current-mode')
         };
 
+        this.voiceCommands = {
+            'take screenshot': () => this.handleScreenshot(),
+            'take rolling screenshot': () => this.handleRollingScreenshot(),
+            'analyze content': () => this.handleContentAnalysis(),
+            'analyze page': () => this.handleContentAnalysis()
+        };
+
         this.initializeAll();
         this.setupMessageListener();
+    }
+
+    initializeVoiceControl() {
+        if (!('webkitSpeechRecognition' in window)) {
+            console.error('Speech recognition not supported');
+            return;
+        }
+
+        const recognition = new webkitSpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = () => {
+            console.log('Voice control started');
+            this.state.voice.control.active = true;
+            this.speakText('Voice control activated.');
+            this.appendMessage('system', 'Voice control activated.');
+        };
+
+        recognition.onresult = async (event) => {
+            const command = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
+            this.appendMessage('system', `Detected command: "${command}"`);
+            console.log('Voice command received:', command);
+            await this.handleVoiceCommand(command);
+
+            setTimeout(() => {
+                this.stopVoiceControl();
+            }, 800);
+        };
+
+        recognition.onerror = (event) => {
+            console.error('Voice control error:', event.error);
+            this.stopVoiceControl();
+        };
+
+        recognition.onend = () => {
+            if (this.state.voice.control.active) {
+                console.log('Voice control ended');
+                this.state.voice.control.active = false;
+            }
+        };
+
+        this.state.voice.control.recognition = recognition;
+    }
+
+    async toggleVoiceControl() {
+        if (this.state.voice.input.active) {
+            this.stopVoiceInput();
+        }
+
+        if (!this.state.voice.control.recognition) {
+            this.initializeVoiceControl();
+        }
+
+        if (this.state.voice.control.active) {
+            this.stopVoiceControl();
+        } else {
+            await this.startVoiceControl();
+        }
+    }
+
+    async startVoiceControl() {
+        try {
+            const hasPermission = await this.requestMicrophonePermission();
+            if (!hasPermission) return;
+
+            await this.state.voice.control.recognition.start();
+            this.state.voice.control.active = true;
+        } catch (error) {
+            console.error('Failed to start voice control:', error);
+            this.appendMessage('system', 'Failed to start voice control');
+            this.stopVoiceControl();
+        }
+    }
+
+    stopVoiceControl() {
+        if (!this.state.voice.control.recognition) return;
+
+        try {
+            this.state.voice.control.recognition.stop();
+            this.state.voice.control.active = false;
+        } catch (error) {
+            console.error('Error stopping voice control:', error);
+        }
+    }
+
+    async handleVoiceCommand(command) {
+        console.log('Processing command:', command);
+
+        const normalizeCommand = (cmd) => {
+            return cmd
+                .toLowerCase()
+                .replace(/analyse/g, 'analyze')
+                .replace(/screenshot/g, 'screenshot')
+                .trim();
+        };
+
+        const matchCommand = (input, target) => {
+            const normalizedInput = normalizeCommand(input);
+            return normalizedInput.includes(target) ||
+                normalizedInput.replace(/\s+/g, '') === target.replace(/\s+/g, '');
+        };
+
+        const normalizedCommand = normalizeCommand(command);
+
+        const searchMatch = normalizedCommand.match(/^search\s+(.+)$/i);
+        if (searchMatch) {
+            const searchQuery = searchMatch[1].trim();
+            await this.performGoogleSearch(searchQuery);
+            return;
+        }
+
+        const websiteMatch = normalizedCommand.match(/go to (.*?)(?:\.com|$)/i);
+        if (websiteMatch) {
+            const website = websiteMatch[1].trim();
+            await this.navigateToWebsite(website);
+            return;
+        }
+        const commandMap = {
+            'screenshot': {
+                variants: ['take screenshot', 'take a screenshot', 'capture screen'],
+                handler: async () => {
+                    this.speakText('Taking screenshot');
+                    await this.handleScreenshot();
+                }
+            },
+            'rolling': {
+                variants: ['take rolling screenshot', 'take a rolling screenshot', 'rolling screenshot'],
+                handler: async () => {
+                    this.speakText('Taking rolling screenshot');
+                    await this.handleRollingScreenshot();
+                }
+            },
+            'analyze': {
+                variants: ['analyze content', 'analyse content', 'analyze page', 'analyse page',
+                    'analyze', 'analyse', 'content analysis'],
+                handler: async () => {
+                    this.speakText('Analyzing content');
+                    await this.handleContentAnalysis();
+                }
+            }
+        };
+
+        for (const [key, { variants, handler }] of Object.entries(commandMap)) {
+            if (variants.some(variant => matchCommand(normalizedCommand, variant))) {
+                await handler();
+                return;
+            }
+        }
+
+        this.appendMessage('system', `Command not recognized: "${command}"`);
+        this.speakText("Command not recognized. Please try again.");
+    }
+
+    initializeVoiceInput() {
+        if (!('webkitSpeechRecognition' in window)) {
+            console.error('Speech recognition not supported');
+            return;
+        }
+
+        const recognition = new webkitSpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = () => {
+            console.log('Voice input started');
+            this.state.voice.input.active = true;
+            this.updateVoiceInputButtonState(true);
+            this.elements.userInput.placeholder = 'Listening...';
+            this.state.voice.input.finalTranscript = '';
+        };
+
+        recognition.onresult = (event) => {
+            let interimTranscript = '';
+
+            if (this.state.voice.input.silenceTimeout) {
+                clearTimeout(this.state.voice.input.silenceTimeout);
+            }
+
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    this.state.voice.input.finalTranscript = transcript;
+                } else {
+                    interimTranscript = transcript;
+                }
+            }
+
+            this.elements.userInput.value = this.state.voice.input.finalTranscript || interimTranscript;
+
+            this.state.voice.input.silenceTimeout = setTimeout(() => {
+                if (this.state.voice.input.finalTranscript.trim()) {
+                    this.handleSendMessage();
+                    this.stopVoiceInput();
+                }
+            }, 600);
+        };
+
+        recognition.onerror = (event) => {
+            console.error('Voice input error:', event.error);
+            this.stopVoiceInput();
+        };
+
+        recognition.onend = () => {
+            console.log('Voice input ended');
+            this.stopVoiceInput();
+        };
+
+        this.state.voice.input.recognition = recognition;
+    }
+
+    async performGoogleSearch(query) {
+        try {
+            const encodedQuery = encodeURIComponent(query);
+            const searchUrl = `https://www.google.com/search?q=${encodedQuery}`;
+            await chrome.tabs.create({ url: searchUrl });
+            this.speakText(`Searching for ${query}`);
+            this.appendMessage('system', `Searching Google for: "${query}"`);
+        } catch (error) {
+            console.error('Search error:', error);
+            this.appendMessage('system', 'Failed to perform search');
+        }
+    }
+
+    async toggleVoiceInput() {
+        if (this.state.voice.control.active) {
+            this.stopVoiceControl();
+        }
+
+        if (!this.state.voice.input.recognition) {
+            this.initializeVoiceInput();
+        }
+
+        if (this.state.voice.input.active) {
+            this.stopVoiceInput();
+        } else {
+            await this.startVoiceInput();
+        }
+    }
+
+    async startVoiceInput() {
+        try {
+            const hasPermission = await this.requestMicrophonePermission();
+            if (!hasPermission) return;
+
+            await this.state.voice.input.recognition.start();
+            this.state.voice.input.active = true;
+            this.updateVoiceInputButtonState(true);
+            this.appendMessage('system', 'Voice input activated');
+            this.speakText('Voice input activated');
+        } catch (error) {
+            console.error('Failed to start voice input:', error);
+            this.stopVoiceInput();
+        }
+    }
+
+    stopVoiceInput() {
+        if (!this.state.voice.input.recognition) return;
+
+        try {
+            this.state.voice.input.recognition.stop();
+            this.state.voice.input.active = false;
+            this.updateVoiceInputButtonState(false);
+            this.elements.userInput.placeholder = 'Type your message here...';
+        } catch (error) {
+            console.error('Error stopping voice input:', error);
+        }
+    }
+
+    navigateToWebsite(website) {
+        const url = `https://www.${website.toLowerCase()}.com`;
+        chrome.tabs.create({ url });
+        this.speakText(`Opening ${website}`);
+    }
+
+    initializeSpeechSynthesis() {
+        if (!this.state.voice.synthesis.instance) return;
+
+        this.state.voice.synthesis.instance.addEventListener('voiceschanged', () => {
+            this.state.voice.synthesis.voices = this.state.voice.synthesis.instance.getVoices();
+            this.state.voice.synthesis.selectedVoice = this.state.voice.synthesis.voices.find(
+                voice => voice.lang.includes('en-US')
+            );
+        });
+    }
+
+    speakText(text) {
+        if (!this.state.voice.synthesis.instance) return;
+
+        if (this.state.voice.synthesis.isSpeaking) {
+            this.state.voice.synthesis.instance.cancel();
+        }
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.voice = this.state.voice.synthesis.selectedVoice;
+        utterance.lang = 'en-US';
+        utterance.rate = 1.5;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
+
+        this.state.voice.synthesis.isSpeaking = true;
+        utterance.onend = () => this.state.voice.synthesis.isSpeaking = false;
+
+        this.state.voice.synthesis.instance.speak(utterance);
+    }
+
+    async requestMicrophonePermission() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            stream.getTracks().forEach(track => track.stop());
+            return true;
+        } catch (error) {
+            console.error('Microphone permission error:', error);
+            this.appendMessage('system', 'Please allow microphone access');
+            return false;
+        }
+    }
+
+    updateVoiceInputButtonState(isActive) {
+        this.elements.voiceButton.style.backgroundColor = isActive ? '#dc3545' : '#007bff';
+        this.elements.voiceButton.textContent = isActive ? 'Stop' : 'Voice';
     }
 
     setupMessageListener() {
@@ -47,8 +387,8 @@ class AIScreenReader {
             console.log('Message received in sidepanel:', request);
 
             const messageHandlers = {
-                toggleVoiceRecording: () => this.toggleRecording(),
-                takeScreenshot: () => this.handleScreenshot()
+                toggleVoiceInput: () => this.toggleVoiceInput(),
+                toggleVoiceControl: () => this.toggleVoiceControl()
             };
 
             if (messageHandlers[request.type]) {
@@ -64,12 +404,9 @@ class AIScreenReader {
             this.initializeGemini()
         ]);
         this.setupEventListeners();
-        this.initializeSpeechFeatures();
-    }
-
-    initializeSpeechFeatures() {
-        this.initializeTTS();
-        this.initializeSpeechRecognition();
+        this.initializeVoiceControl();
+        this.initializeVoiceInput();
+        this.initializeSpeechSynthesis();
     }
 
     async initializeGemini() {
@@ -82,169 +419,18 @@ class AIScreenReader {
         }
     }
 
-    initializeSpeechRecognition() {
-        if (!('webkitSpeechRecognition' in window)) return;
-
-        const recognition = new webkitSpeechRecognition();
-        Object.assign(recognition, {
-            continuous: true,
-            interimResults: true,
-            lang: 'en-US'
-        });
-
-        const SILENCE_THRESHOLD = 800;
-
-        recognition.onstart = () => {
-            console.log('Recording started');
-            this.state.lastSpeechTime = Date.now();
-        };
-
-        recognition.onresult = (event) => {
-            let transcript = Array.from(event.results)
-                .map(result => result[0].transcript)
-                .join('');
-
-            this.state.lastSpeechTime = Date.now();
-            if (this.state.silenceTimer) clearTimeout(this.state.silenceTimer);
-
-            this.elements.userInput.value = transcript;
-            this.handleInputChange();
-
-            this.state.silenceTimer = setTimeout(() => {
-                if (Date.now() - this.state.lastSpeechTime >= SILENCE_THRESHOLD) {
-                    if (this.elements.userInput.value.trim()) {
-                        this.handleSendMessage();
-                    }
-                    this.stopRecording();
-                }
-            }, SILENCE_THRESHOLD);
-        };
-
-        recognition.onerror = (event) => {
-            console.error('Speech recognition error:', event.error);
-            this.stopRecording();
-        };
-
-        recognition.onend = () => {
-            this.handleRecognitionEnd();
-        };
-
-        this.state.recognition = recognition;
-    }
-
-    handleRecognitionEnd() {
-        if (this.state.silenceTimer) {
-            clearTimeout(this.state.silenceTimer);
-            this.state.silenceTimer = null;
-        }
-        if (this.state.isRecording && this.elements.userInput.value.trim()) {
-            this.handleSendMessage();
-        }
-        this.stopRecording();
-    }
-
-    async requestMicrophonePermission() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-            stream.getTracks().forEach(track => track.stop());
-            return true;
-        } catch (error) {
-            console.error('Microphone permission error:', error);
-            this.speakText('Please allow microphone access in your browser.');
-            this.appendMessage('system', 'Please allow microphone access in your browser.');
-            return false;
-        }
-    }
-
-    async toggleRecording() {
-        if (this.state.isRecording) {
-            this.stopRecording();
-        } else {
-            await this.startRecording();
-        }
-    }
-
-    async startRecording() {
-        if (!this.state.recognition) return;
-
-        try {
-            const hasPermission = await this.requestMicrophonePermission();
-            if (!hasPermission) return;
-
-            this.state.isRecording = true;
-            this.updateVoiceButtonState(true);
-            this.state.recognition.start();
-        } catch (error) {
-            this.handleError('Failed to start recording', error);
-            this.stopRecording();
-        }
-    }
-
-    stopRecording() {
-        if (!this.state.recognition) return;
-
-        this.state.isRecording = false;
-        this.updateVoiceButtonState(false);
-
-        if (this.state.silenceTimer) {
-            clearTimeout(this.state.silenceTimer);
-            this.state.silenceTimer = null;
-        }
-
-        this.state.recognition.stop();
-    }
-
-    updateVoiceButtonState(isRecording) {
-        Object.assign(this.elements.voiceButton.style, {
-            backgroundColor: isRecording ? '#dc3545' : '#007bff'
-        });
-        this.elements.voiceButton.textContent = isRecording ? 'Stop' : 'Voice';
-    }
-
-    initializeTTS() {
-        if (!this.state.speechSynthesis) return;
-
-        this.state.speechSynthesis.addEventListener('voiceschanged', () => {
-            this.state.voices = this.state.speechSynthesis.getVoices();
-            this.state.selectedVoice = this.state.voices.find(voice =>
-                voice.lang.includes('en-US')
-            );
-        });
-    }
-
-    speakText(text) {
-        if (!this.state.speechSynthesis) return;
-
-        if (this.state.isSpeaking) {
-            this.state.speechSynthesis.cancel();
-        }
-
-        const utterance = new SpeechSynthesisUtterance(text);
-        Object.assign(utterance, {
-            voice: this.state.selectedVoice,
-            lang: 'en-UK',
-            rate: 1.5,
-            pitch: 1.2,
-            volume: 1.0
-        });
-
-        this.state.isSpeaking = true;
-        utterance.onend = () => this.state.isSpeaking = false;
-        this.state.speechSynthesis.speak(utterance);
-    }
-
     setupEventListeners() {
         const eventHandlers = {
             'screenshotButton': () => this.handleScreenshot(),
             'rollingScreenshotButton': () => this.handleRollingScreenshot(),
             'sendButton': () => this.handleSendMessage(),
-            'voiceButton': () => this.toggleRecording(),
+            'voiceButton': () => this.toggleVoiceInput(),
             'clearButton': () => this.handleClear(),
             'analyzeContentButton': () => this.handleContentAnalysis()
         };
 
         Object.entries(eventHandlers).forEach(([elementName, handler]) => {
-            this.elements[elementName].addEventListener('click', handler);
+            this.elements[elementName].addEventListener('click', handler.bind(this));
         });
 
         this.elements.userInput.addEventListener('input', () => this.handleInputChange());
@@ -254,6 +440,35 @@ class AIScreenReader {
                 this.handleSendMessage();
             }
         });
+    }
+
+    async initializeModel() {
+        try {
+            const modelId = 'Xenova/moondream2';
+            const modelConfig = {
+                dtype: {
+                    embed_tokens: 'fp16',
+                    vision_encoder: 'fp16',
+                    decoder_model_merged: 'q4',
+                },
+                device: 'webgpu',
+            };
+
+            [
+                this.state.tokenizer,
+                this.state.processor,
+                this.state.model
+            ] = await Promise.all([
+                AutoTokenizer.from_pretrained(modelId),
+                AutoProcessor.from_pretrained(modelId),
+                Moondream1ForConditionalGeneration.from_pretrained(modelId, modelConfig)
+            ]);
+
+            this.state.isInitialized = true;
+            this.elements.screenshotButton.disabled = false;
+        } catch (error) {
+            this.handleError('Error initializing model', error);
+        }
     }
 
     showPreview(type, content) {
@@ -276,7 +491,6 @@ class AIScreenReader {
         this.elements.previewText.style.display = 'none';
     }
 
-    // Screenshot related
     async handleScreenshot() {
         if (this.state.isProcessing) return;
 
@@ -331,11 +545,6 @@ class AIScreenReader {
         return pageInfo && pageInfo.scrollHeight && pageInfo.clientHeight;
     }
 
-    updateMode(mode) {
-        this.state.currentMode = mode;
-        this.elements.currentMode.textContent = mode === 'moondream' ? 'Moondream2' : 'Gemini Nano';
-    }
-
     async getPageInfo() {
         return new Promise((resolve, reject) => {
             chrome.runtime.sendMessage({
@@ -357,12 +566,23 @@ class AIScreenReader {
         await this.executeScroll(tab, 0);
 
         while (currentScroll < scrollHeight) {
-            const screenshot = await chrome.tabs.captureVisibleTab(null, { format: 'png' });
-            this.state.rollingScreenshotImages.push(screenshot);
+            try {
+                const screenshot = await chrome.tabs.captureVisibleTab(null, { format: 'png' });
+                this.state.rollingScreenshotImages.push(screenshot);
+            } catch (error) {
+                if (error.message.includes('MAX_CAPTURE_VISIBLE_TAB_CALLS_PER_SECOND')) {
+                    console.warn('Rate limit exceeded. Waiting before retrying...');
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    continue;
+                } else {
+                    throw error;
+                }
+            }
 
             currentScroll += clientHeight;
             await this.executeScroll(tab, currentScroll);
-            await new Promise(resolve => setTimeout(resolve, 150));
+
+            await new Promise(resolve => setTimeout(resolve, 600));
         }
 
         await this.executeScroll(tab, 0);
@@ -401,36 +621,6 @@ class AIScreenReader {
         });
     }
 
-    // Model related
-    async initializeModel() {
-        try {
-            const modelId = 'Xenova/moondream2';
-            const modelConfig = {
-                dtype: {
-                    embed_tokens: 'fp16',
-                    vision_encoder: 'fp16',
-                    decoder_model_merged: 'q4',
-                },
-                device: 'webgpu',
-            };
-
-            [
-                this.state.tokenizer,
-                this.state.processor,
-                this.state.model
-            ] = await Promise.all([
-                AutoTokenizer.from_pretrained(modelId),
-                AutoProcessor.from_pretrained(modelId),
-                Moondream1ForConditionalGeneration.from_pretrained(modelId, modelConfig)
-            ]);
-
-            this.state.isInitialized = true;
-            this.elements.screenshotButton.disabled = false;
-        } catch (error) {
-            this.handleError('Error initializing model', error);
-        }
-    }
-
     async handleImageAnalysis(imageUrl) {
         if (!this.state.isInitialized || this.state.isProcessing) {
             this.handleError('Model not ready', new Error('Please wait for model initialization'));
@@ -441,7 +631,7 @@ class AIScreenReader {
 
         try {
             this.state.messages = [];
-            const defaultPrompt = 'Describe the picture in about 50 words';
+            const defaultPrompt = 'Describe the picture in about 100 words';
 
             const response = await this.generateImageResponse(imageUrl, defaultPrompt);
             this.handleResponse(response);
@@ -464,7 +654,7 @@ class AIScreenReader {
                 ...textInputs,
                 ...visionInputs,
                 do_sample: false,
-                max_new_tokens: 64,
+                max_new_tokens: 128,
             });
 
             const decoded = await this.state.tokenizer.batch_decode(output, {
@@ -518,13 +708,11 @@ class AIScreenReader {
         this.handleResponse(response);
     }
 
-    // Content analysis related
     async handleContentAnalysis() {
         if (this.state.isProcessing) return;
 
         try {
-            this.state.currentMode = 'gemini';
-            this.elements.currentMode.textContent = 'Gemini Nano';
+            this.updateMode('gemini');
             this.state.isProcessing = true;
             this.elements.analyzeContentButton.disabled = true;
             this.speakText("Analyzing webpage content.");
@@ -584,22 +772,6 @@ class AIScreenReader {
                 }
             });
 
-            const cleanContent = (content) => {
-                return content
-                    .replace(/\s+/g, ' ')
-                    .replace(/\n\s*\n/g, '\n')
-                    .trim();
-            };
-
-            const formatContent = (result) => {
-                const parts = [
-                    `Title: ${result.title || 'No Title'}`,
-                    `Author: ${result.byline || 'Unknown'}`,
-                    `Content: ${cleanContent(result.content || '')}`
-                ];
-                return parts.join('\n\n');
-            };
-
             if (!result.success) {
                 throw new Error(`Content extraction failed: ${result.error}`);
             }
@@ -620,7 +792,11 @@ class AIScreenReader {
         ].filter(Boolean).join('\n\n');
     }
 
-    // UI related
+    updateMode(mode) {
+        this.state.currentMode = mode;
+        this.elements.currentMode.textContent = mode === 'moondream' ? 'Moondream2' : 'Gemini Nano';
+    }
+
     handleInputChange() {
         this.elements.sendButton.disabled = !this.elements.userInput.value.trim();
     }
@@ -654,6 +830,7 @@ class AIScreenReader {
 
     resetState() {
         this.state.isProcessing = false;
+        this.state.voice.input.active = false;
         this.state.rollingScreenshotImages = [];
         this.enableInterface();
     }
@@ -672,9 +849,9 @@ class AIScreenReader {
 
         this.elements.currentMode.textContent = 'None';
 
-        if (this.state.speechSynthesis && this.state.isSpeaking) {
-            this.state.speechSynthesis.cancel();
-            this.state.isSpeaking = false;
+        if (this.state.voice.synthesis.instance && this.state.voice.synthesis.isSpeaking) {
+            this.state.voice.synthesis.instance.cancel();
+            this.state.voice.synthesis.isSpeaking = false;
         }
     }
 

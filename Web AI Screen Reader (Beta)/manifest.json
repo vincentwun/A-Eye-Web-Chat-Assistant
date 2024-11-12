@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Web AI Screen Reader (Beta)",
+  "name": "A-Eye Visual Assistant (Beta)",
   "version": "1.0",
   "description": "AI powered screen reader and content analyzer with Moondream2 and Gemini Nano",
   "icons": {
@@ -47,17 +47,17 @@
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
   },
   "commands": {
-    "toggle-voice": {
+    "toggle-voice-control": {
       "suggested_key": {
-        "default": "Ctrl+Shift+F"
+        "default": "Alt+Shift+1"
       },
-      "description": "Toggle voice recording"
+      "description": "Toggle voice browser control"
     },
-    "take-screenshot": {
+    "toggle-voice-input": {
       "suggested_key": {
-        "default": "Ctrl+Shift+Q"
+        "default": "Alt+Shift+2"
       },
-      "description": "Take screenshot"
+      "description": "Toggle voice input for chat"
     }
   }
 }

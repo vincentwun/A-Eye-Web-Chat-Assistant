@@ -13,15 +13,15 @@ let currentGeminiSession = null;
 chrome.commands.onCommand.addListener((command) => {
   console.log('Command received:', command);
 
-  if (command === 'toggle-voice') {
+  if (command === 'toggle-voice-control') {
     chrome.runtime.sendMessage({
-      type: 'toggleVoiceRecording'
+      type: 'toggleVoiceControl'
     });
   }
 
-  if (command === 'take-screenshot') {
+  if (command === 'toggle-voice-input') {
     chrome.runtime.sendMessage({
-      type: 'takeScreenshot'
+      type: 'toggleVoiceInput'
     });
   }
 });
@@ -117,7 +117,7 @@ async function initializeAndAnalyze(text, sendResponse) {
       return;
     }
 
-    const prompt = `Summarize the main points of this text in 2-3 short sentences. Be direct and concise:
+    const prompt = `Summarize this web page about 300 words. Web Page Content:
 
     "${text}"`;
 
