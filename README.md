@@ -7,118 +7,120 @@
 ![Platform](https://img.shields.io/badge/platform-Windows%20|%20MacOS%20|%20Linux-lightgrey)
 ![Status](https://img.shields.io/badge/status-beta-orange)
 
-A next-generation Chrome extension powered by Web AI and Gemini Nano, delivering on-device real-time image description capabilities with enterprise-grade privacy.
+An advanced Chrome extension leveraging Web AI and Gemini Nano for real-time image description with privacy-first approach.
 
-> ⚠️ **Critical Requirement**: This extension exclusively supports Chrome Dev/Canary channel (≥ 128.0.6545.0).
+> ⚠️ **Important**: This extension requires Chrome Dev or Canary channel (≥ 128.0.6545.0) to function properly.
 
 </div>
 
 ## Table of Contents
 - [Overview](#overview)
-- [Core Features](#core-features)
-- [System Requirements](#system-requirements)
-- [Setup Guide](#setup-guide)
-- [Architecture](#architecture)
-- [Known Limitations](#known-limitations)
+- [Key Features](#key-features)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Technical Details](#technical-details)
+- [Limitations](#limitations)
 - [License](#license)
 
 ## Overview
-A-Eye Visual Assistant represents a breakthrough in web accessibility technology, specifically engineered for vision-impaired users. It seamlessly integrates state-of-the-art AI conversational capabilities with enhanced screen reader functionality, enabling natural interaction with web content through intelligent page interpretation. Built on Chrome's native Gemini Nano framework, it ensures enterprise-grade security through complete on-device processing for real-time image analysis and content comprehension.
+A-Eye Visual Assistant is a specialized Chrome extension designed to enhance web accessibility for visually impaired users. By integrating advanced AI chat capabilities with traditional screen reader functions, users can naturally converse with web content and receive comprehensive page interpretations. Powered by Chrome's built-in Gemini Nano, it provides secure on-device processing for real-time image descriptions and content analysis. Currently in beta development with regular updates.
 
-## Core Features
+## Key Features
 
-| Feature | Implementation Details |
-|---------|----------------------|
-| Enterprise Privacy | Dedicated on-device processing architecture ensures zero data transmission |
-| High-Performance Engine | Optimized algorithms delivering sub-second image analysis response |
-| Dual AI Architecture | Strategic integration of Gemini Nano and Moondream2 technologies |
-| Universal Compatibility | Full support across Windows, macOS, and Linux environments |
+| Feature | Description |
+|---------|-------------|
+| Privacy-First | All processing happens locally on your device |
+| Real-Time Performance | Instant image analysis and description |
+| Dual AI Models | Leveraging both Gemini Nano and Moondream2 |
+| Cross-Platform | Supports Windows, macOS, and Linux |
 
-## System Requirements
+## Requirements
 
-### Hardware & Software Specifications
+### System Requirements
 
-| Component | Specification Requirements |
-|-----------|--------------------------|
-| Browser Environment | Chrome Dev/Canary (≥ 128.0.6545.0) **MANDATORY** |
-| Operating System | Windows 10+, macOS 13+, or WebGPU-enabled Linux |
-| Processor | Modern multi-core architecture (Intel/AMD) |
-| Graphics Processing | Dedicated/Integrated GPU with minimum 4GB VRAM |
-| Storage Capacity | 24GB available space (Gemini Nano: 22GB, Moondream2: 2GB) |
+| Component | Minimum Requirement |
+|-----------|-------------------|
+| Browser | Chrome Dev/Canary (≥ 128.0.6545.0) **REQUIRED** |
+| Operating System | Windows 10+, macOS 13+, or Linux with WebGPU support |
+| CPU | Multi-core processor (Intel/AMD) |
+| GPU/VRAM | Integrated/Discrete GPU with 4GB+ VRAM |
+| Storage | 24GB free space (22GB Gemini Nano, 2GB Moondream2) |
 
-## Setup Guide
+## Installation
 
-### Browser Installation
-1. Install [Chrome Dev](https://www.google.com/chrome/dev/) or [Chrome Canary](https://www.google.com/chrome/canary/)
-2. Validate installation version (≥ 128.0.6545.0) via `chrome://settings/help`
+### Browser Setup
+- Download [Chrome Dev](https://www.google.com/chrome/dev/) or [Chrome Canary](https://www.google.com/chrome/canary/)
+- Verify version ≥ 128.0.6545.0 at `chrome://settings/help`
 
-### Extension Deployment
 
-1. Source Acquisition
+### Extension Setup
+
+1. Download Extension
    ```
    https://github.com/vincentwun/A-Eye-Visual-Assistant-Beta/archive/refs/heads/main.zip
    ```
 
-2. Extension Configuration
-   - Initialize Chrome browser
-   - Access `chrome://extensions`
-   - Activate "Developer mode"
+2. Chrome Configuration
+   - Launch Chrome browser
+   - Navigate to `chrome://extensions`
+   - Enable "Developer mode" (top-right corner)
    - Select "Load unpacked"
-   - Locate extracted extension files
-   - Choose `A-Eye Visual Assistant (Beta)` directory
+   - Navigate to extracted extension directory
+   - Select `A-Eye Visual Assistant (Beta)` directory
 
-### Advanced Configuration
+### Required Configuration
 
-#### Chrome Flag Configuration
+#### Chrome Flags Setup
 
-| Category | Configuration Path | Required State |
-|----------|-------------------|----------------|
-| WebGPU Support | `chrome://flags/#enable-webgpu-developer-features` | Enabled |
-| Gemini Nano Core | `chrome://flags/#optimization-guide-on-device-model` | Enabled BypassPerfRequirement |
-| Prompt Integration | `chrome://flags/#prompt-api-for-gemini-nano` | Enabled |
+| Category | Flag | Setting |
+|----------|------|---------|
+| WebGPU | `chrome://flags/#enable-webgpu-developer-features` | Enabled |
+| Gemini Nano | `chrome://flags/#optimization-guide-on-device-model` | Enabled BypassPerfRequirement |
+| Prompt API | `chrome://flags/#prompt-api-for-gemini-nano` | Enabled |
 
-Important: Browser restart required post-configuration.
+Note: Restart Chrome after modifying these flags.
 
-#### Gemini Nano Initialization
+#### Gemini Nano Setup
 
-1. Model Activation
-   - Access [Prompt API Playground](https://chrome.dev/web-ai-demos/prompt-api-playground/)
-   - Launch DevTools Console (F12)
-   - Execute initialization:
+1. **Model Initialization**
+   - Visit [Prompt API Playground](https://chrome.dev/web-ai-demos/prompt-api-playground/) to trigger the `Optimization Guide On Device Model` in `chrome://components`.
+   - Open the DevTools Console (F12).
+   - Execute:
      ```javascript
      await ai.languageModel.create();
      ```
-   - Verify "after-download" status before proceeding
+   - Ensure the return value is `"after-download"` before proceeding.
 
-2. Component Status Verification
-   - Navigate to `chrome://components`
-   - Confirm `Optimization Guide On Device Model` version ≥ 2024.5.21.1031
-   - Execute update if necessary
+2. **Component Verification**
+   - Go to `chrome://components`.
+   - Verify that the `Optimization Guide On Device Model` version is ≥ 2024.5.21.1031.
+   - If outdated, click "Check for update."
 
-3. System Readiness Validation
-   - Access DevTools Console (F12)
-   - Execute availability check:
+3. **Availability Check**
+   - Open the DevTools Console (F12).
+   - Execute:
      ```javascript
      (await ai.languageModel.capabilities()).available;
      ```
-   - Confirm "readily" status
+   - Confirm the return value is `"readily"`.
 
-## Architecture
 
-### Component Architecture
-[Documentation Pending]
+## Technical Architecture
 
-### Technical Stack
-[Documentation Pending]
+### Component Structure
+[Update Soon]
 
-## Known Limitations
+### Technology Stack
+[Update Soon]
 
-| Constraint Category | Technical Details |
-|--------------------|-------------------|
-| Language Processing | English language exclusivity |
-| Browser Compatibility | Dev/Canary Channel requirement |
-| System Resources | Substantial storage allocation required |
-| Model Management | Periodic model updates necessary |
+## Current Limitations
+
+| Limitation | Description |
+|------------|-------------|
+| Language Support | English only |
+| Chrome Version | Requires Dev/Canary Channel |
+| Hardware Requirements | Significant storage space needed |
+| Model Updates | Regular downloads required |
 
 ## License
-Released under MIT License. Reference [LICENSE](LICENSE) for comprehensive terms.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for full details.
