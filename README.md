@@ -16,9 +16,9 @@ An advanced Chrome extension leveraging Web AI and Gemini Nano for real-time ima
 ## Table of Contents
 - [Overview](#overview)
 - [Key Features](#key-features)
+- [Technical Details](#technical-details)
 - [Requirements](#requirements)
 - [Installation](#installation)
-- [Technical Details](#technical-details)
 - [Limitations](#limitations)
 - [License](#license)
 
