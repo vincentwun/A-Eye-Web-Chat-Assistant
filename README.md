@@ -1,4 +1,4 @@
-# A-Eye Visual Assistant (Beta)
+# A-Eye Visual Assistant
 
 <div align="center">
 
@@ -85,7 +85,7 @@ This Chrome extension is built on a modular architecture featuring advanced tech
    - Enable "Developer mode" (top-right corner)
    - Select "Load unpacked"
    - Navigate to extracted extension directory
-   - Select `A-Eye Visual Assistant (Beta)` directory
+   - Select `A-Eye Visual Assistant` directory
 
 ### Required Configuration
 

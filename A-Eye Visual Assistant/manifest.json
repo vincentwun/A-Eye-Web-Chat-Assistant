@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "A-Eye Visual Assistant (Beta)",
+  "name": "A-Eye Visual Assistant",
   "version": "1.0",
   "description": "AI powered screen reader and content analyzer with Moondream2 and Gemini Nano",
   "icons": {
