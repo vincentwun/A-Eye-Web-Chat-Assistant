@@ -35,7 +35,7 @@ A-Eye Visual Assistant is a specialized Chrome extension designed to enhance web
 | Cross-Platform | Supports Windows, macOS, and Linux |
 
 ## Technical Architecture
-![Architecture](images/A-Eye Visual Assistant_Architecture.png)
+![architecture](images/architecture.png)
 
 
 ## Requirements
