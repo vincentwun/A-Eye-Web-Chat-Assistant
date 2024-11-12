@@ -57,7 +57,7 @@ A-Eye Visual Assistant is a specialized Chrome extension designed to enhance web
 
 1. Download Extension
    ```
-   https://github.com/vincentwun/Web-AI-Screen-Reader-Beta/archive/refs/heads/main.zip
+   https://github.com/vincentwun/A-Eye-Visual-Assistant-Beta/archive/refs/heads/main.zip
    ```
 
 2. Chrome Configuration
