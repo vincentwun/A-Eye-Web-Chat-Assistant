@@ -76,7 +76,7 @@ This Chrome extension is built on a modular architecture featuring advanced tech
 
 1. Download Extension
    ```
-   https://github.com/vincentwun/A-Eye-Visual-Assistant-Beta/archive/refs/heads/main.zip
+   https://github.com/vincentwun/A-Eye-Visual-Assistant/archive/refs/heads/main.zip
    ```
 
 2. Chrome Configuration
