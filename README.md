@@ -16,7 +16,8 @@ An advanced Chrome extension leveraging Web AI and Gemini Nano for real-time ima
 ## Table of Contents
 - [Overview](#overview)
 - [Key Features](#key-features)
-- [Technical Details](#technical-details)
+- [How to Use](#how-to-use)
+- [Technical Architecture](#technical-architecture)
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Limitations](#limitations)
@@ -33,6 +34,14 @@ A-Eye Visual Assistant is a specialized Chrome extension designed to enhance web
 | Real-Time Performance | Instant image analysis and description |
 | Dual AI Models | Leveraging both Gemini Nano and Moondream2 |
 | Cross-Platform | Supports Windows, macOS, and Linux |
+
+## How to Use
+
+### Keyboard Shortcuts
+- **Alt + Shift + 1**: Activate voice control for browser and extension operations.
+- **Alt + Shift + 2**: Activate voice input to interact with the extension's AI.
+
+These shortcuts allow you to seamlessly navigate and interact with web content using voice commands.
 
 ## Technical Architecture
 
