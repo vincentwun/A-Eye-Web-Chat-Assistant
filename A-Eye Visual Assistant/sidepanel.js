@@ -498,7 +498,7 @@ class AIScreenReader {
             this.elements.screenshotButton.disabled = true;
             this.speakText("Analyzing Screenshot");
             this.appendMessage('system', 'Analyzing Screenshot.');
-            this.updateMode('moondream');
+            this.updateModel('moondream');
 
             const screenshot = await chrome.tabs.captureVisibleTab();
             this.showPreview('image', screenshot);
@@ -519,7 +519,7 @@ class AIScreenReader {
             this.state.rollingScreenshotImages = [];
             this.speakText("Analyzing scrolling screenshot.");
             this.appendMessage('system', 'Analyzing scrolling screenshot.');
-            this.updateMode('moondream');
+            this.updateModel('moondream');
 
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             if (!tab) throw new Error('No active tab found');
@@ -691,7 +691,7 @@ class AIScreenReader {
                 });
                 this.handleResponse(response.content);
             } else {
-                throw new Error('Please select a mode first');
+                throw new Error('Please select a model first');
             }
 
             this.elements.userInput.value = '';
@@ -712,7 +712,7 @@ class AIScreenReader {
         if (this.state.isProcessing) return;
 
         try {
-            this.updateMode('gemini');
+            this.updateModel('gemini');
             this.state.isProcessing = true;
             this.elements.analyzeContentButton.disabled = true;
             this.speakText("Analyzing webpage content.");
@@ -792,7 +792,7 @@ class AIScreenReader {
         ].filter(Boolean).join('\n\n');
     }
 
-    updateMode(mode) {
+    updateModel(mode) {
         this.state.currentModel = mode;
         this.elements.currentModel.textContent = mode === 'moondream' ? 'Moondream2' : 'Gemini Nano';
     }
