@@ -101,18 +101,20 @@ This Chrome extension is built on a modular architecture featuring advanced tech
 | Gemini Nano | `chrome://flags/#optimization-guide-on-device-model` | Enabled BypassPerfRequirement |
 | Prompt API | `chrome://flags/#prompt-api-for-gemini-nano` | Enabled |
 
-Note: Restart Chrome after modifying these flags.
+**Important:**  
+After modifying the flags above, **please restart Chrome** to apply the changes. Failure to do so may result in the settings not being properly activated.
 
 #### Gemini Nano Setup
 
 1. **Model Initialization**
-   - Visit [Prompt API Playground](https://chrome.dev/web-ai-demos/prompt-api-playground/) to trigger the `Optimization Guide On Device Model` in `chrome://components`.
+   - Navigate to the [Prompt API Playground](https://chrome.dev/web-ai-demos/prompt-api-playground/).
    - Open the DevTools Console (F12).
    - Execute:
      ```javascript
      (await ai.languageModel.capabilities()).available;
      ```
-   - Ensure the return value is `"after-download"` before proceeding.
+   - The return value should be `"after-download"`.
+> **Reminder:** This step triggers the `Optimization Guide On Device Model` to appear in `chrome://components`. Ensure that this component is visible for the next steps.
 
 2. **Component Verification**
    - Go to `chrome://components`.
