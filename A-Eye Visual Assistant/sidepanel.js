@@ -9,7 +9,7 @@ class AIScreenReader {
             pastKeyValues: null,
             isInitialized: false,
             isProcessing: false,
-            currentMode: 'none',
+            currentModel: 'none',
             messages: [],
             rollingScreenshotImages: [],
             voice: {
@@ -45,7 +45,7 @@ class AIScreenReader {
             rollingScreenshotButton: document.getElementById('rolling-screenshot-button'),
             clearButton: document.getElementById('clear-button'),
             analyzeContentButton: document.getElementById('analyze-content-button'),
-            currentMode: document.getElementById('current-mode')
+            currentModel: document.getElementById('current-model')
         };
 
         this.voiceCommands = {
@@ -682,9 +682,9 @@ class AIScreenReader {
         try {
             this.appendMessage('user', input);
 
-            if (this.state.currentMode === 'moondream') {
+            if (this.state.currentModel === 'moondream') {
                 await this.generateMoondreamResponse(input);
-            } else if (this.state.currentMode === 'gemini') {
+            } else if (this.state.currentModel === 'gemini') {
                 const response = await chrome.runtime.sendMessage({
                     type: 'chat',
                     text: input
@@ -793,8 +793,8 @@ class AIScreenReader {
     }
 
     updateMode(mode) {
-        this.state.currentMode = mode;
-        this.elements.currentMode.textContent = mode === 'moondream' ? 'Moondream2' : 'Gemini Nano';
+        this.state.currentModel = mode;
+        this.elements.currentModel.textContent = mode === 'moondream' ? 'Moondream2' : 'Gemini Nano';
     }
 
     handleInputChange() {
@@ -844,10 +844,10 @@ class AIScreenReader {
             messages: [],
             rollingScreenshotImages: [],
             pastKeyValues: null,
-            currentMode: 'none'
+            currentModel: 'none'
         });
 
-        this.elements.currentMode.textContent = 'None';
+        this.elements.currentModel.textContent = 'None';
 
         if (this.state.voice.synthesis.instance && this.state.voice.synthesis.isSpeaking) {
             this.state.voice.synthesis.instance.cancel();
