@@ -42,6 +42,8 @@ This Chrome extension is built on a modular architecture featuring advanced tech
 - **Performance Optimization**: Utilizes WebGPU for efficient AI acceleration and asynchronous operations for a smooth user experience.
 - **Accessibility-Driven Design**: Integrates intelligent voice control, audio descriptions, and web content summarization for enhanced usability.
 
+![architecture](/images/architecture.png)
+
 ## Key Features
 
 | Feature | Description |
@@ -50,9 +52,6 @@ This Chrome extension is built on a modular architecture featuring advanced tech
 | Real-Time Performance | Instant image analysis and description |
 | Dual AI Models | Leveraging both Gemini Nano and Moondream2 |
 | Cross-Platform | Supports Windows, macOS, and Linux |
-
-![architecture](/images/architecture.png)
-
 
 ## Requirements
 
