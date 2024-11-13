@@ -7,11 +7,13 @@
 ![Platform](https://img.shields.io/badge/platform-Windows%20|%20MacOS%20|%20Linux-lightgrey)
 ![Status](https://img.shields.io/badge/status-beta-orange)
 
-An advanced Chrome extension leveraging Web AI and Gemini Nano for real-time image description with privacy-first approach.
+
 
 > ⚠️ **Important**: This extension requires Chrome Dev or Canary channel (≥ 128.0.6545.0) to function properly.
 
 </div>
+
+An advanced Chrome extension leveraging WebAI and Gemini Nano for real-time web voice chat with privacy-first approach for visually impaired or handicap.
 
 ## Table of Contents
 - [Overview](#overview)
@@ -46,12 +48,15 @@ This Chrome extension is built on a modular architecture featuring advanced tech
 
 ## Key Features
 
-| Feature | Description |
-|---------|-------------|
-| Privacy-First | All processing happens locally on your device |
-| Real-Time Performance | Instant image analysis and description |
-| Dual AI Models | Leveraging both Gemini Nano and Moondream2 |
-| Cross-Platform | Supports Windows, macOS, and Linux |
+- **Privacy-First**: Ensures all processing is done locally on your device, safeguarding your data with AI on Chrome and WebAI.
+- **Voice Interaction**: Allows users to control the screen reader with voice commands using the Web Speech API.
+- **Real-Time Image Descriptions**: Provides real-time descriptions of images through WebAI and HuggingFace.js.
+- **Comprehensive Content Chat**: Offers detailed interpretations of web pages and image descriptions using Chrome’s built-in prompt API.
+- **Speech Synthesis**: Reads out responses using advanced speech synthesis technology via the Web Speech API.
+- **Conversation Management**: Keeps track of conversation history and state for seamless interactions.
+- **Dual AI Models**: Utilizes both Gemini Nano and Moondream2 for superior accuracy.
+- **Cross-Platform Compatibility**: Available on Windows, macOS, and Linux.
+- **Chrome Extension**: Easily accessible as a Chrome extension.
 
 ## Requirements
 
