@@ -15,33 +15,16 @@ An advanced Chrome extension leveraging Web AI and Gemini Nano for real-time ima
 
 ## Table of Contents
 - [Overview](#overview)
-- [Key Features](#key-features)
-- [How to Use](#how-to-use)
 - [Technical Architecture](#technical-architecture)
+- [Key Features](#key-features)
 - [Requirements](#requirements)
 - [Installation](#installation)
+- [How to Use](#how-to-use)
 - [Limitations](#limitations)
 - [License](#license)
 
 ## Overview
 A-Eye Visual Assistant is a specialized Chrome extension designed to enhance web accessibility for visually impaired users. By integrating advanced AI chat capabilities with traditional screen reader functions, users can naturally converse with web content and receive comprehensive page interpretations. Powered by Chrome's built-in Gemini Nano, it provides secure on-device processing for real-time image descriptions and content analysis. Currently in beta development with regular updates, this extension is completely free and is an open-source project.
-
-## Key Features
-
-| Feature | Description |
-|---------|-------------|
-| Privacy-First | All processing happens locally on your device |
-| Real-Time Performance | Instant image analysis and description |
-| Dual AI Models | Leveraging both Gemini Nano and Moondream2 |
-| Cross-Platform | Supports Windows, macOS, and Linux |
-
-## How to Use
-
-### Keyboard Shortcuts
-- **Alt + Shift + 1**: Activate voice control for browser and extension operations.
-- **Alt + Shift + 2**: Activate voice input to interact with the extension's AI.
-
-These shortcuts allow you to seamlessly navigate and interact with web content using voice commands.
 
 ## Technical Architecture
 
@@ -58,6 +41,15 @@ This Chrome extension is built on a modular architecture featuring advanced tech
 ### Key Technical Features
 - **Performance Optimization**: Utilizes WebGPU for efficient AI acceleration and asynchronous operations for a smooth user experience.
 - **Accessibility-Driven Design**: Integrates intelligent voice control, audio descriptions, and web content summarization for enhanced usability.
+
+## Key Features
+
+| Feature | Description |
+|---------|-------------|
+| Privacy-First | All processing happens locally on your device |
+| Real-Time Performance | Instant image analysis and description |
+| Dual AI Models | Leveraging both Gemini Nano and Moondream2 |
+| Cross-Platform | Supports Windows, macOS, and Linux |
 
 ![architecture](/images/architecture.png)
 
@@ -79,7 +71,6 @@ This Chrome extension is built on a modular architecture featuring advanced tech
 ### Browser Setup
 - Download [Chrome Dev](https://www.google.com/chrome/dev/) or [Chrome Canary](https://www.google.com/chrome/canary/)
 - Verify version ≥ 128.0.6545.0 at `chrome://settings/help`
-
 
 ### Extension Setup
 
@@ -115,7 +106,7 @@ Note: Restart Chrome after modifying these flags.
    - Open the DevTools Console (F12).
    - Execute:
      ```javascript
-     await ai.languageModel.create();
+     (await ai.languageModel.capabilities()).available;
      ```
    - Ensure the return value is `"after-download"` before proceeding.
 
@@ -131,6 +122,14 @@ Note: Restart Chrome after modifying these flags.
      (await ai.languageModel.capabilities()).available;
      ```
    - Confirm the return value is `"readily"`.
+
+## How to Use
+
+### Keyboard Shortcuts
+- **Alt + Shift + 1**: Activate voice control for browser and extension operations.
+- **Alt + Shift + 2**: Activate voice input to interact with the extension's AI.
+
+These shortcuts allow you to seamlessly navigate and interact with web content using voice commands.
 
 ## Current Limitations
 
