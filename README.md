@@ -28,6 +28,7 @@ An advanced Chrome extension leveraging WebAI and Gemini Nano for real-time web 
 ## Overview
 A-Eye Web Chat Assistant is a specialized Chrome extension designed to enhance web accessibility for visually impaired users. By integrating advanced AI chat capabilities with traditional screen reader functions, users can naturally converse with web content and receive comprehensive page interpretations. Powered by Chrome's built-in Gemini Nano, it provides secure on-device processing for real-time image descriptions and content analysis. Currently in beta development with regular updates, this extension is completely free and is an open-source project.
 
+
 ## Technical Architecture
 
 This Chrome extension is built on a modular architecture featuring advanced technologies to deliver a professional and accessible experience. It integrates:
@@ -91,6 +92,7 @@ This Chrome extension is built on a modular architecture featuring advanced tech
    - Navigate to extracted extension directory
    - Select `A-Eye Web Chat Assistant` directory
 
+
 ### Required Configuration
 
 #### Chrome Flags Setup
@@ -101,18 +103,20 @@ This Chrome extension is built on a modular architecture featuring advanced tech
 | Gemini Nano | `chrome://flags/#optimization-guide-on-device-model` | Enabled BypassPerfRequirement |
 | Prompt API | `chrome://flags/#prompt-api-for-gemini-nano` | Enabled |
 
-Note: Restart Chrome after modifying these flags.
+**Important:**  
+After modifying the flags above, **please restart Chrome** to apply the changes. Failure to do so may result in the settings not being properly activated.
 
 #### Gemini Nano Setup
 
 1. **Model Initialization**
-   - Visit [Prompt API Playground](https://chrome.dev/web-ai-demos/prompt-api-playground/) to trigger the `Optimization Guide On Device Model` in `chrome://components`.
+   - Navigate to the [Prompt API Playground](https://chrome.dev/web-ai-demos/prompt-api-playground/).
    - Open the DevTools Console (F12).
    - Execute:
      ```javascript
      (await ai.languageModel.capabilities()).available;
      ```
-   - Ensure the return value is `"after-download"` before proceeding.
+   - The return value should be `"after-download"`.
+> **Reminder:** This step triggers the `Optimization Guide On Device Model` to appear in `chrome://components`. Ensure that this component is visible for the next steps.
 
 2. **Component Verification**
    - Go to `chrome://components`.
