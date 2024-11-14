@@ -137,6 +137,8 @@ After modifying the flags above, **please restart Chrome** to apply the changes.
 - **Alt + Shift + 1**: Activate voice control for browser and extension operations.
 - **Alt + Shift + 2**: Activate voice input to interact with the extension's AI.
 
+> Reminder: Please grant microphone access to the extension to use the voice features.
+
 These shortcuts allow you to seamlessly navigate and interact with web content using voice commands.
 
 ## Current Limitations
