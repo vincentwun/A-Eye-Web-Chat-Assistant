@@ -443,8 +443,48 @@ class AIScreenReader {
     }
 
     async initializeModel() {
+        const modelStatus = document.getElementById('model-status');
+        const modelId = 'Xenova/moondream2';
+
+        const createProgressTracker = (response) => {
+            const reader = response.body.getReader();
+            const contentLength = +response.headers.get('Content-Length');
+            let receivedLength = 0;
+
+            return new ReadableStream({
+                async start(controller) {
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+
+                        receivedLength += value.length;
+                        const percentage = Math.floor((receivedLength / contentLength) * 100);
+                        modelStatus.textContent = `Downloading model: ${percentage}%`;
+                        controller.enqueue(value);
+                    }
+                    controller.close();
+                }
+            });
+        };
+
+        const originalFetch = window.fetch;
+        window.fetch = async (...args) => {
+            const [resource, config] = args;
+
+            if (resource.includes(modelId)) {
+                try {
+                    const response = await originalFetch(resource, config);
+                    const stream = await createProgressTracker(response);
+                    return new Response(stream, response);
+                } catch (error) {
+                    modelStatus.textContent = `Download failed: ${error.message}`;
+                    throw error;
+                }
+            }
+            return originalFetch(...args);
+        };
+
         try {
-            const modelId = 'Xenova/moondream2';
             const modelConfig = {
                 dtype: {
                     embed_tokens: 'fp16',
@@ -454,20 +494,30 @@ class AIScreenReader {
                 device: 'webgpu',
             };
 
-            [
-                this.state.tokenizer,
-                this.state.processor,
-                this.state.model
-            ] = await Promise.all([
+            modelStatus.textContent = 'Initializing model...';
+            this.speakText("Initializing model, loading resources");
+
+            const [tokenizer, processor, model] = await Promise.all([
                 AutoTokenizer.from_pretrained(modelId),
                 AutoProcessor.from_pretrained(modelId),
                 Moondream1ForConditionalGeneration.from_pretrained(modelId, modelConfig)
             ]);
 
-            this.state.isInitialized = true;
+            Object.assign(this.state, {
+                tokenizer,
+                processor,
+                model,
+                isInitialized: true
+            });
+
             this.elements.screenshotButton.disabled = false;
+            modelStatus.textContent = 'Model initialization complete.';
+            this.speakText("Model initialization complete.");
         } catch (error) {
+            modelStatus.textContent = `Initialization failed: ${error.message}`;
             this.handleError('Error initializing model', error);
+        } finally {
+            window.fetch = originalFetch;
         }
     }
 
