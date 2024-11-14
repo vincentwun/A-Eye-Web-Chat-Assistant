@@ -81,7 +81,7 @@ This Chrome extension is built on a modular architecture featuring advanced tech
 
 1. Download Extension
    ```
-   https://github.com/vincentwun/A-Eye-Visual-Assistant/archive/refs/heads/main.zip
+   https://github.com/vincentwun/A-Eye-Web-Chat-Assistant/archive/refs/heads/main.zip
    ```
 
 2. Chrome Configuration
@@ -90,7 +90,7 @@ This Chrome extension is built on a modular architecture featuring advanced tech
    - Enable "Developer mode" (top-right corner)
    - Select "Load unpacked"
    - Navigate to extracted extension directory
-   - Select `A-Eye Web Chat Assistant` directory
+   - Select `A-Eye-Web-Chat-Assistant` directory
 
 
 ### Required Configuration
