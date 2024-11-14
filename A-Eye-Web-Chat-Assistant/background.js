@@ -117,7 +117,7 @@ async function initializeAndAnalyze(text, sendResponse) {
       return;
     }
 
-    const prompt = `Summarize this web page about 300 words. Web Page Content:
+    const prompt = `Summarize this web page about 200 words. Web Page Content:
 
     "${text}"`;
 
