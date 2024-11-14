@@ -92,7 +92,6 @@ This Chrome extension is built on a modular architecture featuring advanced tech
    - Navigate to extracted extension directory
    - Select `A-Eye-Web-Chat-Assistant` directory
 
-
 ### Required Configuration
 
 #### Chrome Flags Setup
@@ -121,7 +120,7 @@ After modifying the flags above, **please restart Chrome** to apply the changes.
 2. **Component Verification**
    - Go to `chrome://components`.
    - Verify that the `Optimization Guide On Device Model` version is ≥ 2024.5.21.1031.
-   - If outdated, click "Check for update."
+   - If outdated, click "Check for update." (This may take some time to download).
 
 3. **Availability Check**
    - Open the DevTools Console (F12).
@@ -133,9 +132,44 @@ After modifying the flags above, **please restart Chrome** to apply the changes.
 
 ## How to Use
 
-### Keyboard Shortcuts
-- **Alt + Shift + 1**: Activate voice control for browser and extension operations.
-- **Alt + Shift + 2**: Activate voice input to interact with the extension's AI.
+### Keyboard Shortcuts  
+- **Alt + Shift + 1**: Activate voice control for browser and extension operations.  
+- **Alt + Shift + 2**: Interact with the AI for additional information after executing specific commands.  
+  *(Example: After using **Take Screenshot**, **Take Rolling Screenshot**, or **Analyze Content**, press **Alt + Shift + 2** to chat with the AI for further insights.)*
+
+### Voice Commands  
+Use the following voice commands to perform various tasks:
+
+#### 1. **Search**  
+- **Command**: `"Search [query]"`  
+  - **Example**: `"Search the weather today"`  
+  - **Action**: Opens a Google search for the specified query.
+
+#### 2. **Navigate to a Website**  
+- **Command**: `"Go to [website]"`  
+  - **Example**: `"Go to google.com"`  
+  - **Action**: Opens the specified website.  
+    *(Note: The `.com` suffix is optional.)*
+
+#### 3. **Take Screenshot**  
+- **Commands**:  
+  - `"Take screenshot"`  
+  - `"Take a screenshot"`  
+  - `"Capture screen"`  
+  - **Action**: Captures a screenshot of the current view. The AI provides a description of the image.
+
+#### 4. **Take Rolling Screenshot**  
+- **Commands**:  
+  - `"Take rolling screenshot"`  
+  - `"Rolling screenshot"`  
+  - **Action**: Captures a scrolling screenshot. The AI provides a description of the image.
+
+#### 5. **Analyze Content**  
+- **Commands**:  
+  - `"Analyze content"`  
+  - `"Analyze page"`  
+  - `"Content analysis"`  
+  - **Action**: Performs content analysis on the current page using **Gemini Nano**.
 
 > Reminder: Please grant microphone access to the extension to use the voice features.
 
