@@ -494,8 +494,8 @@ class AIScreenReader {
                 device: 'webgpu',
             };
 
-            modelStatus.textContent = 'Initializing model...';
-            this.speakText("Initializing model, loading resources");
+            modelStatus.textContent = 'Model initialization in progress, please wait.';
+            this.speakText("Model initialization in progress, please wait.");
 
             const [tokenizer, processor, model] = await Promise.all([
                 AutoTokenizer.from_pretrained(modelId),
@@ -726,6 +726,7 @@ class AIScreenReader {
         const input = this.elements.userInput.value.trim();
         if (!input || this.state.isProcessing) return;
 
+        this.elements.userInput.value = '';
         this.state.isProcessing = true;
         this.disableInterface();
 
