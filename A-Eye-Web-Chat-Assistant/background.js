@@ -1,3 +1,9 @@
+chrome.commands.onCommand.addListener((command) => {
+  if (command === "_execute_action") {
+    console.log("Shortcut pressed!");
+  }
+});
+
 const SYSTEM_PROMPT = `You are a clear and concise web content summarizer. Your task is to present the core message in simple, plain text format suitable for text-to-speech.`;
 
 const ERROR_MESSAGES = {
