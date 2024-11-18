@@ -19,19 +19,16 @@ export class VoiceController {
       }
     };
 
-    this.commandMap = {
-      'screenshot': {
-        variants: ['take screenshot', 'take a screenshot', 'capture screen'],
-        handler: null
+    this.recognitionConfig = {
+      input: {
+        continuous: true,
+        interimResults: true,
+        lang: 'en-US'
       },
-      'rolling': {
-        variants: ['take rolling screenshot', 'take a rolling screenshot', 'rolling screenshot'],
-        handler: null
-      },
-      'analyze': {
-        variants: ['analyze content', 'analyse content', 'analyze page', 'analyse page',
-          'analyze', 'analyse', 'content analysis'],
-        handler: null
+      control: {
+        continuous: false,
+        interimResults: false,
+        lang: 'en-US'
       }
     };
 
@@ -41,27 +38,12 @@ export class VoiceController {
       handleScreenshot: null,
       handleRollingScreenshot: null,
       handleContentAnalysis: null,
-      performGoogleSearch: null,
-      navigateToWebsite: null,
-      handleSendMessage: null
+      updateCurrentModel: null
     };
   }
 
   setCallbacks(callbacks) {
     this.callbacks = { ...this.callbacks, ...callbacks };
-
-    this.commandMap.screenshot.handler = async () => {
-      this.speakText('Taking screenshot');
-      await this.callbacks.handleScreenshot();
-    };
-    this.commandMap.rolling.handler = async () => {
-      this.speakText('Taking rolling screenshot');
-      await this.callbacks.handleRollingScreenshot();
-    };
-    this.commandMap.analyze.handler = async () => {
-      this.speakText('Analyzing content');
-      await this.callbacks.handleContentAnalysis();
-    };
   }
 
   initializeAll() {
@@ -77,26 +59,20 @@ export class VoiceController {
     }
 
     const recognition = new webkitSpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
+    Object.assign(recognition, this.recognitionConfig.control);
 
     recognition.onstart = () => {
-      console.log('Voice control started');
       this.state.control.active = true;
       this.speakText('Voice control activated.');
       this.callbacks.appendMessage('system', 'Voice control activated.');
+      this.callbacks.updateCurrentModel('Gemini Nano');
     };
 
     recognition.onresult = async (event) => {
       const command = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
       this.callbacks.appendMessage('system', `Detected command: "${command}"`);
-      console.log('Voice command received:', command);
       await this.handleVoiceCommand(command);
-
-      setTimeout(() => {
-        this.stopVoiceControl();
-      }, 800);
+      setTimeout(() => this.stopVoiceControl(), 800);
     };
 
     recognition.onerror = (event) => {
@@ -106,7 +82,6 @@ export class VoiceController {
 
     recognition.onend = () => {
       if (this.state.control.active) {
-        console.log('Voice control ended');
         this.state.control.active = false;
       }
     };
@@ -121,12 +96,9 @@ export class VoiceController {
     }
 
     const recognition = new webkitSpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
+    Object.assign(recognition, this.recognitionConfig.input);
 
     recognition.onstart = () => {
-      console.log('Voice input started');
       this.state.input.active = true;
       this.callbacks.updateVoiceInputButtonState(true);
       document.getElementById('user-input').placeholder = 'Listening...';
@@ -135,10 +107,7 @@ export class VoiceController {
 
     recognition.onresult = (event) => {
       let interimTranscript = '';
-
-      if (this.state.input.silenceTimeout) {
-        clearTimeout(this.state.input.silenceTimeout);
-      }
+      if (this.state.input.silenceTimeout) clearTimeout(this.state.input.silenceTimeout);
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
@@ -149,12 +118,11 @@ export class VoiceController {
         }
       }
 
-      document.getElementById('user-input').value =
-        this.state.input.finalTranscript || interimTranscript;
+      document.getElementById('user-input').value = this.state.input.finalTranscript || interimTranscript;
 
       this.state.input.silenceTimeout = setTimeout(() => {
         if (this.state.input.finalTranscript.trim()) {
-          this.callbacks.handleSendMessage();
+          this.handleVoiceCommand(this.state.input.finalTranscript.trim());
           this.stopVoiceInput();
         }
       }, 600);
@@ -165,10 +133,7 @@ export class VoiceController {
       this.stopVoiceInput();
     };
 
-    recognition.onend = () => {
-      console.log('Voice input ended');
-      this.stopVoiceInput();
-    };
+    recognition.onend = () => this.stopVoiceInput();
 
     this.state.input.recognition = recognition;
   }
@@ -185,46 +150,62 @@ export class VoiceController {
   }
 
   async handleVoiceCommand(command) {
-    console.log('Processing command:', command);
+    try {
+      const response = await chrome.runtime.sendMessage({
+        type: 'processVoiceCommand',
+        text: command
+      });
 
-    const normalizeCommand = (cmd) => {
-      return cmd
-        .toLowerCase()
-        .replace(/analyse/g, 'analyze')
-        .trim();
-    };
-
-    const matchCommand = (input, target) => {
-      const normalizedInput = normalizeCommand(input);
-      return normalizedInput.includes(target) ||
-        normalizedInput.replace(/\s+/g, '') === target.replace(/\s+/g, '');
-    };
-
-    const normalizedCommand = normalizeCommand(command);
-
-    const searchMatch = normalizedCommand.match(/^search\s+(.+)$/i);
-    if (searchMatch) {
-      const searchQuery = searchMatch[1].trim();
-      await this.callbacks.performGoogleSearch(searchQuery);
-      return;
-    }
-
-    const websiteMatch = normalizedCommand.match(/go to (.*?)(?:\.com|$)/i);
-    if (websiteMatch) {
-      const website = websiteMatch[1].trim();
-      await this.callbacks.navigateToWebsite(website);
-      return;
-    }
-
-    for (const [key, { variants, handler }] of Object.entries(this.commandMap)) {
-      if (variants.some(variant => matchCommand(normalizedCommand, variant))) {
-        await handler();
+      if (response.error) {
+        this.handleCommandError(response.error);
         return;
       }
-    }
 
-    this.callbacks.appendMessage('system', `Command not recognized: "${command}"`);
-    this.speakText("Command not recognized. Please try again.");
+      const result = response.response.trim();
+
+      if (result.startsWith('window.open')) {
+        this.handleUrlCommand(result);
+      } else {
+        await this.handleSystemCommand(result);
+      }
+    } catch (error) {
+      this.handleCommandError(error.message);
+    }
+  }
+
+  handleUrlCommand(result) {
+    const urlMatch = result.match(/window\.open\('(.+?)'\)/);
+    if (urlMatch?.[1]) {
+      const url = urlMatch[1];
+      chrome.tabs.create({ url });
+      this.speakText('Opening website');
+      this.callbacks.appendMessage('system', `Opening: ${url}`);
+    }
+  }
+
+  async handleSystemCommand(command) {
+    switch (command) {
+      case 'screenshot':
+        this.speakText('Taking screenshot');
+        await this.callbacks.handleScreenshot();
+        break;
+      case 'rollingScreenshot':
+        this.speakText('Taking rolling screenshot');
+        await this.callbacks.handleRollingScreenshot();
+        break;
+      case 'analyze content':
+        this.speakText('Analyzing content');
+        await this.callbacks.handleContentAnalysis();
+        break;
+      default:
+        this.callbacks.appendMessage('system', `Command not recognized: ${command}`);
+        this.speakText("Command not recognized. Please try again.");
+    }
+  }
+
+  handleCommandError(error) {
+    this.callbacks.appendMessage('system', `Error: ${error}`);
+    this.speakText("Sorry, there was an error processing your command.");
   }
 
   async requestMicrophonePermission() {
@@ -248,48 +229,31 @@ export class VoiceController {
     }
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.voice = this.state.synthesis.selectedVoice;
-    utterance.lang = 'en-US';
-    utterance.rate = 1.5;
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
+    Object.assign(utterance, {
+      voice: this.state.synthesis.selectedVoice,
+      lang: 'en-US',
+      rate: 1.5,
+      pitch: 1.0,
+      volume: 1.0
+    });
 
     this.state.synthesis.isSpeaking = true;
     utterance.onend = () => this.state.synthesis.isSpeaking = false;
-
     this.state.synthesis.instance.speak(utterance);
   }
 
   async toggleVoiceControl() {
-    if (this.state.input.active) {
-      this.stopVoiceInput();
-    }
+    if (this.state.input.active) this.stopVoiceInput();
+    if (!this.state.control.recognition) this.initializeVoiceControl();
 
-    if (!this.state.control.recognition) {
-      this.initializeVoiceControl();
-    }
-
-    if (this.state.control.active) {
-      this.stopVoiceControl();
-    } else {
-      await this.startVoiceControl();
-    }
+    this.state.control.active ? this.stopVoiceControl() : await this.startVoiceControl();
   }
 
   async toggleVoiceInput() {
-    if (this.state.control.active) {
-      this.stopVoiceControl();
-    }
+    if (this.state.control.active) this.stopVoiceControl();
+    if (!this.state.input.recognition) this.initializeVoiceInput();
 
-    if (!this.state.input.recognition) {
-      this.initializeVoiceInput();
-    }
-
-    if (this.state.input.active) {
-      this.stopVoiceInput();
-    } else {
-      await this.startVoiceInput();
-    }
+    this.state.input.active ? this.stopVoiceInput() : await this.startVoiceInput();
   }
 
   async startVoiceControl() {
@@ -299,6 +263,7 @@ export class VoiceController {
 
       await this.state.control.recognition.start();
       this.state.control.active = true;
+      this.callbacks.updateCurrentModel('Gemini Nano');
     } catch (error) {
       console.error('Failed to start voice control:', error);
       this.callbacks.appendMessage('system', 'Failed to start voice control');

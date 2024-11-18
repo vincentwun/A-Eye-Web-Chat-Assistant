@@ -1,9 +1,11 @@
 import { AutoProcessor, AutoTokenizer, Moondream1ForConditionalGeneration, RawImage } from './lib/transformers300.js';
-import { VoiceController } from './functions/voiceControl.js';
-import { ScreenshotController } from './functions/screenShot.js';
+import { VoiceController } from './components/voiceControl.js';
+import { ScreenshotController } from './components/screenShot.js';
+import { ContentAnalysisController } from './components/contentAnalysis.js';
 
 class AIScreenReader {
     constructor() {
+        this.port = chrome.runtime.connect({ name: 'sidepanel' });
         this.prompts = {
             screenshot: 'Describe the picture in about 100 words.',
             rollingScreenshot: 'Describe the picture in about 200 words.'
@@ -37,39 +39,35 @@ class AIScreenReader {
         };
 
         this.voiceController = new VoiceController();
+        this.setupVoiceController();
+        this.screenshotController = new ScreenshotController();
+        this.contentAnalysisController = new ContentAnalysisController();
+
+        this.initializeAll();
+        this.setupMessageListener();
+    }
+
+    setupVoiceController() {
         this.voiceController.setCallbacks({
             appendMessage: (role, content) => this.appendMessage(role, content),
             updateVoiceInputButtonState: (isActive) => {
                 this.elements.voiceButton.style.backgroundColor = isActive ? '#dc3545' : '#007bff';
                 this.elements.voiceButton.textContent = isActive ? 'Stop' : 'Voice';
             },
-            handleScreenshot: () => this.handleScreenshot(),
-            handleRollingScreenshot: () => this.handleRollingScreenshot(),
-            handleContentAnalysis: () => this.handleContentAnalysis(),
-            performGoogleSearch: async (query) => {
-                try {
-                    const encodedQuery = encodeURIComponent(query);
-                    const searchUrl = `https://www.google.com/search?q=${encodedQuery}`;
-                    await chrome.tabs.create({ url: searchUrl });
-                    this.voiceController.speakText(`Searching for ${query}`);
-                    this.appendMessage('system', `Searching Google for: "${query}"`);
-                } catch (error) {
-                    console.error('Search error:', error);
-                    this.appendMessage('system', 'Failed to perform search');
-                }
+            handleScreenshot: async () => {
+                await this.handleScreenshot();
             },
-            navigateToWebsite: (website) => {
-                const url = `https://www.${website.toLowerCase()}.com`;
-                chrome.tabs.create({ url });
-                this.voiceController.speakText(`Opening ${website}`);
+            handleRollingScreenshot: async () => {
+                await this.handleRollingScreenshot();
             },
-            handleSendMessage: () => this.handleSendMessage()
+            handleContentAnalysis: async () => {
+                await this.handleContentAnalysis();
+            },
+            updateCurrentModel: (model) => {
+                this.state.currentModel = model;
+                this.elements.currentModel.textContent = model;
+            }
         });
-
-        this.screenshotController = new ScreenshotController();
-
-        this.initializeAll();
-        this.setupMessageListener();
     }
 
     setupMessageListener() {
@@ -178,7 +176,7 @@ class AIScreenReader {
 
         try {
             modelStatus.textContent = 'Model initialization in progress, please wait.';
-            this.voiceController.speakText("Model initialization in progress, please wait.");
+            this.voiceController.speakText("A-Eye Web Chat Assistant Opened. Model initialization in progress, please wait.");
 
             const [tokenizer, processor, model] = await Promise.all([
                 AutoTokenizer.from_pretrained(modelId),
@@ -330,7 +328,7 @@ class AIScreenReader {
 
             if (this.state.currentModel === 'moondream') {
                 await this.generateMoondreamResponse(input);
-            } else if (this.state.currentModel === 'gemini') {
+            } else if (this.state.currentModel === 'Gemini Nano') {
                 const response = await chrome.runtime.sendMessage({
                     type: 'chat',
                     text: input
@@ -357,90 +355,33 @@ class AIScreenReader {
     async handleContentAnalysis() {
         if (this.state.isProcessing) return;
 
-        try {
-            this.updateModel('gemini');
-            this.state.isProcessing = true;
-            this.elements.analyzeContentButton.disabled = true;
-            this.voiceController.speakText("Analyzing webpage content.");
-            this.appendMessage('assistant', 'Analyzing webpage content.');
-
-            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            const content = await this.extractPageContent(tab);
-
-            this.showPreview('text', `${this.escapeHTML(content)}`);
-
-            const response = await chrome.runtime.sendMessage({
-                type: 'analyze',
-                text: content
-            });
-
-            if (!response || response.error) {
-                throw new Error(response?.error || 'Analysis failed');
+        const callbacks = {
+            onStart: () => {
+                this.updateModel('Gemini Nano');
+                this.elements.analyzeContentButton.disabled = true;
+                this.voiceController.speakText("Analyzing webpage content.");
+                this.appendMessage('assistant', 'Analyzing webpage content.');
+            },
+            onContentExtracted: (content) => {
+                this.showPreview('text', `${this.escapeHTML(content)}`);
+            },
+            onSuccess: (content) => {
+                this.handleResponse(content);
+            },
+            onError: (error) => {
+                this.handleError('Content analysis failed', error);
+            },
+            onComplete: () => {
+                this.elements.analyzeContentButton.disabled = false;
             }
+        };
 
-            this.handleResponse(response.content);
-
-        } catch (error) {
-            this.handleError('Content analysis failed', error);
-        } finally {
-            this.state.isProcessing = false;
-            this.elements.analyzeContentButton.disabled = false;
-        }
-    }
-
-    async extractPageContent(tab) {
-        try {
-            await chrome.scripting.executeScript({
-                target: { tabId: tab.id },
-                files: ['./lib/readability.js']
-            });
-
-            const [{ result }] = await chrome.scripting.executeScript({
-                target: { tabId: tab.id },
-                function: () => {
-                    try {
-                        const documentClone = document.cloneNode(true);
-                        const reader = new Readability(documentClone);
-                        const article = reader.parse();
-
-                        return {
-                            title: article.title,
-                            content: article.textContent,
-                            byline: article.byline,
-                            success: true
-                        };
-                    } catch (error) {
-                        return {
-                            success: false,
-                            error: error.message
-                        };
-                    }
-                }
-            });
-
-            if (!result.success) {
-                throw new Error(`Content extraction failed: ${result.error}`);
-            }
-
-            return this.formatExtractedContent(result);
-        } catch (error) {
-            console.error('Content extraction error:', error);
-            throw new Error('Failed to extract page content');
-        }
-    }
-
-    formatExtractedContent(result) {
-        return [
-            result.title || 'No Title',
-            result.byline || '',
-            '',
-            result.content || ''
-        ].filter(Boolean).join('\n\n');
+        await this.contentAnalysisController.analyzeContent(callbacks);
     }
 
     updateModel(mode) {
         this.state.currentModel = mode;
-        this.elements.currentModel.textContent = mode === 'moondream' ? 'Moondream2' : 'Gemini Nano';
+        this.elements.currentModel.textContent = mode;
     }
 
     handleInputChange() {
@@ -512,4 +453,5 @@ const aiScreenReader = new AIScreenReader();
 
 document.addEventListener('DOMContentLoaded', function () {
     console.log('Extension loaded!');
+    const port = chrome.runtime.connect({ name: "sidepanel" });
 });
