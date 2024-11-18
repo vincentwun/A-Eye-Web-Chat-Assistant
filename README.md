@@ -68,7 +68,7 @@ This Chrome extension is built on a modular architecture featuring advanced tech
 | Browser | Chrome Dev/Canary (≥ 128.0.6545.0) **REQUIRED** |
 | Operating System | Windows 10+, macOS 13+, or Linux with WebGPU support |
 | CPU | Multi-core processor (Intel/AMD) |
-| GPU/VRAM | Integrated/Discrete GPU with 4GB+ VRAM |
+| GPU/VRAM | Integrated/Discrete GPU with 4GB+ VRAM support **with fp16 capability**|
 | Storage | 24GB free space (22GB Gemini Nano, 2GB Moondream2) |
 
 ## Installation
@@ -149,8 +149,7 @@ Use the following voice commands to perform various tasks:
 #### 2. **Navigate to a Website**  
 - **Command**: `"Go to [website]"`  
   - **Example**: `"Go to google.com"`  
-  - **Action**: Opens the specified website.  
-    *(Note: The `.com` suffix is optional.)*
+  - **Action**: Opens the specified website.
 
 #### 3. **Take Screenshot**  
 - **Commands**:  
