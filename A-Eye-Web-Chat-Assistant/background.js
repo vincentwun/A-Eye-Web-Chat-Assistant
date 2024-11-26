@@ -18,16 +18,19 @@ let currentGeminiSession = null;
 
 chrome.commands.onCommand.addListener((command) => {
   console.log('Command received:', command);
-
   if (command === 'toggle-voice-control') {
     chrome.runtime.sendMessage({
       type: 'toggleVoiceControl'
     });
   }
-
   if (command === 'toggle-voice-input') {
     chrome.runtime.sendMessage({
       type: 'toggleVoiceInput'
+    });
+  }
+  if (command === 'toggle-repeat') {
+    chrome.runtime.sendMessage({
+      type: 'toggleRepeat'
     });
   }
 });
@@ -37,7 +40,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     'initGemini': () => initializeGemini(sendResponse),
     'analyze': () => initializeAndAnalyze(request.text, sendResponse),
     'chat': () => handleChat(request.text, sendResponse),
-    'startRollingScreenshot': async () => {
+    'startScrollingScreenshot': async () => {
       try {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         const results = await chrome.scripting.executeScript({

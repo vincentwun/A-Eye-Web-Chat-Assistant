@@ -30,7 +30,7 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "Open AI Screen Reader"
+    "default_title": "Open A-Eye Web Chat Assistant"
   },
   "web_accessible_resources": [
     {
@@ -60,6 +60,13 @@
         "mac": "Alt+Shift+2"
       },
       "description": "Toggle voice input for chat"
+    },
+    "toggle-repeat": {
+      "suggested_key": {
+        "default": "Alt+Shift+3",
+        "mac": "Alt+Shift+3"
+      },
+      "description": "Repeat last AI response"
     },
     "_execute_action": {
       "suggested_key": {
