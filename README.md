@@ -136,7 +136,7 @@ After modifying the flags above, **please restart Chrome** to apply the changes.
 - **Alt + Shift + Q**: Open A-Eye Web Chat Assistant Extension.
 - **Alt + Shift + 1**: Activate voice control for browser and extension operations.  
 - **Alt + Shift + 2**: Interact with the AI for additional information after executing specific commands.  
-  *(Example: After using **Take Screenshot**, **Take Rolling Screenshot**, or **Analyze Content**, press **Alt + Shift + 2** to chat with the AI for further insights.)*
+  *(Example: After using **Take Screenshot**, **Take Scrolling Screenshot**, or **Analyze Content**, press **Alt + Shift + 2** to chat with the AI for further insights.)*
 - **Alt + Shift + 3**: Repeat the AI's last response.
 
 ### Voice Commands  
@@ -160,10 +160,10 @@ Use the following voice commands to perform various tasks:
   - `"Capture screen"`  
   - **Action**: Captures a screenshot of the current view. The AI provides a description of the image.
 
-#### 4. **Take Rolling Screenshot**  
+#### 4. **Take Scrolling Screenshot**  
 - **Commands**:  
-  - `"Take rolling screenshot"`  
-  - `"Rolling screenshot"`  
+  - `"Take Scrolling screenshot"`  
+  - `"Scrolling screenshot"`  
   - **Action**: Captures a scrolling screenshot. The AI provides a description of the image.
 
 #### 5. **Analyze Content**  
