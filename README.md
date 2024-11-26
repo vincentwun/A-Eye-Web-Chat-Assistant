@@ -66,9 +66,9 @@ This Chrome extension is built on a modular architecture featuring advanced tech
 | Component | Minimum Requirement |
 |-----------|-------------------|
 | Browser | Chrome Dev/Canary (≥ 128.0.6545.0) **REQUIRED** |
-| Operating System | Windows 10+, macOS 13+, or Linux with WebGPU support |
+| Operating System | Windows 10+, macOS 13+, or Linux |
 | CPU | Multi-core processor (Intel/AMD) |
-| GPU/VRAM | Integrated/Discrete GPU with 4GB+ VRAM |
+| GPU/VRAM | GPU with 4GB+ VRAM (Integrated or Discrete) that supports WebGPU API |
 | Storage | 24GB free space (22GB Gemini Nano, 2GB Moondream2) |
 
 ## Installation
@@ -133,10 +133,11 @@ After modifying the flags above, **please restart Chrome** to apply the changes.
 ## How to Use
 
 ### Keyboard Shortcuts
-- **Alt + Shift + 1**: Open A-Eye Web Chat Assistant Extension.
+- **Alt + Shift + Q**: Open A-Eye Web Chat Assistant Extension.
 - **Alt + Shift + 1**: Activate voice control for browser and extension operations.  
 - **Alt + Shift + 2**: Interact with the AI for additional information after executing specific commands.  
   *(Example: After using **Take Screenshot**, **Take Rolling Screenshot**, or **Analyze Content**, press **Alt + Shift + 2** to chat with the AI for further insights.)*
+- **Alt + Shift + 3**: Repeat the AI's last response.
 
 ### Voice Commands  
 Use the following voice commands to perform various tasks:

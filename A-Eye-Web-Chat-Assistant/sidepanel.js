@@ -1,12 +1,12 @@
 import { AutoProcessor, AutoTokenizer, Moondream1ForConditionalGeneration, RawImage } from './lib/transformers300.js';
-import { VoiceController } from './functions/voiceControl.js';
-import { ScreenshotController } from './functions/screenShot.js';
+import { VoiceController } from './components/voiceControl.js';
+import { ScreenshotController } from './components/screenShot.js';
 
 class AIScreenReader {
     constructor() {
         this.prompts = {
             screenshot: 'Describe the picture in about 100 words.',
-            rollingScreenshot: 'Describe the picture in about 200 words.'
+            scrollingScreenshot: 'Describe the picture in about 200 words.'
         };
 
         this.state = {
@@ -23,6 +23,9 @@ class AIScreenReader {
 
         this.elements = {
             screenshotButton: document.getElementById('screenshot-button'),
+            scrollingScreenshotButton: document.getElementById('scrolling-screenshot-button'),
+            analyzeContentButton: document.getElementById('analyze-content-button'),
+            currentModel: document.getElementById('current-model'),
             previewContainer: document.getElementById('preview-container'),
             previewImage: document.getElementById('preview-image'),
             previewText: document.getElementById('preview-text'),
@@ -30,10 +33,8 @@ class AIScreenReader {
             userInput: document.getElementById('user-input'),
             sendButton: document.getElementById('send-button'),
             voiceButton: document.getElementById('voice-button'),
-            rollingScreenshotButton: document.getElementById('rolling-screenshot-button'),
-            clearButton: document.getElementById('clear-button'),
-            analyzeContentButton: document.getElementById('analyze-content-button'),
-            currentModel: document.getElementById('current-model')
+            repeatButton: document.getElementById('repeat-button'),
+            clearButton: document.getElementById('clear-button')
         };
 
         this.voiceController = new VoiceController();
@@ -44,7 +45,7 @@ class AIScreenReader {
                 this.elements.voiceButton.textContent = isActive ? 'Stop' : 'Voice';
             },
             handleScreenshot: () => this.handleScreenshot(),
-            handleRollingScreenshot: () => this.handleRollingScreenshot(),
+            handleScrollingScreenshot: () => this.handleScrollingScreenshot(),
             handleContentAnalysis: () => this.handleContentAnalysis(),
             performGoogleSearch: async (query) => {
                 try {
@@ -78,7 +79,8 @@ class AIScreenReader {
 
             const messageHandlers = {
                 toggleVoiceInput: () => this.voiceController.toggleVoiceInput(),
-                toggleVoiceControl: () => this.voiceController.toggleVoiceControl()
+                toggleVoiceControl: () => this.voiceController.toggleVoiceControl(),
+                toggleRepeat: () => this.handleRepeat()
             };
 
             if (messageHandlers[request.type]) {
@@ -110,11 +112,12 @@ class AIScreenReader {
     setupEventListeners() {
         const eventHandlers = {
             'screenshotButton': () => this.handleScreenshot(),
-            'rollingScreenshotButton': () => this.handleRollingScreenshot(),
+            'scrollingScreenshotButton': () => this.handleScrollingScreenshot(),
+            'analyzeContentButton': () => this.handleContentAnalysis(),
             'sendButton': () => this.handleSendMessage(),
             'voiceButton': () => this.voiceController.toggleVoiceInput(),
-            'clearButton': () => this.handleClear(),
-            'analyzeContentButton': () => this.handleContentAnalysis()
+            'repeatButton': () => this.handleRepeat(),
+            'clearButton': () => this.handleClear()
         };
 
         Object.entries(eventHandlers).forEach(([elementName, handler]) => {
@@ -178,7 +181,7 @@ class AIScreenReader {
 
         try {
             modelStatus.textContent = 'Model initialization in progress, please wait.';
-            this.voiceController.speakText("Model initialization in progress, please wait.");
+            this.voiceController.speakText("A-Eye Web Chat Assistant is open. Model initialization in progress, please wait.");
 
             const [tokenizer, processor, model] = await Promise.all([
                 AutoTokenizer.from_pretrained(modelId),
@@ -230,8 +233,8 @@ class AIScreenReader {
 
         try {
             this.elements.screenshotButton.disabled = true;
-            this.voiceController.speakText("Analyzing Screenshot");
-            this.appendMessage('system', 'Analyzing Screenshot.');
+            this.voiceController.speakText("Analyzing screenshot. Please wait.");
+            this.appendMessage('system', 'Analyzing screenshot. Please wait.');
             this.updateModel('moondream');
 
             const screenshot = await this.screenshotController.captureVisibleTab();
@@ -245,26 +248,26 @@ class AIScreenReader {
         }
     }
 
-    async handleRollingScreenshot() {
+    async handleScrollingScreenshot() {
         if (this.state.isProcessing) return;
 
         try {
-            this.elements.rollingScreenshotButton.disabled = true;
-            this.voiceController.speakText("Analyzing rolling screenshot.");
-            this.appendMessage('system', 'Analyzing rolling screenshot.');
+            this.elements.scrollingScreenshotButton.disabled = true;
+            this.voiceController.speakText("Analyzing scrolling screenshot. Please wait.");
+            this.appendMessage('system', 'Analyzing scrolling screenshot. Please wait.');
             this.updateModel('moondream');
 
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             if (!tab) throw new Error('No active tab found');
 
-            const mergedImage = await this.screenshotController.handleRollingScreenshot(tab);
+            const mergedImage = await this.screenshotController.handleScrollingScreenshot(tab);
             this.showPreview('image', mergedImage);
 
-            await this.handleImageAnalysis(mergedImage, this.prompts.rollingScreenshot);
+            await this.handleImageAnalysis(mergedImage, this.prompts.scrollingScreenshot);
         } catch (error) {
-            this.handleError('Rolling screenshot failed', error);
+            this.handleError('Scrolling screenshot failed', error);
         } finally {
-            this.elements.rollingScreenshotButton.disabled = false;
+            this.elements.scrollingScreenshotButton.disabled = false;
         }
     }
 
@@ -361,8 +364,8 @@ class AIScreenReader {
             this.updateModel('gemini');
             this.state.isProcessing = true;
             this.elements.analyzeContentButton.disabled = true;
-            this.voiceController.speakText("Analyzing webpage content.");
-            this.appendMessage('assistant', 'Analyzing webpage content.');
+            this.voiceController.speakText("Analyzing webpage content. Please wait.");
+            this.appendMessage('assistant', 'Analyzing webpage content. Please wait.');
 
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             const content = await this.extractPageContent(tab);
@@ -495,21 +498,31 @@ class AIScreenReader {
         this.screenshotController.cleanup();
     }
 
+
+    handleRepeat() {
+        const lastAIMessage = [...this.elements.conversation.getElementsByClassName('assistant')]
+            .pop();
+
+        if (lastAIMessage) {
+            const messageText = lastAIMessage.textContent.replace(/^AI:\s*/, '');
+            this.voiceController.speakText(messageText);
+        } else {
+            this.appendMessage('system', 'No AI response to repeat.');
+        }
+    }
     enableInterface() {
         this.elements.userInput.disabled = false;
         this.elements.sendButton.disabled = false;
         this.elements.screenshotButton.disabled = false;
         this.elements.analyzeContentButton.disabled = false;
-        this.elements.rollingScreenshotButton.disabled = false;
+        this.elements.scrollingScreenshotButton.disabled = false;
+        this.elements.repeatButton.disabled = false;
     }
 
     disableInterface() {
         this.elements.sendButton.disabled = true;
+        this.elements.repeatButton.disabled = true;
     }
 }
 
 const aiScreenReader = new AIScreenReader();
-
-document.addEventListener('DOMContentLoaded', function () {
-    console.log('Extension loaded!');
-});
