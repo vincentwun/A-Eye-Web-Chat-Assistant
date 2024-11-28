@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "A-Eye Web Chat Assistant",
   "version": "1.0",
-  "description": "AI powered screen reader and content analyzer with Moondream2 and Gemini Nano",
+  "description": "Screen reader and content analyzer powered by Web AI and Chrome's built-in AI, featuring Moondream2 and Gemini Nano.",
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",
@@ -11,12 +11,9 @@
   },
   "permissions": [
     "sidePanel",
-    "storage",
     "activeTab",
-    "tabs",
     "scripting",
     "tts",
-    "notifications",
     "microphone",
     "commands"
   ],

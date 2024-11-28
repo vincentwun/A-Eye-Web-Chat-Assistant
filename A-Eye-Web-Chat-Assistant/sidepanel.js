@@ -1,6 +1,6 @@
 import { AutoProcessor, AutoTokenizer, Moondream1ForConditionalGeneration, RawImage } from './lib/transformers300.js';
-import { VoiceController } from './functions/voiceControl.js';
-import { ScreenshotController } from './functions/screenShot.js';
+import { VoiceController } from './components/voiceControl.js';
+import { ScreenshotController } from './components/screenShot.js';
 
 class AIScreenReader {
     constructor() {
