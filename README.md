@@ -13,7 +13,7 @@
 
 </div>
 
-An advanced Chrome extension leveraging WebAI and Gemini Nano for real-time web voice chat with privacy-first approach for visually impaired or handicap.
+An advanced Chrome extension leveraging Web AI and Chrome's built-in AI (Gemini Nano) for real-time web voice chat with privacy-first approach for visually impaired or handicap.
 
 ## Table of Contents
 - [Overview](#overview)
@@ -68,7 +68,7 @@ This Chrome extension is built on a modular architecture featuring advanced tech
 | Browser | Chrome Dev/Canary (≥ 128.0.6545.0) **REQUIRED** |
 | Operating System | Windows 10+, macOS 13+, or Linux |
 | CPU | Multi-core processor (Intel/AMD) |
-| GPU/VRAM | GPU with 4GB+ VRAM (Integrated or Discrete) that supports WebGPU API and FP16 (half-precision floating point) |
+| GPU/VRAM | GPU with 4GB+ VRAM (integrated or discrete) that must support FP16 (half-precision floating point) |
 | Storage | 24GB free space (22GB Gemini Nano, 2GB Moondream2) |
 
 ## Installation
@@ -108,21 +108,21 @@ After modifying the flags above, **please restart Chrome** to apply the changes.
 #### Gemini Nano Setup
 
 1. **Model Initialization**
-   - Navigate to the [Prompt API Playground](https://chrome.dev/web-ai-demos/prompt-api-playground/).
+   - Navigate to the Prompt API Playground (Made by Thomas Steiner)
+     ```
+     https://chrome.dev/web-ai-demos/prompt-api-playground/
+     ```
    - Open the DevTools Console (F12).
    - Execute:
      ```javascript
      (await ai.languageModel.capabilities()).available;
      ```
-   - The return value should be `"after-download"`.
-> **Reminder:** This step triggers the `Optimization Guide On Device Model` to appear in `chrome://components`. Ensure that this component is visible for the next steps.
-
-2. **Component Verification**
+   - The return value should be `"after-download"`. (This step ensures that the `Optimization Guide On Device Model` appears.)
    - Go to `chrome://components`.
    - Verify that the `Optimization Guide On Device Model` version is ≥ 2024.5.21.1031.
    - If outdated, click "Check for update." (This may take some time to download).
 
-3. **Availability Check**
+2. **Availability Check**
    - Open the DevTools Console (F12).
    - Execute:
      ```javascript
@@ -139,15 +139,16 @@ After modifying the flags above, **please restart Chrome** to apply the changes.
   *(Example: After using **Take Screenshot**, **Take Scrolling Screenshot**, or **Analyze Content**, press **Alt + Shift + 2** to chat with the AI for further insights.)*
 - **Alt + Shift + 3**: Repeat the AI's last response. (Coming soon)
 
-### Voice Commands  
+### Voice Commands
+> Reminder: Please grant microphone access to the extension to use the voice features.
 Use the following voice commands to perform various tasks:
 
-#### 1. **Search**  
+#### 1. **Search**
 - **Command**: `"Search [query]"`  
   - **Example**: `"Search the weather today"`  
   - **Action**: Opens a Google search for the specified query.
 
-#### 2. **Navigate to a Website**  
+#### 2. **Navigate to a Website**
 - **Command**: `"Go to [website]"`  
   - **Example**: `"Go to google.com"`  
   - **Action**: Opens the specified website.  
@@ -172,8 +173,6 @@ Use the following voice commands to perform various tasks:
   - `"Analyze page"`  
   - `"Content analysis"`  
   - **Action**: Performs content analysis on the current page using **Gemini Nano**.
-
-> Reminder: Please grant microphone access to the extension to use the voice features.
 
 These shortcuts allow you to seamlessly navigate and interact with web content using voice commands.
 
