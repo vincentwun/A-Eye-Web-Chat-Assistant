@@ -137,7 +137,7 @@ After modifying the flags above, **please restart Chrome** to apply the changes.
 - **Alt + Shift + 1**: Activate voice control for browser and extension operations.  
 - **Alt + Shift + 2**: Interact with the AI for additional information after executing specific commands.  
   *(Example: After using **Take Screenshot**, **Take Scrolling Screenshot**, or **Analyze Content**, press **Alt + Shift + 2** to chat with the AI for further insights.)*
-- **Alt + Shift + 3**: Repeat the AI's last response.
+- **Alt + Shift + 3**: Repeat the AI's last response. (Coming soon)
 
 ### Voice Commands  
 Use the following voice commands to perform various tasks:
