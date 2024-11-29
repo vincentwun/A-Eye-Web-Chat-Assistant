@@ -54,8 +54,8 @@ export class VoiceController {
       this.speakText('Taking screenshot');
       await this.callbacks.handleScreenshot();
     };
-    this.commandMap.rolling.handler = async () => {
-      this.speakText('Taking rolling screenshot');
+    this.commandMap.scrolling.handler = async () => {
+      this.speakText('Taking scrolling screenshot');
       await this.callbacks.handleRollingScreenshot();
     };
     this.commandMap.analyze.handler = async () => {
