@@ -24,8 +24,8 @@ export class VoiceController {
         variants: ['take screenshot', 'take a screenshot', 'capture screen'],
         handler: null
       },
-      'rolling': {
-        variants: ['take rolling screenshot', 'take a rolling screenshot', 'rolling screenshot'],
+      'scrolling': {
+        variants: ['take scrolling screenshot', 'take a scrolling screenshot', 'scrolling screenshot'],
         handler: null
       },
       'analyze': {
