@@ -250,8 +250,8 @@ class AIScreenReader {
 
         try {
             this.elements.rollingScreenshotButton.disabled = true;
-            this.voiceController.speakText("Analyzing rolling screenshot.");
-            this.appendMessage('system', 'Analyzing rolling screenshot.');
+            this.voiceController.speakText("Analyzing scrolling screenshot.");
+            this.appendMessage('system', 'Analyzing scrolling screenshot.');
             this.updateModel('moondream');
 
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
