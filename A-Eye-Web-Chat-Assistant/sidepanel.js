@@ -6,7 +6,7 @@ class AIScreenReader {
     constructor() {
         this.prompts = {
             screenshot: 'Describe the picture in about 100 words.',
-            rollingScreenshot: 'Describe the picture in about 200 words.'
+            scrollingScreenshot: 'Describe the picture in about 200 words.'
         };
 
         this.state = {
@@ -260,7 +260,7 @@ class AIScreenReader {
             const mergedImage = await this.screenshotController.handleRollingScreenshot(tab);
             this.showPreview('image', mergedImage);
 
-            await this.handleImageAnalysis(mergedImage, this.prompts.rollingScreenshot);
+            await this.handleImageAnalysis(mergedImage, this.prompts.scrollingScreenshot);
         } catch (error) {
             this.handleError('Rolling screenshot failed', error);
         } finally {
