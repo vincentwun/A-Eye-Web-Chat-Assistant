@@ -1,9 +1,3 @@
-chrome.commands.onCommand.addListener((command) => {
-  if (command === "_execute_action") {
-    console.log("Shortcut pressed!");
-  }
-});
-
 const SYSTEM_PROMPT = `You are a clear and concise web content summarizer. Your task is to present the core message in simple, plain text format suitable for text-to-speech.`;
 
 const ERROR_MESSAGES = {
@@ -18,16 +12,22 @@ let currentGeminiSession = null;
 
 chrome.commands.onCommand.addListener((command) => {
   console.log('Command received:', command);
-
+  if (command === "_execute_action") {
+    console.log("Shortcut pressed!");
+  }
   if (command === 'toggle-voice-control') {
     chrome.runtime.sendMessage({
       type: 'toggleVoiceControl'
     });
   }
-
   if (command === 'toggle-voice-input') {
     chrome.runtime.sendMessage({
       type: 'toggleVoiceInput'
+    });
+  }
+  if (command === 'toggle-repeat') {
+    chrome.runtime.sendMessage({
+      type: 'toggleRepeat'
     });
   }
 });
@@ -37,7 +37,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     'initGemini': () => initializeGemini(sendResponse),
     'analyze': () => initializeAndAnalyze(request.text, sendResponse),
     'chat': () => handleChat(request.text, sendResponse),
-    'startRollingScreenshot': async () => {
+    'startScrollingScreenshot': async () => {
       try {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         const results = await chrome.scripting.executeScript({
