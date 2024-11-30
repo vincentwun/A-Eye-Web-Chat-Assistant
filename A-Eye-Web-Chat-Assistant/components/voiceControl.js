@@ -24,8 +24,8 @@ export class VoiceController {
         variants: ['take screenshot', 'take a screenshot', 'capture screen'],
         handler: null
       },
-      'rolling': {
-        variants: ['take rolling screenshot', 'take a rolling screenshot', 'rolling screenshot'],
+      'scrolling': {
+        variants: ['take scrolling screenshot', 'take a scrolling screenshot', 'scrolling screenshot'],
         handler: null
       },
       'analyze': {
@@ -51,15 +51,12 @@ export class VoiceController {
     this.callbacks = { ...this.callbacks, ...callbacks };
 
     this.commandMap.screenshot.handler = async () => {
-      this.speakText('Taking screenshot');
       await this.callbacks.handleScreenshot();
     };
-    this.commandMap.rolling.handler = async () => {
-      this.speakText('Taking rolling screenshot');
+    this.commandMap.scrolling.handler = async () => {
       await this.callbacks.handleRollingScreenshot();
     };
     this.commandMap.analyze.handler = async () => {
-      this.speakText('Analyzing content');
       await this.callbacks.handleContentAnalysis();
     };
   }

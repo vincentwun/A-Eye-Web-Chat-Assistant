@@ -1,21 +1,15 @@
-chrome.commands.onCommand.addListener((command) => {
-  if (command === "_execute_action") {
-    console.log("Shortcut pressed!");
-  }
-});
-
-const SYSTEM_PROMPT = `You are A-Eye Web Chat Assistant, a helpful web browsing assistant. Your task is to summarize web content and respond to user queries in a clear, concise, and plain text format, suitable for text-to-speech. Avoid using markdown format.
-
-1. Summarizing Content: Provide a brief, plain text summary of the core message when summarizing web pages, suitable for text-to-speech.
-
-2. Respond to queries as follows:
-   - When asked "go to youtube / go youtube": Respond with "open https://www.youtube.com".
-   - When asked "search for youtube / find youtube": Respond with "open https://www.google.com/search?q=youtube".
-   - When asked "take a screenshot": Respond with "screenshot".
-   - When asked "take a rolling screenshot": Respond with "rollingScreenshot".
-   - When asked "summarize content / analyze content": Respond with "analyze content".
-
-Always respond in English. Your responses must be clear, helpful, and in plain text, avoiding any formatting like markdown.`;
+const SYSTEM_PROMPT = `You are A-Eye-Web-Chat-Assistant. Your main tasks are Summarize Web Page Content and answering questions following the instructions:
+Question like: 'go to youtube / go youtube'.
+Your Response: window.open('https://www.youtube.com');
+Question like: 'search for youtube / find youtube'.
+Your Response: window.open('https://www.google.com/search?q=youtube');
+Question like: 'take a screenshot'.
+Your Response: 'screenshot'
+Question like: 'take a scrolling screenshot'.
+Your Response: 'scrollingScreenshot'
+Question like: 'summarization content / analyze content'.
+Your Response: 'analyze content'
+Important: Respond using plain text only, without any form of formatting, and avoid Markdown tags or special characters.`;
 
 const ERROR_MESSAGES = {
   GEMINI_UNAVAILABLE: "Gemini Nano is not available.",
@@ -30,6 +24,9 @@ let isInitializing = false;
 
 chrome.commands.onCommand.addListener((command) => {
   console.log('Command received:', command);
+  if (command === "_execute_action") {
+    console.log("Shortcut pressed!");
+  }
   if (command === 'toggle-voice-control') {
     chrome.runtime.sendMessage({
       type: 'toggleVoiceControl'
@@ -84,10 +81,10 @@ async function createGeminiSession() {
   if (isInitializing) {
     return { success: false, error: 'Session initialization in progress' };
   }
-  
+
   try {
     isInitializing = true;
-    
+
     const capabilities = await ai.languageModel.capabilities();
     if (capabilities.available === "no") {
       throw new Error(ERROR_MESSAGES.GEMINI_UNAVAILABLE);
@@ -144,7 +141,7 @@ async function initializeAndAnalyze(text, sendResponse) {
       return;
     }
 
-    const prompt = `Summarize this web page about 100 words. Web Page Content: "${text}"`;
+    const prompt = `Summarize the webpage content within 200 words: "${text}"`;
 
     const result = await currentGeminiSession.prompt(prompt);
     handleGeminiResponse(result, sendResponse);
@@ -160,7 +157,7 @@ async function handleChat(text, sendResponse) {
     if (!sessionAvailable) {
       await createGeminiSession();
     }
-    
+
     if (!currentGeminiSession) {
       throw new Error(ERROR_MESSAGES.GEMINI_UNAVAILABLE);
     }
