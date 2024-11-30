@@ -29,8 +29,7 @@ export class VoiceController {
         handler: null
       },
       'analyze': {
-        variants: ['analyze content', 'analyse content', 'analyze page', 'analyse page',
-          'analyze', 'analyse', 'content analysis'],
+        variants: ['analyze content', 'analyse content', 'analyze page', 'analyse page'],
         handler: null
       }
     };
@@ -39,7 +38,7 @@ export class VoiceController {
       appendMessage: null,
       updateVoiceInputButtonState: null,
       handleScreenshot: null,
-      handleRollingScreenshot: null,
+      handleScrollingScreenshot: null,
       handleContentAnalysis: null,
       performGoogleSearch: null,
       navigateToWebsite: null,
@@ -56,7 +55,7 @@ export class VoiceController {
     };
     this.commandMap.scrolling.handler = async () => {
       this.speakText('Taking scrolling screenshot');
-      await this.callbacks.handleRollingScreenshot();
+      await this.callbacks.handleScrollingScreenshot();
     };
     this.commandMap.analyze.handler = async () => {
       this.speakText('Analyzing content');
