@@ -27,7 +27,7 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "Open AI Screen Reader"
+    "default_title": "Open A-Eye Web Chat Assistant"
   },
   "web_accessible_resources": [
     {
