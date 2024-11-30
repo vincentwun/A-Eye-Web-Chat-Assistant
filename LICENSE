@@ -42,11 +42,6 @@ This software incorporates the following third-party components:
    Source: https://github.com/xenova/transformers.js
    License: https://www.apache.org/licenses/LICENSE-2.0
 
-4. Chrome's Built-in Gemini Nano (Developer Version)
-   This extension utilizes experimental AI features available in Chrome Developer 
-   Version, which are subject to Chrome's terms of service and experimental 
-   features policy.
-
 --------------------------------------------------------------------------------
 
 Additional Notices:
