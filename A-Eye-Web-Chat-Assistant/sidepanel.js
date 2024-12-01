@@ -41,7 +41,7 @@ class AIScreenReader {
         this.voiceController.setCallbacks({
             appendMessage: (role, content) => this.appendMessage(role, content),
             updateVoiceInputButtonState: (isActive) => {
-                this.elements.voiceButton.style.backgroundColor = isActive ? '#dc3545' : '#007bff';
+                this.elements.voiceButton.style.backgroundColor = isActive ? '#dc3545' : '#1a73e8';
                 this.elements.voiceButton.textContent = isActive ? 'Stop' : 'Voice';
             },
             handleScreenshot: () => this.handleScreenshot(),
