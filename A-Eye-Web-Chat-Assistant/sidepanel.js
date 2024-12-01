@@ -200,6 +200,15 @@ class AIScreenReader {
             this.elements.screenshotButton.disabled = false;
             modelStatus.textContent = 'Model initialization complete.';
             this.voiceController.speakText("Model initialization complete.");
+            const instructions = 
+`How to use?
+
+Alt + Shift + 1: Activate voice control.
+Alt + Shift + 2: Interact with the AI. (Example: After using Take Screenshot, Take Scrolling Screenshot, or Analyze Content, press Alt + Shift + 2 to chat with the AI for further insights.)
+Alt + Shift + 3: Repeat the AI's last response.`;
+
+        this.appendMessage('system', instructions);
+
         } catch (error) {
             modelStatus.textContent = `Initialization failed: ${error.message}`;
             this.handleError('Error initializing model', error);
@@ -453,11 +462,11 @@ class AIScreenReader {
     appendMessage(role, content) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', role);
-        messageDiv.innerHTML = `<strong>${role === 'user' ? 'You' : 'AI'}:</strong> ${this.escapeHTML(content)}`;
+        const formattedContent = content.replace(/\n/g, '<br>');
+        messageDiv.innerHTML = `<strong>${role === 'user' ? 'You' : role === 'system' ? 'System' : 'AI'}:</strong> ${formattedContent}`;
         this.elements.conversation.appendChild(messageDiv);
         this.elements.conversation.scrollTop = this.elements.conversation.scrollHeight;
     }
-
     escapeHTML(str) {
         const div = document.createElement('div');
         div.textContent = str;
