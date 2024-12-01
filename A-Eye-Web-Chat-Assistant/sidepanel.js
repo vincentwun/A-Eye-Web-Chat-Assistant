@@ -41,28 +41,8 @@ class AIScreenReader {
         this.voiceController.setCallbacks({
             appendMessage: (role, content) => this.appendMessage(role, content),
             updateVoiceInputButtonState: (isActive) => {
-                this.elements.voiceButton.style.backgroundColor = isActive ? '#dc3545' : '#007bff';
+                this.elements.voiceButton.style.backgroundColor = isActive ? '#dc3545' : '#1a73e8';
                 this.elements.voiceButton.textContent = isActive ? 'Stop' : 'Voice';
-            },
-            handleScreenshot: () => this.handleScreenshot(),
-            handleScrollingScreenshot: () => this.handleScrollingScreenshot(),
-            handleContentAnalysis: () => this.handleContentAnalysis(),
-            performGoogleSearch: async (query) => {
-                try {
-                    const encodedQuery = encodeURIComponent(query);
-                    const searchUrl = `https://www.google.com/search?q=${encodedQuery}`;
-                    await chrome.tabs.create({ url: searchUrl });
-                    this.voiceController.speakText(`Searching for ${query}`);
-                    this.appendMessage('system', `Searching Google for: "${query}"`);
-                } catch (error) {
-                    console.error('Search error:', error);
-                    this.appendMessage('system', 'Failed to perform search');
-                }
-            },
-            navigateToWebsite: (website) => {
-                const url = `https://www.${website.toLowerCase()}.com`;
-                chrome.tabs.create({ url });
-                this.voiceController.speakText(`Opening ${website}`);
             },
             handleSendMessage: () => this.handleSendMessage()
         });
@@ -79,7 +59,6 @@ class AIScreenReader {
 
             const messageHandlers = {
                 toggleVoiceInput: () => this.voiceController.toggleVoiceInput(),
-                toggleVoiceControl: () => this.voiceController.toggleVoiceControl(),
                 toggleRepeat: () => this.handleRepeat()
             };
 
@@ -500,8 +479,55 @@ class AIScreenReader {
     handleResponse(response) {
         this.appendMessage('assistant', response);
         this.state.messages.push({ role: 'assistant', content: response });
+
+        if (this.isSpecialCommand(response)) {
+            this.handleSpecialCommand(response);
+        }
+
         this.voiceController.speakText(response);
         this.enableInterface();
+    }
+
+    isSpecialCommand(response) {
+        const windowOpenRegex = /^window\.open\(['"][^'"]+['"]\);?$/;
+        return (
+            windowOpenRegex.test(response) ||
+            response.trim().toLowerCase() === 'screenshot' ||
+            response.trim().toLowerCase() === 'scrolling' ||
+            response.trim().toLowerCase() === 'analyze'
+        );
+    }
+
+    async handleSpecialCommand(response) {
+        try {
+            if (response.startsWith('window.open')) {
+                const urlMatch = response.match(/window\.open\(['"]([^'"]+)['"]\)/);
+                if (urlMatch && urlMatch[1]) {
+                    const url = urlMatch[1];
+                    try {
+                        new URL(url);
+                        this.appendMessage('system', `Opening ${url}...`);
+                        window.open(url);
+                    } catch (urlError) {
+                        throw new Error('Invalid URL format');
+                    }
+                } else {
+                    throw new Error('Invalid command format');
+                }
+            } else if (response.trim().toLowerCase() === 'screenshot') {
+                // 移除系統消息，因為 handleScreenshot 會添加自己的消息
+                await this.handleScreenshot();
+            } else if (response.trim().toLowerCase() === 'scrolling') {
+                // 移除系統消息，因為 handleScrollingScreenshot 會添加自己的消息
+                await this.handleScrollingScreenshot();
+            } else if (response.trim().toLowerCase() === 'analyze') {
+                // 移除系統消息，因為 handleContentAnalysis 會添加自己的消息
+                await this.handleContentAnalysis();
+            }
+        } catch (error) {
+            console.error('Error executing command:', error);
+            this.handleError('Failed to execute command', error);
+        }
     }
 
     handleError(message, error) {

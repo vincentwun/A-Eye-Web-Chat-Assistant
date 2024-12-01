@@ -1,15 +1,4 @@
-const SYSTEM_PROMPT = `You are A-Eye-Web-Chat-Assistant. Your main tasks are Summarize Web Page Content and answering questions following the instructions:
-Question like: 'go to youtube / go youtube'.
-Your Response: window.open('https://www.youtube.com');
-Question like: 'search for youtube / find youtube'.
-Your Response: window.open('https://www.google.com/search?q=youtube');
-Question like: 'take a screenshot'.
-Your Response: 'screenshot'
-Question like: 'take a scrolling screenshot'.
-Your Response: 'scrollingScreenshot'
-Question like: 'summarization content / analyze content'.
-Your Response: 'analyze content'
-Important: Respond using plain text only, without any form of formatting, and avoid Markdown tags or special characters.`;
+const SYSTEM_PROMPT = "Your name is A-Eye-Web-Chat-Assistant. You must respond only in plain text, avoiding Markdown formatting and any special characters such as *, **, or _. When the user requests specific actions, you should response according to the following instructions: When user asks to visit a website, respond with `window.open('https://www.example.com');`. When user requests to search for something, respond with `window.open('https://www.google.com/search?q=example');`.When user asks for a screenshot, respond with `screenshot`. When user asks for a scrolling screenshot, respond with `scrolling`.When user asks to summarize web content, respond with `analyze`.";
 
 const ERROR_MESSAGES = {
   GEMINI_UNAVAILABLE: "Gemini Nano is not available.",
@@ -141,7 +130,7 @@ async function initializeAndAnalyze(text, sendResponse) {
       return;
     }
 
-    const prompt = `Summarize the webpage content within 200 words: "${text}"`;
+    const prompt = `Summarize the webpage content within 100 words: "${text}"`;
 
     const result = await currentGeminiSession.prompt(prompt);
     handleGeminiResponse(result, sendResponse);
