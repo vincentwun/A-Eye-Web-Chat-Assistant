@@ -22,7 +22,7 @@ An advanced Chrome extension leveraging Web AI and Chrome's built-in AI (Gemini 
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [How to Use](#how-to-use)
-- [Limitations](#limitations)
+- [Current Limitations](#current-limitations)
 - [License](#license)
 
 ## Overview
@@ -90,7 +90,7 @@ This Chrome extension is built on a modular architecture featuring advanced tech
    - Enable "Developer mode" (top-right corner)
    - Select "Load unpacked"
    - Navigate to extracted extension directory
-   - Select `A-Eye-Web-Chat-Assistant-main\A-Eye-Web-Chat-Assistant` directory
+   - Select `A-Eye-Web-Chat-Assistant-main/A-Eye-Web-Chat-Assistant` directory
 
 ### Required Configuration
 
@@ -105,74 +105,90 @@ This Chrome extension is built on a modular architecture featuring advanced tech
 **Important:**  
 After modifying the flags above, **please restart Chrome** to apply the changes. Failure to do so may result in the settings not being properly activated.
 
-#### Gemini Nano Setup
+#### Built-in AI Model (Gemini Nano) Setup
 
-1. **Model Initialization**
-   - Navigate to the Prompt API Playground (Made by Thomas Steiner)
-     ```
-     https://chrome.dev/web-ai-demos/prompt-api-playground/
-     ```
-   - Open the DevTools Console (F12).
-   - Execute:
+**Step 1: Model Initialization**  
+1. Open the **Prompt API Playground**:  
+   [https://chrome.dev/web-ai-demos/prompt-api-playground/](https://chrome.dev/web-ai-demos/prompt-api-playground/)  
+2. Launch the **DevTools Console** (`F12`).
+3. Execute:  
+   ```javascript
+   (await ai.languageModel.capabilities()).available;
+   ```
+4. If prompted to manually type "allow pasting", do so before proceeding.
+5. If the return value is `"after-download"`:  
+   - Go to **chrome://components** and ensure the **Optimization Guide On Device Model** version is **≥ 2024.5.21.1031**.  
+   - If outdated, click **"Check for update"**. *(Download time may vary.)*
+6. If the return value is `"no"`:  
+   - In **DevTools Console**, run:  
+     ```javascript
+     await ai.languageModel.create();
+     ```  
+   - This may fail, which is expected.  
+   - Relaunch Chrome.
+   - Open **DevTools Console** again and execute:  
      ```javascript
      (await ai.languageModel.capabilities()).available;
      ```
-   - The return value should be `"after-download"`. (This step ensures that the `Optimization Guide On Device Model` appears.)
-   - Go to `chrome://components`.
-   - Verify that the `Optimization Guide On Device Model` version is ≥ 2024.5.21.1031.
-   - If outdated, click "Check for update." (This may take some time to download).
+   - The return value should now be `"after-download"`.
+   - Go to **chrome://components** and verify that the **Optimization Guide On Device Model** version is **≥ 2024.5.21.1031**.
 
-2. **Availability Check**
-   - Open the DevTools Console (F12).
-   - Execute:
-     ```javascript
-     (await ai.languageModel.capabilities()).available;
-     ```
-   - Confirm the return value is `"readily"`.
+---
+
+#### Web AI Model (Moondream2) Setup
+
+**Initialization Process**
+1. Press `Alt + Shift + Q` to open the **A-Eye Web Chat Assistant**.  
+2. During the first run, the Web AI model will automatically download from the **Hugging Face Hub**.  
+3. Once the initialization is complete:  
+   - A message **"Model initialization complete"** will appear at the top of the screen.  
+   - The system will announce the message using **text-to-speech (TTS)**.
+
+---
 
 ## How to Use
 
+### Prerequisite
+- Ensure microphone access is granted to the extension to utilize voice features.
+
 ### Keyboard Shortcuts
-- **Alt + Shift + Q**: Open A-Eye Web Chat Assistant Extension.
-- **Alt + Shift + 1**: Activate voice control for browser and extension operations.  
-- **Alt + Shift + 2**: Interact with the AI for additional information after executing specific commands.  
-  *(Example: After using **Take Screenshot**, **Take Scrolling Screenshot**, or **Analyze Content**, press **Alt + Shift + 2** to chat with the AI for further insights.)*
-- **Alt + Shift + 3**: Repeat the AI's last response.
+#### 1. Open the A-Eye Web Chat Assistant
+- **Shortcut**: `Alt + Shift + Q`  
 
-### Voice Commands
-> Reminder: Please grant microphone access to the extension to use the voice features.
-Use the following voice commands to perform various tasks:
+#### 2. Activate Voice Control
+- **Shortcut**: `Alt + Shift + 1`  
+- Enables voice control for browser and extension operations.  
+- **Available Voice Commands**:  
+  - **Search**  
+    - Command: `"Search [query]"`  
+    - Example: `"Search the weather today"`  
+    - Action: Opens a Google search for the specified query.  
 
-#### 1. **Search**
-- **Command**: `"Search [query]"`  
-  - **Example**: `"Search the weather today"`  
-  - **Action**: Opens a Google search for the specified query.
+  - **Navigate to a Website**  
+    - Command: `"Go to [website]"`  
+    - Example: `"Go to google.com"`  
+    - Action: Opens the specified website. *(Note: The `.com` suffix is optional.)*  
 
-#### 2. **Navigate to a Website**
-- **Command**: `"Go to [website]"`  
-  - **Example**: `"Go to google.com"`  
-  - **Action**: Opens the specified website.  
-    *(Note: The `.com` suffix is optional.)*
+  - **Take Screenshot**  
+    - Commands: `"Take screenshot"`, `"Take a screenshot"`, `"Capture screen"`  
+    - Action: Captures a screenshot of the current view and provides an AI-generated description.  
 
-#### 3. **Take Screenshot**  
-- **Commands**:  
-  - `"Take screenshot"`  
-  - `"Take a screenshot"`  
-  - `"Capture screen"`  
-  - **Action**: Captures a screenshot of the current view. The AI provides a description of the image.
+  - **Take Scrolling Screenshot**  
+    - Commands: `"Take scrolling screenshot"`, `"Scrolling screenshot"`  
+    - Action: Captures a scrolling screenshot and provides an AI-generated description.  
 
-#### 4. **Take Scrolling Screenshot**  
-- **Commands**:  
-  - `"Take Scrolling screenshot"`  
-  - `"Scrolling screenshot"`  
-  - **Action**: Captures a scrolling screenshot. The AI provides a description of the image.
+  - **Analyze Content**  
+    - Commands: `"Analyze content"`, `"Analyze page"`, `"Content analysis"`  
+    - Action: Performs content analysis of the current page using **Gemini Nano**.
 
-#### 5. **Analyze Content**  
-- **Commands**:  
-  - `"Analyze content"`  
-  - `"Analyze page"`  
-  - `"Content analysis"`  
-  - **Action**: Performs content analysis on the current page using **Gemini Nano**.
+#### 3. Interact with the AI After Actions
+- **Shortcut**: `Alt + Shift + 2`  
+- Use this after executing **Screenshot**, **Scrolling Screenshot**, or **Analyze Content** to chat with the AI for additional insights.
+
+#### 4. Repeat the AI's Last Response
+- **Shortcut**: `Alt + Shift + 3`  
+
+
 
 These shortcuts allow you to seamlessly navigate and interact with web content using voice commands.
 
