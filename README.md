@@ -90,7 +90,7 @@ This Chrome extension is built on a modular architecture featuring advanced tech
    - Enable "Developer mode" (top-right corner)
    - Select "Load unpacked"
    - Navigate to extracted extension directory
-   - Select `A-Eye-Web-Chat-Assistant` directory
+   - Select `A-Eye-Web-Chat-Assistant-main\A-Eye-Web-Chat-Assistant` directory
 
 ### Required Configuration
 
