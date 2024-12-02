@@ -167,18 +167,18 @@ After modifying the flags above, **please restart Chrome** to apply the changes.
   - **Navigate to a Website**  
     - Command: `"Go to [website]"`  
     - Example: `"Go to google.com"`  
-    - Action: Opens the specified website. *(Note: The `.com` suffix is optional.)*  
+    - Action: Opens the specified website. *(Currently, only .com websites are supported.)*
 
   - **Take Screenshot**  
-    - Commands: `"Take screenshot"`, `"Take a screenshot"`, `"Capture screen"`  
+    - Commands: `"Take a screenshot"`
     - Action: Captures a screenshot of the current view and provides an AI-generated description.  
 
-  - **Take Scrolling Screenshot**  
-    - Commands: `"Take scrolling screenshot"`, `"Scrolling screenshot"`  
+  - **Take Scrolling Screenshot**
+    - Commands: `"Take a scrolling screenshot"`
     - Action: Captures a scrolling screenshot and provides an AI-generated description.  
 
-  - **Analyze Content**  
-    - Commands: `"Analyze content"`, `"Analyze page"`, `"Content analysis"`  
+  - **Analyze Content**
+    - Commands: `"Analyze content"`
     - Action: Performs content analysis of the current page using **Gemini Nano**.
 
 #### 3. Interact with the AI After Actions

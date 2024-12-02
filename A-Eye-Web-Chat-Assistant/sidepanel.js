@@ -200,14 +200,16 @@ class AIScreenReader {
             this.elements.screenshotButton.disabled = false;
             modelStatus.textContent = 'Model initialization complete.';
             this.voiceController.speakText("Model initialization complete.");
-            const instructions = 
-`How to use?
+            const instructions =
+                `Hello, I’m A-Eye Web Chat Assistant, here to help with various tasks.
+To get started, press Alt + Shift + 1 to activate voice control. You can then say commands like "Search the weather today" for a Google search.
+To navigate to a website, say "Go to [website]" (e.g., "Go to youtube"). Currently, I can only open .com websites.
+To perform actions like taking a screenshot or analyzing content, say "Take a screenshot," "Take a scrolling screenshot," or "Analyze content."
+Press Alt + Shift + 2 to interact with me for additional insights after performing tasks like taking a screenshot or analyzing content.
+Press Alt + Shift + 3 to repeat my last response.`;
 
-Alt + Shift + 1: Activate voice control.
-Alt + Shift + 2: Interact with the AI. (Example: After using Take Screenshot, Take Scrolling Screenshot, or Analyze Content, press Alt + Shift + 2 to chat with the AI for further insights.)
-Alt + Shift + 3: Repeat the AI's last response.`;
-
-        this.appendMessage('system', instructions);
+            this.appendMessage('AI', instructions);
+            this.voiceController.speakText(instructions);
 
         } catch (error) {
             modelStatus.textContent = `Initialization failed: ${error.message}`;
@@ -349,7 +351,9 @@ Alt + Shift + 3: Repeat the AI's last response.`;
                 });
                 this.handleResponse(response.content);
             } else {
-                throw new Error('Please select a model first');
+                this.voiceController.speakText('Please select a function, such as Screenshot, Scrolling Screenshot, or Analyze Content, before interacting with the AI.');
+                throw new Error('Please select a function, such as Screenshot, Scrolling Screenshot, or Analyze Content, before interacting with the AI.');
+
             }
 
             this.elements.userInput.value = '';

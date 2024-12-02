@@ -1,4 +1,4 @@
-const SYSTEM_PROMPT = `You are a clear and concise web content summarizer. Your task is to present the core message in simple, plain text format suitable for text-to-speech.`;
+const SYSTEM_PROMPT = `Your name is A-Eye Web Chat Assistant, all your responses should avoid markdown format and be in plain text only.`;
 
 const ERROR_MESSAGES = {
   GEMINI_UNAVAILABLE: "Gemini Nano is not available.",
@@ -123,9 +123,7 @@ async function initializeAndAnalyze(text, sendResponse) {
       return;
     }
 
-    const prompt = `Summarize this web page about 100 words. Web Page Content:
-
-    "${text}"`;
+    const prompt = `Summarize the core message of this webpage in about 100 words: "${text}"`;
 
     const result = await currentGeminiSession.prompt(prompt);
     handleGeminiResponse(result, sendResponse);
