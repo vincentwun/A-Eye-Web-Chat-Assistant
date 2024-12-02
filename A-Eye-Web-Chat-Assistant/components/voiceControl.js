@@ -237,23 +237,37 @@ export class VoiceController {
   }
 
   speakText(text) {
-    if (!this.state.synthesis.instance) return;
+    return new Promise((resolve) => {
+      if (!this.state.synthesis.instance) {
+        resolve();
+        return;
+      }
 
-    if (this.state.synthesis.isSpeaking) {
-      this.state.synthesis.instance.cancel();
-    }
+      if (this.state.synthesis.isSpeaking) {
+        this.state.synthesis.instance.cancel();
+      }
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.voice = this.state.synthesis.selectedVoice;
-    utterance.lang = 'en-US';
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.voice = this.state.synthesis.selectedVoice;
+      utterance.lang = 'en-US';
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
 
-    this.state.synthesis.isSpeaking = true;
-    utterance.onend = () => this.state.synthesis.isSpeaking = false;
+      this.state.synthesis.isSpeaking = true;
 
-    this.state.synthesis.instance.speak(utterance);
+      utterance.onend = () => {
+        this.state.synthesis.isSpeaking = false;
+        resolve();
+      };
+
+      utterance.onerror = () => {
+        this.state.synthesis.isSpeaking = false;
+        resolve();
+      };
+
+      this.state.synthesis.instance.speak(utterance);
+    });
   }
 
   async toggleVoiceControl() {

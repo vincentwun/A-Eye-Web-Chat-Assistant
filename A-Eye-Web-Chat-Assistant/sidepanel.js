@@ -199,9 +199,9 @@ class AIScreenReader {
             Object.assign(this.state, { tokenizer, processor, model, isInitialized: true });
             this.elements.screenshotButton.disabled = false;
             modelStatus.textContent = 'Model initialization complete.';
-            this.voiceController.speakText("Model initialization complete.");
+            await this.voiceController.speakText("Model initialization complete.");
             const instructions =
-`Hello, I’m A-Eye Web Chat Assistant, here to help with various tasks.
+                `Hello, I’m A-Eye Web Chat Assistant, here to help with various tasks.
 To get started, press Alt + Shift + 1 to activate voice control. You can then say commands like "Search the weather today" for a Google search.
 To navigate to a website, say "Go to [website]" (e.g., "Go to youtube"). Currently, I can only open .com websites.
 To perform actions like taking a screenshot or analyzing content, say "Take a screenshot," "Take a scrolling screenshot," or "Analyze content."
@@ -209,7 +209,7 @@ Press Alt + Shift + 2 to interact with me for additional insights after performi
 Press Alt + Shift + 3 to repeat my last response.`;
 
             this.appendMessage('assistant', instructions);
-            this.voiceController.speakText(instructions);
+            await this.voiceController.speakText(instructions);
 
         } catch (error) {
             modelStatus.textContent = `Initialization failed: ${error.message}`;
