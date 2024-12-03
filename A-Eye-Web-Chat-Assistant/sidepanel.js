@@ -68,6 +68,13 @@ class AIScreenReader {
         });
 
         this.screenshotController = new ScreenshotController();
+        this.screenshotController.setCallbacks({
+            onStart: () => {
+                const message = "Taking a scrolling screenshot.";
+                this.voiceController.speakText(message);
+                this.appendMessage('system', message);
+            }
+        });
 
         this.initializeAll();
         this.setupMessageListener();
@@ -201,7 +208,7 @@ class AIScreenReader {
             modelStatus.textContent = 'Model initialization complete.';
             await this.voiceController.speakText("Model initialization complete.");
             const instructions =
-`Hi, I’m the A-Eye Web Chat Assistant, nice to meet you! 
+                `Hi, I’m the A-Eye Web Chat Assistant, nice to meet you! 
 To experience my voice control feature, simply press [Alternate + Shift + 1] and then say the following commands to activate the functions.
 
 For browsing, you can search on Google by saying, "Search Gemini" or "Search Google Cloud." I’ll handle the search for you.

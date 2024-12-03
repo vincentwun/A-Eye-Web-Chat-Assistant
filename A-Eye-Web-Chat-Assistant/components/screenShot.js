@@ -1,6 +1,13 @@
 export class ScreenshotController {
     constructor() {
         this.scrollingScreenshotImages = [];
+        this.callbacks = {
+            onStart: null
+        };
+    }
+
+    setCallbacks(callbacks) {
+        this.callbacks = { ...this.callbacks, ...callbacks };
     }
 
     async captureVisibleTab() {
@@ -35,6 +42,10 @@ export class ScreenshotController {
         const pageInfo = await this.getPageInfo();
         if (!this.validatePageInfo(pageInfo)) {
             throw new Error('Invalid page dimensions');
+        }
+
+        if (this.callbacks.onStart) {
+            this.callbacks.onStart();
         }
 
         await this.captureScreenshots(tab, pageInfo);

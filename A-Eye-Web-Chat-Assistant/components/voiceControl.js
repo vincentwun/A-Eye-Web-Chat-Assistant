@@ -322,8 +322,6 @@ export class VoiceController {
     try {
       this.state.control.recognition.stop();
       this.state.control.active = false;
-      this.callbacks.appendMessage('system', 'Voice control deactivated.');
-      this.speakText('Voice control deactivated.');
     } catch (error) {
       console.error('Error stopping voice control:', error);
     }
