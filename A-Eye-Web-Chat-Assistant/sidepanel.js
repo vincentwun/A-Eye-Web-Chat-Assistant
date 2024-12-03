@@ -5,8 +5,8 @@ import { ScreenshotController } from './components/screenShot.js';
 class AIScreenReader {
     constructor() {
         this.prompts = {
-            screenshot: 'Describe the picture in about 100 words.',
-            scrollingScreenshot: 'Describe the picture in about 200 words.'
+            screenshot: 'Provide a concise description of the overall structure of this webpage screenshot, including its headings, main sections, and navigation elements, within 100 words.',
+            scrollingScreenshot: 'Provide a concise description of the overall structure of this webpage screenshot, including its headings, main sections, and navigation elements, within 150 words.'
         };
 
         this.state = {
@@ -201,15 +201,20 @@ class AIScreenReader {
             modelStatus.textContent = 'Model initialization complete.';
             await this.voiceController.speakText("Model initialization complete.");
             const instructions =
-                `Hello, I’m A-Eye Web Chat Assistant, here to help with various tasks.
-To get started, press Alt + Shift + 1 to activate voice control. You can then say commands like "Search the weather today" for a Google search.
-To navigate to a website, say "Go to [website]" (e.g., "Go to youtube"). Currently, I can only open .com websites.
-To perform actions like taking a screenshot or analyzing content, say "Take a screenshot," "Take a scrolling screenshot," or "Analyze content."
-Press Alt + Shift + 2 to interact with me for additional insights after performing tasks like taking a screenshot or analyzing content.
-Press Alt + Shift + 3 to repeat my last response.`;
+                `Hi, I’m A-Eye Web Chat Assistant, nice to meet you! 
+To get started, just press Alt + Shift + 1 to activate voice control and perform various tasks.
+
+For browser control, you can search by saying 'Search [something]' – like 'Search Google Cloud,' or visit a website by saying 'Go to [website]' – for example, 'Go to YouTube.' 
+Currently, I only support .com websites, but I’ll be adding more soon!
+
+For AI-powered functions, say 'Take a screenshot' to describe an image, 'Take a scrolling screenshot' to capture and describe the entire website, or 'Analyze content' for a summary of the site.
+
+After using these AI-powered features, you can press Alt + Shift + 2 or use the voice button below to interact with me for more insights.
+
+If you'd like to hear my last response again, just press Alt + Shift + 3.`;
 
             this.appendMessage('assistant', instructions);
-            await this.voiceController.speakText(instructions);
+            this.voiceController.speakText(instructions);
 
         } catch (error) {
             modelStatus.textContent = `Initialization failed: ${error.message}`;
@@ -244,11 +249,11 @@ Press Alt + Shift + 3 to repeat my last response.`;
 
         try {
             this.elements.screenshotButton.disabled = true;
-            this.voiceController.speakText("Analyzing screenshot. Please wait.");
-            this.appendMessage('system', 'Analyzing screenshot. Please wait.');
             this.updateModel('moondream');
 
             const screenshot = await this.screenshotController.captureVisibleTab();
+            this.voiceController.speakText("Analyzing screenshot. Please wait.");
+            this.appendMessage('system', 'Analyzing screenshot. Please wait.');
             this.showPreview('image', screenshot);
 
             await this.handleImageAnalysis(screenshot, this.prompts.screenshot);
@@ -264,14 +269,14 @@ Press Alt + Shift + 3 to repeat my last response.`;
 
         try {
             this.elements.scrollingScreenshotButton.disabled = true;
-            this.voiceController.speakText("Analyzing scrolling screenshot. Please wait.");
-            this.appendMessage('system', 'Analyzing scrolling screenshot. Please wait.');
             this.updateModel('moondream');
 
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             if (!tab) throw new Error('No active tab found');
 
             const mergedImage = await this.screenshotController.handleScrollingScreenshot(tab);
+            this.voiceController.speakText("Analyzing scrolling screenshot. Please wait.");
+            this.appendMessage('system', 'Analyzing scrolling screenshot. Please wait.');
             this.showPreview('image', mergedImage);
 
             await this.handleImageAnalysis(mergedImage, this.prompts.scrollingScreenshot);
@@ -377,12 +382,12 @@ Press Alt + Shift + 3 to repeat my last response.`;
             this.updateModel('gemini');
             this.state.isProcessing = true;
             this.elements.analyzeContentButton.disabled = true;
-            this.voiceController.speakText("Analyzing webpage content. Please wait.");
-            this.appendMessage('assistant', 'Analyzing webpage content. Please wait.');
 
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             const content = await this.extractPageContent(tab);
 
+            this.voiceController.speakText("Analyzing webpage content. Please wait.");
+            this.appendMessage('assistant', 'Analyzing webpage content. Please wait.');
             this.showPreview('text', `${this.escapeHTML(content)}`);
 
             const response = await chrome.runtime.sendMessage({
@@ -486,7 +491,7 @@ Press Alt + Shift + 3 to repeat my last response.`;
 
     handleError(message, error) {
         console.error(message, error);
-        this.appendMessage('system', `${message}: ${error.message}`);
+        this.appendMessage('system', error.message);
         this.resetState();
     }
 
