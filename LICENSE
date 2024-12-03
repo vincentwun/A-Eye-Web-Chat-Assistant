@@ -1,54 +1,56 @@
 MIT License
 
-Copyright (c) 2024 Vincent WUn
+Copyright (c) 2024 Vincent Wun
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
+of this extension and associated documentation files (the "Extension"), to deal
+in the Extension without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
+copies of the Extension, and to permit persons to whom the Extension is
 furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+copies or substantial portions of the Extension.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+THE EXTENSION IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE EXTENSION OR THE USE OR OTHER DEALINGS IN THE
+EXTENSION.
 
---------------------------------------------------------------------------------
+---
 
-This software incorporates the following third-party components:
+Third-Party Components
+
+This extension incorporates the following third-party components:
 
 1. Moondream2
-   Licensed under the Apache License 2.0
-   Copyright (c) 2024 Xenova
-   Source: https://huggingface.co/Xenova/moondream2
-   License: https://www.apache.org/licenses/LICENSE-2.0
+   - Licensed under the Apache License 2.0
+   - Copyright (c) 2024 Xenova
+   - Source: https://huggingface.co/Xenova/moondream2
+   - License: https://www.apache.org/licenses/LICENSE-2.0
 
 2. Readability.js
-   Licensed under the Apache License 2.0
-   Copyright (c) 2010 Arc90 Inc
-   Source: https://github.com/mozilla/readability
-   License: https://www.apache.org/licenses/LICENSE-2.0
+   - Licensed under the Apache License 2.0
+   - Copyright (c) 2010 Arc90 Inc
+   - Source: https://github.com/mozilla/readability
+   - License: https://www.apache.org/licenses/LICENSE-2.0
 
 3. Transformers.js
-   Licensed under the Apache License 2.0
-   Copyright (c) 2024 Xenova
-   Source: https://github.com/xenova/transformers.js
-   License: https://www.apache.org/licenses/LICENSE-2.0
+   - Licensed under the Apache License 2.0
+   - Copyright (c) 2024 Xenova
+   - Source: https://github.com/xenova/transformers.js
+   - License: https://www.apache.org/licenses/LICENSE-2.0
 
---------------------------------------------------------------------------------
+---
 
 Additional Notices:
 
-1. This software requires Google Chrome Developer Version to function properly.
+1. This extension requires Google Chrome Dev or Canary Version to function properly.
 2. Some features may be experimental and subject to change.
-3. Any modifications to this software should maintain these notices and comply 
+3. Any modifications to this extension must maintain these notices and comply 
    with all applicable license terms.
 4. The use of AI models and features is subject to their respective terms of 
    service and acceptable use policies.
