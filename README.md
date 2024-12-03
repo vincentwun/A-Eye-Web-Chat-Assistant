@@ -108,8 +108,10 @@ After modifying the flags above, **please restart Chrome** to apply the changes.
 #### Built-in AI Model (Gemini Nano) Setup
 
 **Step 1: Model Initialization**  
-1. Open the **Prompt API Playground**:  
-   [https://chrome.dev/web-ai-demos/prompt-api-playground/](https://chrome.dev/web-ai-demos/prompt-api-playground/)  
+1. To trigger the Gemini Nano download, open the [Prompt API Playground](https://chrome.dev/web-ai-demos/prompt-api-playground/)  
+```
+https://chrome.dev/web-ai-demos/prompt-api-playground/
+```
 2. Launch the **DevTools Console** (`F12`).
 3. Execute:  
    ```javascript
