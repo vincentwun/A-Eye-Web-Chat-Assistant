@@ -201,7 +201,7 @@ class AIScreenReader {
             modelStatus.textContent = 'Model initialization complete.';
             await this.voiceController.speakText("Model initialization complete.");
             const instructions =
-                `Hi, I’m A-Eye Web Chat Assistant, nice to meet you! 
+`Hi, I’m A-Eye Web Chat Assistant, nice to meet you! 
 To get started, just press Alt + Shift + 1 to activate voice control and perform various tasks.
 
 For browser control, you can search by saying 'Search [something]' – like 'Search Google Cloud,' or visit a website by saying 'Go to [website]' – for example, 'Go to YouTube.' 
@@ -209,12 +209,12 @@ Currently, I only support .com websites, but I’ll be adding more soon!
 
 For AI-powered functions, say 'Take a screenshot' to describe an image, 'Take a scrolling screenshot' to capture and describe the entire website, or 'Analyze content' for a summary of the site.
 
-After using these features, press Alt + Shift + 2 or use the voice button below to interact with me for more insights.
+After using these AI-powered features, you can press Alt + Shift + 2 or use the voice button below to interact with me for more insights.
 
 If you'd like to hear my last response again, just press Alt + Shift + 3.`;
 
             this.appendMessage('assistant', instructions);
-            await this.voiceController.speakText(instructions);
+            this.voiceController.speakText(instructions);
 
         } catch (error) {
             modelStatus.textContent = `Initialization failed: ${error.message}`;
@@ -491,7 +491,7 @@ If you'd like to hear my last response again, just press Alt + Shift + 3.`;
 
     handleError(message, error) {
         console.error(message, error);
-        this.appendMessage('system', `${message}: ${error.message}`);
+        this.appendMessage('system', error.message);
         this.resetState();
     }
 
