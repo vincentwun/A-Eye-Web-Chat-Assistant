@@ -13,6 +13,7 @@
             --gray-700: #3c4043;
             --space: 6px;
             --radius: 5px;
+            --common-padding: 5px;
         }
 
         * {
@@ -32,24 +33,33 @@
             overflow: hidden;
         }
 
-        .header-section {
+        .header-section,
+        #input-section {
             padding: var(--space);
             border-bottom: 1px solid var(--gray-300);
             flex-shrink: 0;
         }
 
-        .button-group {
+        .button-group,
+        .bottom-buttons {
             display: flex;
             gap: var(--space);
+        }
+
+        .button-group {
             flex-wrap: wrap;
             margin-bottom: 3px;
+        }
+
+        .bottom-buttons {
+            justify-content: flex-end;
         }
 
         button {
             background: var(--blue);
             color: #fff;
             border: none;
-            padding: 5px 5px;
+            padding: var(--common-padding);
             border-radius: var(--radius);
             font-size: 13px;
             font-weight: 500;
@@ -57,6 +67,46 @@
             height: 28px;
             display: flex;
             align-items: center;
+        }
+
+        [data-tooltip] {
+            position: relative;
+        }
+
+        [data-tooltip]:before,
+        [data-tooltip]:after {
+            position: absolute;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            left: 50%;
+        }
+
+        [data-tooltip]:before {
+            content: attr(data-tooltip);
+            bottom: calc(100% + 5px);
+            transform: translateX(-50%);
+            padding: var(--common-padding) 8px;
+            background: var(--gray-700);
+            color: white;
+            font-size: 12px;
+            white-space: nowrap;
+            border-radius: var(--radius);
+        }
+
+        [data-tooltip]:after {
+            content: '';
+            bottom: calc(100% - 1px);
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: var(--gray-700);
+        }
+
+        [data-tooltip]:hover:before,
+        [data-tooltip]:hover:after {
+            visibility: visible;
+            opacity: 1;
         }
 
         .model-indicator {
@@ -81,14 +131,13 @@
 
         #preview-container {
             display: none;
-            background: var(--gray-50);
+            background: #fff;
             border-radius: var(--radius);
             padding: var(--space);
             margin-bottom: var(--space);
             height: 200px;
             overflow-y: auto;
             border-bottom: 1px solid var(--gray-300);
-            background: #fff;
         }
 
         #preview-image {
@@ -98,7 +147,6 @@
         }
 
         #preview-text {
-            background: #fff;
             padding: var(--space);
             border-radius: var(--radius);
             border: 1px solid var(--gray-300);
@@ -141,12 +189,11 @@
         }
 
         #input-section {
-            padding: var(--space);
             border-top: 1px solid var(--gray-300);
+            border-bottom: none;
             display: flex;
             flex-direction: column;
             gap: 3px;
-            flex-shrink: 0;
         }
 
         #user-input {
@@ -163,14 +210,8 @@
             border-color: var(--blue);
         }
 
-        .bottom-buttons {
-            display: flex;
-            gap: var(--space);
-            justify-content: flex-end;
-        }
-
         .footer {
-            padding: 5px;
+            padding: var(--common-padding);
             background: var(--gray-50);
             border-top: 1px solid var(--gray-300);
             color: var(--gray-500);
@@ -211,10 +252,10 @@
     <div id="input-section">
         <input type="text" id="user-input" placeholder="Type your message here...">
         <div class="bottom-buttons">
-            <button id="send-button">Send</button>
-            <button id="voice-button">Voice</button>
-            <button id="repeat-button">Repeat</button>
-            <button id="clear-button">Clear</button>
+            <button id="send-button" data-tooltip="Send message to the current AI model.">Send</button>
+            <button id="voice-button" data-tooltip="This button is for voice input, NOT voice control!">Voice</button>
+            <button id="repeat-button" data-tooltip="Repeat the AI's last response.">Repeat</button>
+            <button id="clear-button" data-tooltip="Clear the screen.">Clear</button>
         </div>
     </div>
 

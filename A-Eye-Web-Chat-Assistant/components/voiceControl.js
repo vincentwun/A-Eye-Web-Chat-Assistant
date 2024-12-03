@@ -230,7 +230,7 @@ export class VoiceController {
       return true;
     } catch (error) {
       console.error('Microphone permission error:', error);
-      this.callbacks.appendMessage('system', 'Please allow microphone access.');
+      this.callbacks.appendMessage('system', 'Please allow microphone access. Introduction: Right-click extension icon > View web permissions > Find Microphone and set it to Allow');
       this.speakText('Please allow microphone access.');
       return false;
     }
@@ -250,7 +250,7 @@ export class VoiceController {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.voice = this.state.synthesis.selectedVoice;
       utterance.lang = 'en-US';
-      utterance.rate = 1.2;
+      utterance.rate = 1.1;
       utterance.pitch = 1.0;
       utterance.volume = 1.0;
 
