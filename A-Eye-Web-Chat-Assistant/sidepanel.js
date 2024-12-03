@@ -201,7 +201,7 @@ class AIScreenReader {
             modelStatus.textContent = 'Model initialization complete.';
             await this.voiceController.speakText("Model initialization complete.");
             const instructions =
-`Hi, I’m A-Eye Web Chat Assistant, nice to meet you! 
+                `Hi, I’m A-Eye Web Chat Assistant, nice to meet you! 
 To get started, just press Alt + Shift + 1 to activate voice control and perform various tasks.
 
 For browser control, you can search by saying 'Search [something]' – like 'Search Google Cloud,' or visit a website by saying 'Go to [website]' – for example, 'Go to YouTube.' 
@@ -249,11 +249,11 @@ If you'd like to hear my last response again, just press Alt + Shift + 3.`;
 
         try {
             this.elements.screenshotButton.disabled = true;
-            this.voiceController.speakText("Analyzing screenshot. Please wait.");
-            this.appendMessage('system', 'Analyzing screenshot. Please wait.');
             this.updateModel('moondream');
 
             const screenshot = await this.screenshotController.captureVisibleTab();
+            this.voiceController.speakText("Analyzing screenshot. Please wait.");
+            this.appendMessage('system', 'Analyzing screenshot. Please wait.');
             this.showPreview('image', screenshot);
 
             await this.handleImageAnalysis(screenshot, this.prompts.screenshot);
@@ -269,14 +269,14 @@ If you'd like to hear my last response again, just press Alt + Shift + 3.`;
 
         try {
             this.elements.scrollingScreenshotButton.disabled = true;
-            this.voiceController.speakText("Analyzing scrolling screenshot. Please wait.");
-            this.appendMessage('system', 'Analyzing scrolling screenshot. Please wait.');
             this.updateModel('moondream');
 
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             if (!tab) throw new Error('No active tab found');
 
             const mergedImage = await this.screenshotController.handleScrollingScreenshot(tab);
+            this.voiceController.speakText("Analyzing scrolling screenshot. Please wait.");
+            this.appendMessage('system', 'Analyzing scrolling screenshot. Please wait.');
             this.showPreview('image', mergedImage);
 
             await this.handleImageAnalysis(mergedImage, this.prompts.scrollingScreenshot);
@@ -382,12 +382,12 @@ If you'd like to hear my last response again, just press Alt + Shift + 3.`;
             this.updateModel('gemini');
             this.state.isProcessing = true;
             this.elements.analyzeContentButton.disabled = true;
-            this.voiceController.speakText("Analyzing webpage content. Please wait.");
-            this.appendMessage('assistant', 'Analyzing webpage content. Please wait.');
 
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             const content = await this.extractPageContent(tab);
 
+            this.voiceController.speakText("Analyzing webpage content. Please wait.");
+            this.appendMessage('assistant', 'Analyzing webpage content. Please wait.');
             this.showPreview('text', `${this.escapeHTML(content)}`);
 
             const response = await chrome.runtime.sendMessage({
