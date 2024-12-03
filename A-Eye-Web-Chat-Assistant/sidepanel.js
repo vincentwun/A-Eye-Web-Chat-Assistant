@@ -351,8 +351,8 @@ Press Alt + Shift + 3 to repeat my last response.`;
                 });
                 this.handleResponse(response.content);
             } else {
-                this.voiceController.speakText('Please select a function, such as Screenshot, Scrolling Screenshot, or Analyze Content, before interacting with the AI.');
-                throw new Error('Please select a function, such as Screenshot, Scrolling Screenshot, or Analyze Content, before interacting with the AI.');
+                this.voiceController.speakText('Before interacting with the AI, please select a function first, such as Screenshot, Scrolling Screenshot, or Analyze Content.');
+                throw new Error('Before interacting with the AI, please select a function first, such as Screenshot, Scrolling Screenshot, or Analyze Content.');
 
             }
 
