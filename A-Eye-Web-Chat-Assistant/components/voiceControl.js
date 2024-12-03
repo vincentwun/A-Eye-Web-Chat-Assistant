@@ -21,15 +21,15 @@ export class VoiceController {
 
     this.commandMap = {
       'screenshot': {
-        variants: ['take screenshot', 'take a screenshot', 'capture screen'],
+        variants: ['take a screenshot'],
         handler: null
       },
       'scrolling': {
-        variants: ['take scrolling screenshot', 'take a scrolling screenshot', 'scrolling screenshot'],
+        variants: ['take a scrolling screenshot'],
         handler: null
       },
       'analyze': {
-        variants: ['analyze content', 'analyse content', 'analyze page', 'analyse page'],
+        variants: ['analyze content', 'analyse content'],
         handler: null
       }
     };
@@ -50,15 +50,12 @@ export class VoiceController {
     this.callbacks = { ...this.callbacks, ...callbacks };
 
     this.commandMap.screenshot.handler = async () => {
-      this.speakText('Taking screenshot');
       await this.callbacks.handleScreenshot();
     };
     this.commandMap.scrolling.handler = async () => {
-      this.speakText('Taking scrolling screenshot');
       await this.callbacks.handleScrollingScreenshot();
     };
     this.commandMap.analyze.handler = async () => {
-      this.speakText('Analyzing content');
       await this.callbacks.handleContentAnalysis();
     };
   }
@@ -240,23 +237,37 @@ export class VoiceController {
   }
 
   speakText(text) {
-    if (!this.state.synthesis.instance) return;
+    return new Promise((resolve) => {
+      if (!this.state.synthesis.instance) {
+        resolve();
+        return;
+      }
 
-    if (this.state.synthesis.isSpeaking) {
-      this.state.synthesis.instance.cancel();
-    }
+      if (this.state.synthesis.isSpeaking) {
+        this.state.synthesis.instance.cancel();
+      }
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.voice = this.state.synthesis.selectedVoice;
-    utterance.lang = 'en-US';
-    utterance.rate = 1.5;
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.voice = this.state.synthesis.selectedVoice;
+      utterance.lang = 'en-US';
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
 
-    this.state.synthesis.isSpeaking = true;
-    utterance.onend = () => this.state.synthesis.isSpeaking = false;
+      this.state.synthesis.isSpeaking = true;
 
-    this.state.synthesis.instance.speak(utterance);
+      utterance.onend = () => {
+        this.state.synthesis.isSpeaking = false;
+        resolve();
+      };
+
+      utterance.onerror = () => {
+        this.state.synthesis.isSpeaking = false;
+        resolve();
+      };
+
+      this.state.synthesis.instance.speak(utterance);
+    });
   }
 
   async toggleVoiceControl() {
@@ -311,6 +322,8 @@ export class VoiceController {
     try {
       this.state.control.recognition.stop();
       this.state.control.active = false;
+      this.callbacks.appendMessage('system', 'Voice control deactivated.');
+      this.speakText('Voice control deactivated.');
     } catch (error) {
       console.error('Error stopping voice control:', error);
     }
