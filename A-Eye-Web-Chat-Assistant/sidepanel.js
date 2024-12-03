@@ -68,6 +68,13 @@ class AIScreenReader {
         });
 
         this.screenshotController = new ScreenshotController();
+        this.screenshotController.setCallbacks({
+            onStart: () => {
+                const message = "Taking a scrolling screenshot.";
+                this.voiceController.speakText(message);
+                this.appendMessage('system', message);
+            }
+        });
 
         this.initializeAll();
         this.setupMessageListener();
@@ -201,17 +208,21 @@ class AIScreenReader {
             modelStatus.textContent = 'Model initialization complete.';
             await this.voiceController.speakText("Model initialization complete.");
             const instructions =
-                `Hi, I’m A-Eye Web Chat Assistant, nice to meet you! 
-To get started, just press Alt + Shift + 1 to activate voice control and perform various tasks.
+                `Hi, I’m the A-Eye Web Chat Assistant, nice to meet you! 
+To experience my voice control feature, simply press [Alternate + Shift + 1] and then say the following commands to activate the functions.
 
-For browser control, you can search by saying 'Search [something]' – like 'Search Google Cloud,' or visit a website by saying 'Go to [website]' – for example, 'Go to YouTube.' 
-Currently, I only support .com websites, but I’ll be adding more soon!
+For browsing, you can search on Google by saying, "Search Gemini" or "Search Google Cloud." I’ll handle the search for you.
 
-For AI-powered functions, say 'Take a screenshot' to describe an image, 'Take a scrolling screenshot' to capture and describe the entire website, or 'Analyze content' for a summary of the site.
+To visit a website, just say, "Go to Gmail.com" or "Go to YouTube.com." I currently only support .com websites, but I’ll add more soon.
 
-After using these AI-powered features, you can press Alt + Shift + 2 or use the voice button below to interact with me for more insights.
+For AI-powered features, say: 
+"Take a screenshot" to capture and describe the current window.
+"Take a scrolling screenshot" to capture and describe the entire website.
+"Analyze content" for a summary of the page.
 
-If you'd like to hear my last response again, just press Alt + Shift + 3.`;
+After using any of these AI features, press [Alternate + Shift + 2] to interact with me for more insights.
+
+You can press [Alternate + Shift + 3] to repeat my last response.`;
 
             this.appendMessage('assistant', instructions);
             this.voiceController.speakText(instructions);
