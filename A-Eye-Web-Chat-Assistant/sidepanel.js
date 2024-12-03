@@ -5,8 +5,8 @@ import { ScreenshotController } from './components/screenShot.js';
 class AIScreenReader {
     constructor() {
         this.prompts = {
-            screenshot: 'Describe a webpage screenshot in detail, including the overall structure, headers, main sections, navigation elements in about 100 words.',
-            scrollingScreenshot: 'Describe a webpage screenshot in detail, including the overall structure, headers, main sections, navigation elements in about 150 words.'
+            screenshot: 'Provide a concise description of the overall structure of this webpage screenshot, including its headings, main sections, and navigation elements, within 100 words.',
+            scrollingScreenshot: 'Provide a concise description of the overall structure of this webpage screenshot, including its headings, main sections, and navigation elements, within 150 words.'
         };
 
         this.state = {
