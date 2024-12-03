@@ -5,8 +5,8 @@ import { ScreenshotController } from './components/screenShot.js';
 class AIScreenReader {
     constructor() {
         this.prompts = {
-            screenshot: 'Describe the picture in about 100 words.',
-            scrollingScreenshot: 'Describe the picture in about 200 words.'
+            screenshot: 'Describe a webpage screenshot in detail, including the overall structure, headers, main sections, navigation elements in about 100 words.',
+            scrollingScreenshot: 'Describe a webpage screenshot in detail, including the overall structure, headers, main sections, navigation elements in about 150 words.'
         };
 
         this.state = {
@@ -201,12 +201,17 @@ class AIScreenReader {
             modelStatus.textContent = 'Model initialization complete.';
             await this.voiceController.speakText("Model initialization complete.");
             const instructions =
-                `Hello, I’m A-Eye Web Chat Assistant, here to help with various tasks.
-To get started, press Alt + Shift + 1 to activate voice control. You can then say commands like "Search the weather today" for a Google search.
-To navigate to a website, say "Go to [website]" (e.g., "Go to youtube"). Currently, I can only open .com websites.
-To perform actions like taking a screenshot or analyzing content, say "Take a screenshot," "Take a scrolling screenshot," or "Analyze content."
-Press Alt + Shift + 2 to interact with me for additional insights after performing tasks like taking a screenshot or analyzing content.
-Press Alt + Shift + 3 to repeat my last response.`;
+                `Hi, I’m A-Eye Web Chat Assistant, nice to meet you! 
+To get started, just press Alt + Shift + 1 to activate voice control and perform various tasks.
+
+For browser control, you can search by saying 'Search [something]' – like 'Search Google Cloud,' or visit a website by saying 'Go to [website]' – for example, 'Go to YouTube.' 
+Currently, I only support .com websites, but I’ll be adding more soon!
+
+For AI-powered functions, say 'Take a screenshot' to describe an image, 'Take a scrolling screenshot' to capture and describe the entire website, or 'Analyze content' for a summary of the site.
+
+After using these features, press Alt + Shift + 2 or use the voice button below to interact with me for more insights.
+
+If you'd like to hear my last response again, just press Alt + Shift + 3.`;
 
             this.appendMessage('assistant', instructions);
             await this.voiceController.speakText(instructions);
