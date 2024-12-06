@@ -80,7 +80,7 @@ This Chrome extension is built on a modular architecture featuring advanced tech
 - Download [Chrome Dev](https://www.google.com/chrome/dev/) or [Chrome Canary](https://www.google.com/chrome/canary/)
 - Verify version ≥ 128.0.6545.0 at `chrome://settings/help`
 
-### Get Extension From Github
+### Get Extension from GitHub
 
 1. Download Extension
    ```
@@ -95,10 +95,12 @@ This Chrome extension is built on a modular architecture featuring advanced tech
    - Navigate to extracted extension directory
    - Select `A-Eye-Web-Chat-Assistant-main/A-Eye-Web-Chat-Assistant` directory
 
-### Or, Get Extension From Chrome Web Store
+### Alternatively: Get Extension from Chrome Web Store
 ```
 https://chromewebstore.google.com/detail/a-eye-web-chat-assistant/cdjignhknhdkldbjijipaaamodpfjflp
 ```
+
+---
 
 ## Browser Required Configuration
 
