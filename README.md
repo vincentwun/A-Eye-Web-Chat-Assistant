@@ -138,7 +138,7 @@ https://chrome.dev/web-ai-demos/prompt-api-playground/
      await ai.languageModel.create();
      ```  
    - Note: This command may fail, which is expected.
-   - Relaunch Chrome and reopen the DevTools Console and execute: 
+   - Relaunch Chrome, reopen the DevTools Console, and run: 
      ```javascript
      (await ai.languageModel.capabilities()).available;
      ```
