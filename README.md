@@ -101,6 +101,7 @@ This Chrome extension is built on a modular architecture featuring advanced tech
 | WebGPU | `chrome://flags/#enable-webgpu-developer-features` | Enabled |
 | Gemini Nano | `chrome://flags/#optimization-guide-on-device-model` | Enabled BypassPerfRequirement |
 | Prompt API | `chrome://flags/#prompt-api-for-gemini-nano` | Enabled |
+| Text Classifier | `chrome://flags/#text-safety-classifier` | Disabled |
 
 **Important:**  
 After modifying the flags above, **please restart Chrome** to apply the changes. Failure to do so may result in the settings not being properly activated.
