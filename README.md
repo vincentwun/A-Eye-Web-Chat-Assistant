@@ -76,7 +76,7 @@ This Chrome extension is built on a modular architecture featuring advanced tech
 
 ## Installation Guide
 
-### Installation Guide Video:
+#### Installation Guide Video:
 ```
 Comming soon
 ```
