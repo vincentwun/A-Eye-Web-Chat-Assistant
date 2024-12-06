@@ -129,8 +129,9 @@ https://chrome.dev/web-ai-demos/prompt-api-playground/
    ```
 - Manually type "allow pasting" if prompted.
   
-4. - If the return value is `"no"`, proceed to Step 5.
-   - If the return value is `"after-download"`, skip to Step 6.
+4. Check the return value from the command:  
+- If the return value is `"no"`, proceed to Step 5.
+- If the return value is `"after-download"`, skip to Step 6.
 
 5. In **DevTools Console**, run:  
      ```javascript
