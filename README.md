@@ -20,8 +20,8 @@ An advanced Chrome extension leveraging Web AI and Chrome's built-in AI (Gemini 
 - [Technical Architecture](#technical-architecture)
 - [Key Features](#key-features)
 - [Requirements](#requirements)
-- [Installation](#installation)
-- [Browser Required Configuration](#browser-required-configuration)
+- [Installation Guide](#installation-guide)
+- [Browser Configuration](#browser-configuration)
 - [How to Use](#how-to-use)
 - [Current Limitations](#current-limitations)
 - [License](#license)
@@ -74,7 +74,12 @@ This Chrome extension is built on a modular architecture featuring advanced tech
 
 ---
 
-## Installation
+## Installation Guide
+
+### Installation Guide Video:
+```
+www.youtube.com
+```
 
 ### Get Chrome Dev or Chrome Canary Browser
 - Download [Chrome Dev](https://www.google.com/chrome/dev/) or [Chrome Canary](https://www.google.com/chrome/canary/)
@@ -102,7 +107,7 @@ https://chromewebstore.google.com/detail/a-eye-web-chat-assistant/cdjignhknhdkld
 
 ---
 
-## Browser Required Configuration
+## Browser Configuration
 
 ### Chrome Flags Setup
 
