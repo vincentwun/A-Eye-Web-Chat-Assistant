@@ -5,8 +5,8 @@ import { ScreenshotController } from './components/screenShot.js';
 class AIScreenReader {
     constructor() {
         this.prompts = {
-            screenshot: 'Provide a concise description of the overall structure of this webpage screenshot, including its headings, main sections, and navigation elements, within 100 words.',
-            scrollingScreenshot: 'Provide a concise description of the overall structure of this webpage screenshot, including its headings, main sections, and navigation elements, within 150 words.'
+            screenshot: 'Provide a concise description of the overall structure of this webpage screenshot within 100 words.',
+            scrollingScreenshot: 'Provide a concise description of the overall structure of this webpage screenshot within 150 words.'
         };
 
         this.state = {
@@ -16,9 +16,11 @@ class AIScreenReader {
             pastKeyValues: null,
             isInitialized: false,
             isProcessing: false,
-            currentModel: 'none',
+            currentModel: 'gemini',
             messages: [],
-            geminiSession: null
+            geminiSession: null,
+            lastCommandTime: 0,
+            commandCooldown: 1000
         };
 
         this.elements = {
@@ -32,7 +34,7 @@ class AIScreenReader {
             conversation: document.getElementById('conversation'),
             userInput: document.getElementById('user-input'),
             sendButton: document.getElementById('send-button'),
-            voiceButton: document.getElementById('voice-button'),
+            voiceButton: document.getElementById('voiceInput-button'),
             repeatButton: document.getElementById('repeat-button'),
             clearButton: document.getElementById('clear-button')
         };
@@ -43,26 +45,6 @@ class AIScreenReader {
             updateVoiceInputButtonState: (isActive) => {
                 this.elements.voiceButton.style.backgroundColor = isActive ? '#dc3545' : '#1a73e8';
                 this.elements.voiceButton.textContent = isActive ? 'Stop' : 'Voice';
-            },
-            handleScreenshot: () => this.handleScreenshot(),
-            handleScrollingScreenshot: () => this.handleScrollingScreenshot(),
-            handleContentAnalysis: () => this.handleContentAnalysis(),
-            performGoogleSearch: async (query) => {
-                try {
-                    const encodedQuery = encodeURIComponent(query);
-                    const searchUrl = `https://www.google.com/search?q=${encodedQuery}`;
-                    await chrome.tabs.create({ url: searchUrl });
-                    this.voiceController.speakText(`Searching for ${query}`);
-                    this.appendMessage('system', `Searching Google for: "${query}"`);
-                } catch (error) {
-                    console.error('Search error:', error);
-                    this.appendMessage('system', 'Failed to perform search');
-                }
-            },
-            navigateToWebsite: (website) => {
-                const url = `https://www.${website.toLowerCase()}.com`;
-                chrome.tabs.create({ url });
-                this.voiceController.speakText(`Opening ${website}`);
             },
             handleSendMessage: () => this.handleSendMessage()
         });
@@ -76,8 +58,23 @@ class AIScreenReader {
             }
         });
 
-        this.initializeAll();
+        this.commandMap = {
+            'screenshot': {
+                variants: ['screenshot'],
+                handler: () => this.handleScreenshot()
+            },
+            'scrolling': {
+                variants: ['scrolling'],
+                handler: () => this.handleScrollingScreenshot()
+            },
+            'analyze': {
+                variants: ['analyze'],
+                handler: () => this.handleContentAnalysis()
+            }
+        };
+
         this.setupMessageListener();
+        this.initializeAll();
     }
 
     setupMessageListener() {
@@ -86,7 +83,6 @@ class AIScreenReader {
 
             const messageHandlers = {
                 toggleVoiceInput: () => this.voiceController.toggleVoiceInput(),
-                toggleVoiceControl: () => this.voiceController.toggleVoiceControl(),
                 toggleRepeat: () => this.handleRepeat()
             };
 
@@ -98,21 +94,35 @@ class AIScreenReader {
     }
 
     async initializeAll() {
-        await Promise.all([
-            this.initializeModel(),
-            this.initializeGemini()
-        ]);
-        this.setupEventListeners();
-        this.voiceController.initializeAll();
+        try {
+            await this.initializeGemini();
+            await this.initializeModel();
+            this.setupEventListeners();
+            this.voiceController.initializeAll();
+
+            this.elements.currentModel.textContent = 'Gemini Nano';
+        } catch (error) {
+            console.error('Initialization failed:', error);
+            this.appendMessage('system', 'Initialization failed. Please refresh the extension.');
+        }
     }
 
     async initializeGemini() {
         try {
-            this.state.geminiSession = await chrome.runtime.sendMessage({
+            const response = await chrome.runtime.sendMessage({
                 type: 'initGemini'
             });
+
+            if (!response || response.error) {
+                throw new Error(response?.error || 'Gemini initialization failed');
+            }
+
+            this.state.geminiSession = response;
+            console.log('Gemini initialization successful');
         } catch (error) {
-            console.error('Failed to initialize Gemini:', error);
+            console.error('Gemini initialization failed:', error);
+            this.appendMessage('system', 'Failed to initialize Gemini. Please try refreshing the extension.');
+            throw error;
         }
     }
 
@@ -195,7 +205,7 @@ class AIScreenReader {
                 AutoProcessor.from_pretrained(modelId),
                 Moondream1ForConditionalGeneration.from_pretrained(modelId, {
                     dtype: {
-                        embed_tokens: 'fp16',
+                        embed_tokens: 'fp32',
                         vision_encoder: 'fp16',
                         decoder_model_merged: 'q4',
                     },
@@ -256,22 +266,36 @@ You can press [Alternate + Shift + 3] to repeat my last response.`;
     }
 
     async handleScreenshot() {
-        if (this.state.isProcessing) return;
+        console.log('handleScreenshot called, processing state:', this.state.isProcessing);
+
+        if (this.state.isProcessing) {
+            console.log('Screenshot already in progress, resetting state');
+            this.state.isProcessing = false;
+        }
 
         try {
+            console.log('Starting screenshot capture');
             this.elements.screenshotButton.disabled = true;
-            this.updateModel('moondream');
 
             const screenshot = await this.screenshotController.captureVisibleTab();
+            this.updateModel('moondream');
             this.voiceController.speakText("Analyzing screenshot. Please wait.");
             this.appendMessage('system', 'Analyzing screenshot. Please wait.');
-            this.showPreview('image', screenshot);
+            console.log('Screenshot captured');
 
-            await this.handleImageAnalysis(screenshot, this.prompts.screenshot);
+            if (screenshot) {
+                this.showPreview('image', screenshot);
+                await this.handleImageAnalysis(screenshot, this.prompts.screenshot);
+            } else {
+                throw new Error('Screenshot capture failed');
+            }
         } catch (error) {
+            console.error('Screenshot error:', error);
             this.handleError('Error taking screenshot', error);
         } finally {
+            console.log('Screenshot process completed');
             this.elements.screenshotButton.disabled = false;
+            this.state.isProcessing = false;
         }
     }
 
@@ -280,12 +304,12 @@ You can press [Alternate + Shift + 3] to repeat my last response.`;
 
         try {
             this.elements.scrollingScreenshotButton.disabled = true;
-            this.updateModel('moondream');
 
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             if (!tab) throw new Error('No active tab found');
 
             const mergedImage = await this.screenshotController.handleScrollingScreenshot(tab);
+            this.updateModel('moondream');
             this.voiceController.speakText("Analyzing scrolling screenshot. Please wait.");
             this.appendMessage('system', 'Analyzing scrolling screenshot. Please wait.');
             this.showPreview('image', mergedImage);
@@ -357,27 +381,35 @@ You can press [Alternate + Shift + 3] to repeat my last response.`;
 
         try {
             this.appendMessage('user', input);
+            this.voiceController.speakText("Message sent");
 
-            if (this.state.currentModel === 'moondream') {
-                await this.generateMoondreamResponse(input);
-            } else if (this.state.currentModel === 'gemini') {
+            if (this.state.currentModel === 'gemini') {
+                await this.ensureGeminiSession();
                 const response = await chrome.runtime.sendMessage({
                     type: 'chat',
                     text: input
                 });
+
+                if (response.error) {
+                    throw new Error(response.error);
+                }
+
                 this.handleResponse(response.content);
-            } else {
-                this.voiceController.speakText('Before interacting with the AI, please select a function first, such as Screenshot, Scrolling Screenshot, or Analyze Content.');
-                throw new Error('Before interacting with the AI, please select a function first, such as Screenshot, Scrolling Screenshot, or Analyze Content.');
-
+            } else if (this.state.currentModel === 'moondream') {
+                await this.generateMoondreamResponse(input);
             }
-
-            this.elements.userInput.value = '';
         } catch (error) {
-            this.handleError('Error', error);
+            this.handleError('Message sending failed', error);
+            await this.initializeGemini();
         } finally {
             this.state.isProcessing = false;
             this.enableInterface();
+        }
+    }
+
+    async ensureGeminiSession() {
+        if (!this.state.geminiSession) {
+            await this.initializeGemini();
         }
     }
 
@@ -396,9 +428,9 @@ You can press [Alternate + Shift + 3] to repeat my last response.`;
 
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             const content = await this.extractPageContent(tab);
-
             this.voiceController.speakText("Analyzing webpage content. Please wait.");
             this.appendMessage('assistant', 'Analyzing webpage content. Please wait.');
+
             this.showPreview('text', `${this.escapeHTML(content)}`);
 
             const response = await chrome.runtime.sendMessage({
@@ -487,6 +519,7 @@ You can press [Alternate + Shift + 3] to repeat my last response.`;
         this.elements.conversation.appendChild(messageDiv);
         this.elements.conversation.scrollTop = this.elements.conversation.scrollHeight;
     }
+
     escapeHTML(str) {
         const div = document.createElement('div');
         div.textContent = str;
@@ -494,15 +527,104 @@ You can press [Alternate + Shift + 3] to repeat my last response.`;
     }
 
     handleResponse(response) {
+        console.log('Starting handleResponse with:', response);
+
         this.appendMessage('assistant', response);
         this.state.messages.push({ role: 'assistant', content: response });
+
+        const normalizedResponse = response.toLowerCase().trim();
+        console.log('Normalized response:', normalizedResponse);
+
+        if (normalizedResponse === 'screenshot' || normalizedResponse === 'take screenshot') {
+            console.log('Screenshot command detected');
+            try {
+                this.state.isProcessing = false;
+                setTimeout(() => {
+                    console.log('Executing delayed screenshot');
+                    this.handleScreenshot();
+                }, 100);
+                return;
+            } catch (error) {
+                console.error('Screenshot execution error:', error);
+            }
+        }
+
+        if (this.handleCommands(normalizedResponse)) {
+            console.log('Other command executed');
+            return;
+        }
+
         this.voiceController.speakText(response);
         this.enableInterface();
     }
 
+    handleCommands(normalizedResponse) {
+        console.log('Handling command:', normalizedResponse);
+
+        const screenshotCommands = ['screenshot', 'screenshot.'];
+        const scrollingCommands = ['scrolling'];
+        const analyzeCommands = ['analyze'];
+
+        if (screenshotCommands.includes(normalizedResponse)) {
+            console.log('Screenshot command detected');
+            setTimeout(() => {
+                this.state.isProcessing = false;
+                this.handleScreenshot();
+            }, 100);
+            return true;
+        }
+
+        if (scrollingCommands.some(cmd => normalizedResponse.includes(cmd))) {
+            console.log('Scrolling screenshot command detected');
+            setTimeout(() => {
+                this.state.isProcessing = false;
+                this.handleScrollingScreenshot();
+            }, 100);
+            return true;
+        }
+
+        if (analyzeCommands.some(cmd => normalizedResponse.includes(cmd))) {
+            console.log('Analyze command detected');
+            setTimeout(() => {
+                this.state.isProcessing = false;
+                this.handleContentAnalysis();
+            }, 100);
+            return true;
+        }
+
+        if (normalizedResponse.startsWith('window.open')) {
+            console.log('Window.open command detected');
+            const urlMatch = normalizedResponse.match(/window\.open\(['"]([^'"]+)['"]\)/);
+            if (urlMatch && urlMatch[1]) {
+                try {
+                    const url = urlMatch[1];
+                    new URL(url);
+                    this.appendMessage('system', `Opening ${url}...`);
+                    window.open(url);
+                    return true;
+                } catch (error) {
+                    this.handleError('Invalid URL format', error);
+                }
+            }
+        }
+
+        console.log('No matching command found');
+        return false;
+    }
+
+    canExecuteCommand() {
+        const now = Date.now();
+        if (now - this.state.lastCommandTime < this.state.commandCooldown) {
+            console.log('Command in cooldown');
+            return false;
+        }
+        this.state.lastCommandTime = now;
+        return true;
+    }
+
     handleError(message, error) {
         console.error(message, error);
-        this.appendMessage('system', error.message);
+        this.appendMessage('system', `${message}: ${error.message}`);
         this.resetState();
     }
 
@@ -519,14 +641,13 @@ You can press [Alternate + Shift + 3] to repeat my last response.`;
         Object.assign(this.state, {
             messages: [],
             pastKeyValues: null,
-            currentModel: 'none'
+            currentModel: 'gemini'
         });
 
-        this.elements.currentModel.textContent = 'None';
+        this.elements.currentModel.textContent = 'Gemini Nano';
         this.voiceController.cleanup();
         this.screenshotController.cleanup();
     }
-
 
     handleRepeat() {
         const lastAIMessage = [...this.elements.conversation.getElementsByClassName('assistant')]
