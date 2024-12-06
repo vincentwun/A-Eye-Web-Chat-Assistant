@@ -21,6 +21,7 @@ An advanced Chrome extension leveraging Web AI and Chrome's built-in AI (Gemini 
 - [Key Features](#key-features)
 - [Requirements](#requirements)
 - [Installation](#installation)
+- [Browser Required Configuration](#browser-required-configuration)
 - [How to Use](#how-to-use)
 - [Current Limitations](#current-limitations)
 - [License](#license)
@@ -71,13 +72,15 @@ This Chrome extension is built on a modular architecture featuring advanced tech
 | GPU/VRAM | GPU with 6GB+ VRAM (integrated or discrete) that must support FP16 (half-precision floating point) |
 | Storage | 24GB free space (22GB Gemini Nano, 2GB Moondream2) |
 
+---
+
 ## Installation
 
-### Browser Setup
+### Get Chrome Dev or Chrome Canary Browser
 - Download [Chrome Dev](https://www.google.com/chrome/dev/) or [Chrome Canary](https://www.google.com/chrome/canary/)
 - Verify version ≥ 128.0.6545.0 at `chrome://settings/help`
 
-### Extension Setup
+### Get Extension From Github
 
 1. Download Extension
    ```
@@ -92,9 +95,14 @@ This Chrome extension is built on a modular architecture featuring advanced tech
    - Navigate to extracted extension directory
    - Select `A-Eye-Web-Chat-Assistant-main/A-Eye-Web-Chat-Assistant` directory
 
-### Required Configuration
+### Or, Get Extension From Chrome Web Store
+```
+https://chromewebstore.google.com/detail/a-eye-web-chat-assistant/cdjignhknhdkldbjijipaaamodpfjflp
+```
 
-#### Chrome Flags Setup
+## Browser Required Configuration
+
+### Chrome Flags Setup
 
 | Category | Flag | Setting |
 |----------|------|---------|
@@ -104,11 +112,10 @@ This Chrome extension is built on a modular architecture featuring advanced tech
 | Text Classifier | `chrome://flags/#text-safety-classifier` | Disabled |
 
 **Important:**  
-After modifying the flags above, **please restart Chrome** to apply the changes. Failure to do so may result in the settings not being properly activated.
+After modifying the flags above, **Please Restart Chrome** to apply the changes!!!
 
-#### Built-in AI Model (Gemini Nano) Setup
+### Built-in AI Model (Gemini Nano) Setup
 
-**Step 1: Model Initialization**  
 1. To trigger the Gemini Nano download, open the [Prompt API Playground](https://chrome.dev/web-ai-demos/prompt-api-playground/)  
 ```
 https://chrome.dev/web-ai-demos/prompt-api-playground/
@@ -118,27 +125,28 @@ https://chrome.dev/web-ai-demos/prompt-api-playground/
    ```javascript
    (await ai.languageModel.capabilities()).available;
    ```
-4. If prompted to manually type "allow pasting", do so before proceeding.
-5. If the return value is `"after-download"`:  
-   - Go to **chrome://components** and ensure the **Optimization Guide On Device Model** version is **≥ 2024.5.21.1031**.  
-   - If outdated, click **"Check for update"**. *(Download time may vary.)*
-6. If the return value is `"no"`:  
-   - In **DevTools Console**, run:  
+- Manually type "allow pasting" if prompted.
+  
+4. - If the return value is `"no"`, proceed to Step 5.
+   - If the return value is `"after-download"`, skip to Step 6.
+
+5. In **DevTools Console**, run:  
      ```javascript
      await ai.languageModel.create();
      ```  
-   - This may fail, which is expected.  
-   - Relaunch Chrome.
-   - Open **DevTools Console** again and execute:  
+   - Note: This command may fail, which is expected.
+   - Relaunch Chrome and reopen the DevTools Console and execute: 
      ```javascript
      (await ai.languageModel.capabilities()).available;
      ```
-   - The return value should now be `"after-download"`.
-   - Go to **chrome://components** and verify that the **Optimization Guide On Device Model** version is **≥ 2024.5.21.1031**.
+   - The return value should now be `"after-download"`. Proceed to Step 6.
 
----
+6. Go to ```chrome://components```
+- Locate **Optimization Guide On Device Model**
+- Click **"Check for update"** to download the latest version.
+- (Note: Download times may vary depending on your network speed.)
 
-#### Web AI Model (Moondream2) Setup
+### Web AI Model (Moondream2) Setup
 
 **Initialization Process**
 1. Press `Alt + Shift + Q` to open the **A-Eye Web Chat Assistant**.  
