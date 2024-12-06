@@ -68,7 +68,7 @@ This Chrome extension is built on a modular architecture featuring advanced tech
 | Browser | Chrome Dev/Canary (≥ 128.0.6545.0) **REQUIRED** |
 | Operating System | Windows 10+, macOS 13+, or Linux |
 | CPU | Multi-core processor (Intel/AMD) |
-| GPU/VRAM | GPU with 4GB+ VRAM (integrated or discrete) that must support FP16 (half-precision floating point) |
+| GPU/VRAM | GPU with 6GB+ VRAM (integrated or discrete) that must support FP16 (half-precision floating point) |
 | Storage | 24GB free space (22GB Gemini Nano, 2GB Moondream2) |
 
 ## Installation
