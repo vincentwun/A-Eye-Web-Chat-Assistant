@@ -119,7 +119,7 @@ https://chromewebstore.google.com/detail/a-eye-web-chat-assistant/cdjignhknhdkld
 | Text Classifier | `chrome://flags/#text-safety-classifier` | Disabled |
 
 **Important:**  
-After modifying the flags above, **Please Restart Chrome** to apply the changes!!!
+After modifying the flags above, Please **Restart Chrome** to apply the changes!!!
 
 ### Built-in AI Model (Gemini Nano) Setup
 
