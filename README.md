@@ -78,7 +78,7 @@ This Chrome extension is built on a modular architecture featuring advanced tech
 
 #### Installation Guide Video:
 ```
-Comming soon
+https://youtu.be/fOlDYf1J7PM?si=gu3BitSG1W2zhKBe
 ```
 
 ### Get Chrome Dev or Chrome Canary Browser
