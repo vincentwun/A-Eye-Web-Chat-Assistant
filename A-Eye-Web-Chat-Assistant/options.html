@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Options</title>
+</head>
+
+<body>
+    <h1>AI Model Configuration</h1>
+
+    <div>
+        <input type="radio" id="webai" name="model" value="webai" checked>
+        <label for="webai">Web AI</label>
+        <br>
+
+        <input type="radio" id="paligemma2" name="model" value="paligemma2">
+        <label for="paligemma2">PaliGemma2</label>
+        <div id="paligemma2-settings">
+            <label for="flask-url">Local Server URL:</label>
+            <input type="text" id="flask-url" placeholder="http://localhost:5000">
+        </div>
+        <br>
+
+        <input type="radio" id="geminipro" name="model" value="geminipro">
+        <label for="geminipro">Gemini Pro</label>
+        <div id="geminipro-settings">
+            <label for="api-key">API Key:</label>
+            <input type="password" id="api-key">
+        </div>
+    </div>
+
+    <div style="margin-top: 20px;">
+        <button id="save">Save</button>
+    </div>
+
+    <div id="status" style="margin-top: 10px;"></div>
+
+    <script src="options.js"></script>
+</body>
+
+</html>

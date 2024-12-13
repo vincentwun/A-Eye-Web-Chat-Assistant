@@ -5,8 +5,8 @@ import { ScreenshotController } from './components/screenShot.js';
 class AIScreenReader {
     constructor() {
         this.prompts = {
-            screenshot: 'Provide a concise description of the overall structure of this webpage screenshot within 100 words.',
-            scrollingScreenshot: 'Provide a concise description of the overall structure of this webpage screenshot within 150 words.'
+            screenshot: 'Describe the overall structure of this webpage screenshot clearly and concisely in under 100 words.',
+            scrollingScreenshot: 'Describe the overall structure of this webpage screenshot clearly and concisely in under 150 words.'
         };
 
         this.state = {
@@ -35,6 +35,7 @@ class AIScreenReader {
             conversation: document.getElementById('conversation'),
             userInput: document.getElementById('user-input'),
             sendButton: document.getElementById('send-button'),
+            voiceControlButton: document.getElementById('voiceControl-button'),
             voiceButton: document.getElementById('voiceInput-button'),
             repeatButton: document.getElementById('repeat-button'),
             clearButton: document.getElementById('clear-button')
@@ -83,13 +84,7 @@ class AIScreenReader {
             console.log('Message received in sidepanel:', request);
 
             const messageHandlers = {
-                toggleVoiceControl: () => {
-                    this.state.currentModel = 'gemini';
-                    this.elements.currentModel.textContent = 'Gemini Nano';
-
-                    this.voiceController.speakText("Voice control activated, current model is Gemini Nano.");
-                    this.appendMessage('system', 'Voice control activated, current model is Gemini Nano.');
-                },
+                toggleVoiceControl: () => this.handleVoiceControl(),
                 toggleVoiceInput: () => this.voiceController.toggleVoiceInput(),
                 toggleRepeat: () => this.handleRepeat()
             };
@@ -141,6 +136,7 @@ class AIScreenReader {
             'analyzeContentButton': () => this.handleContentAnalysis(),
             'openOptionsButton': () => this.handleOpenOptions(),
             'sendButton': () => this.handleSendMessage(),
+            'voiceControlButton': () => this.handleVoiceControl(),
             'voiceButton': () => this.voiceController.toggleVoiceInput(),
             'repeatButton': () => this.handleRepeat(),
             'clearButton': () => this.handleClear()
@@ -157,6 +153,19 @@ class AIScreenReader {
                 this.handleSendMessage();
             }
         });
+    }
+
+    async handleVoiceControl() {
+        try {
+            this.updateModel('gemini');
+
+            const message = "Voice control activated, current model is Gemini Nano.";
+            this.voiceController.speakText(message);
+            this.appendMessage('system', message);
+
+        } catch (error) {
+            this.handleError('Voice control activation failed', error);
+        }
     }
 
     async initializeModel() {
@@ -230,9 +239,9 @@ class AIScreenReader {
                 `Hi, I’m the A-Eye Web Chat Assistant, nice to meet you! 
 To experience my voice control feature, simply press [Alternate + Shift + 1] and then say the following commands to activate the functions.
 
-For browsing, you can search on Google by saying, "Search Gemini" or "Search Google Cloud." I’ll handle the search for you.
+For browsing, you can search on Google by saying "Search Gemini 2.0". I’ll handle the search for you.
 
-To visit a website, just say, "Go to Gmail.com" or "Go to YouTube.com." I currently only support .com websites, but I’ll add more soon.
+To visit a website, just say "Go to YouTube.com." I’ll open the website for you.
 
 For AI-powered features, say: 
 "Take a screenshot" to capture and describe the current window.
@@ -288,8 +297,12 @@ You can press [Alternate + Shift + 3] to repeat my last response.`;
 
             const screenshot = await this.screenshotController.captureVisibleTab();
             this.updateModel('moondream');
-            this.voiceController.speakText("Analyzing screenshot. Please wait.");
+
+            await this.voiceController.speakText("Taking a screenshot.");
+            this.appendMessage('system', 'Taking a screenshot.');
+            await this.voiceController.speakText("Analyzing screenshot. Please wait.");
             this.appendMessage('system', 'Analyzing screenshot. Please wait.');
+
             console.log('Screenshot captured');
 
             if (screenshot) {
