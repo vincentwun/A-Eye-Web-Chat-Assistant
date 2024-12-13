@@ -34,15 +34,15 @@ async function getGeminiSession() {
 async function handleGeminiMessage(type, text) {
   try {
     const session = await getGeminiSession();
-    
-    switch(type) {
+
+    switch (type) {
       case 'chat':
         return { content: await session.prompt(text) };
-        
+
       case 'analyze':
         const prompt = `Summarize the webpage content within 100 words: "${text}"`;
         return { content: await session.prompt(prompt) };
-        
+
       default:
         throw new Error('Unknown message type');
     }
@@ -73,7 +73,7 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 
 chrome.commands.onCommand.addListener((command) => {
   console.log('Command received:', command);
-  
+
   const commandActions = {
     '_execute_action': () => console.log("Shortcut pressed!"),
     'toggle-voice-control': () => chrome.runtime.sendMessage({ type: 'toggleVoiceControl' }),

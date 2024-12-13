@@ -27,6 +27,7 @@ class AIScreenReader {
             screenshotButton: document.getElementById('screenshot-button'),
             scrollingScreenshotButton: document.getElementById('scrolling-screenshot-button'),
             analyzeContentButton: document.getElementById('analyze-content-button'),
+            openOptionsButton: document.getElementById('openOptions'),
             currentModel: document.getElementById('current-model'),
             previewContainer: document.getElementById('preview-container'),
             previewImage: document.getElementById('preview-image'),
@@ -82,6 +83,13 @@ class AIScreenReader {
             console.log('Message received in sidepanel:', request);
 
             const messageHandlers = {
+                toggleVoiceControl: () => {
+                    this.state.currentModel = 'gemini';
+                    this.elements.currentModel.textContent = 'Gemini Nano';
+
+                    this.voiceController.speakText("Voice control activated, current model is Gemini Nano.");
+                    this.appendMessage('system', 'Voice control activated, current model is Gemini Nano.');
+                },
                 toggleVoiceInput: () => this.voiceController.toggleVoiceInput(),
                 toggleRepeat: () => this.handleRepeat()
             };
@@ -131,6 +139,7 @@ class AIScreenReader {
             'screenshotButton': () => this.handleScreenshot(),
             'scrollingScreenshotButton': () => this.handleScrollingScreenshot(),
             'analyzeContentButton': () => this.handleContentAnalysis(),
+            'openOptionsButton': () => this.handleOpenOptions(),
             'sendButton': () => this.handleSendMessage(),
             'voiceButton': () => this.voiceController.toggleVoiceInput(),
             'repeatButton': () => this.handleRepeat(),
@@ -661,6 +670,11 @@ You can press [Alternate + Shift + 3] to repeat my last response.`;
             this.voiceController.speakText('No AI response to repeat.');
         }
     }
+
+    handleOpenOptions() {
+        chrome.runtime.openOptionsPage();
+    }
+
     enableInterface() {
         this.elements.userInput.disabled = false;
         this.elements.sendButton.disabled = false;
