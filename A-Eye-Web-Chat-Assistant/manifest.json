@@ -33,7 +33,7 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "./lib/transformers300.js",
+        "./lib/transformers.js",
         "./lib/readability.js"
       ],
       "matches": [

@@ -11,10 +11,14 @@
     <header class="header-section">
         <div id="model-status">Initializing model, please wait.</div>
         <nav class="button-group">
-            <button id="screenshot-button">Screenshot</button>
-            <button id="scrolling-screenshot-button">Scrolling Screenshot</button>
-            <button id="analyze-content-button">Analyze Content</button>
-            <button id="openOptions">Options</button>
+            <button id="screenshot-button"
+                data-tooltip="Capture the visible part of the current webpage.">Screenshot</button>
+            <button id="scrolling-screenshot-button"
+                data-tooltip="Capture the entire webpage, including parts not currently visible.">Scrolling
+                Screenshot</button>
+            <button id="analyze-content-button" data-tooltip="Analyze the current webpage's content using AI.">Analyze
+                Content</button>
+            <button id="openOptions" data-tooltip="Configure extension settings and preferences.">Options</button>
         </nav>
         <div class="model-indicator">Current AI Model: <span id="current-model">None</span></div>
     </header>
@@ -31,7 +35,8 @@
         <input type="text" id="user-input" placeholder="Type your message here...">
         <div class="bottom-buttons">
             <button id="send-button" data-tooltip="Send message to the current AI model.">Send</button>
-            <button id="voiceControl-button" data-tooltip="Voice Control">Voice Control</button>
+            <button id="voiceControl-button" data-tooltip="Control the extension using voice commands.">Voice
+                Control</button>
             <button id="voiceInput-button" data-tooltip="Voice Input to current AI model.">Voice Input</button>
             <button id="repeat-button" data-tooltip="Repeat the AI's last response.">Repeat</button>
             <button id="clear-button" data-tooltip="Clear the screen.">Clear</button>

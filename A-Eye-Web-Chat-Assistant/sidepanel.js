@@ -1,12 +1,12 @@
-import { AutoProcessor, AutoTokenizer, Moondream1ForConditionalGeneration, RawImage } from './lib/transformers300.js';
+import { AutoProcessor, AutoTokenizer, Moondream1ForConditionalGeneration, RawImage } from './lib/transformers.js';
 import { VoiceController } from './components/voiceControl.js';
 import { ScreenshotController } from './components/screenShot.js';
 
 class AIScreenReader {
     constructor() {
         this.prompts = {
-            screenshot: 'Describe the overall structure of this webpage screenshot clearly and concisely in under 100 words.',
-            scrollingScreenshot: 'Describe the overall structure of this webpage screenshot clearly and concisely in under 150 words.'
+            screenshot: 'You are a Webpage Screen Reader. Describe the layout and primary sections of the webpage screenshot in a logical and simple way in under 150 words.',
+            scrollingScreenshot: 'You are a Webpage Screen Reader. Describe the layout and primary sections of the webpage screenshot in a logical and simple way in under 200 words.'
         };
 
         this.state = {
@@ -98,8 +98,8 @@ class AIScreenReader {
 
     async initializeAll() {
         try {
-            await this.initializeGemini();
             await this.initializeModel();
+            await this.initializeGemini();
             this.setupEventListeners();
             this.voiceController.initializeAll();
 
@@ -297,12 +297,8 @@ You can press [Alternate + Shift + 3] to repeat my last response.`;
 
             const screenshot = await this.screenshotController.captureVisibleTab();
             this.updateModel('moondream');
-
-            await this.voiceController.speakText("Taking a screenshot.");
             this.appendMessage('system', 'Taking a screenshot.');
-            await this.voiceController.speakText("Analyzing screenshot. Please wait.");
-            this.appendMessage('system', 'Analyzing screenshot. Please wait.');
-
+            await this.voiceController.speakText("Taking a screenshot.");
             console.log('Screenshot captured');
 
             if (screenshot) {
@@ -332,8 +328,6 @@ You can press [Alternate + Shift + 3] to repeat my last response.`;
 
             const mergedImage = await this.screenshotController.handleScrollingScreenshot(tab);
             this.updateModel('moondream');
-            this.voiceController.speakText("Analyzing scrolling screenshot. Please wait.");
-            this.appendMessage('system', 'Analyzing scrolling screenshot. Please wait.');
             this.showPreview('image', mergedImage);
 
             await this.handleImageAnalysis(mergedImage, this.prompts.scrollingScreenshot);
@@ -351,7 +345,8 @@ You can press [Alternate + Shift + 3] to repeat my last response.`;
         }
 
         this.state.isProcessing = true;
-
+        this.appendMessage('system', 'Analyzing screenshot. Please wait.');
+        this.voiceController.speakText("Analyzing screenshot. Please wait.");
         try {
             this.state.messages = [];
             const response = await this.generateImageResponse(imageUrl, prompt);

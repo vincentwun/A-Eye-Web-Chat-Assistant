@@ -114,3 +114,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 });
+
+async function getAIModelConfig() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get('aiModel', (result) => {
+      resolve(result.aiModel || { selectedModel: 'webai' });
+    });
+  });
+}

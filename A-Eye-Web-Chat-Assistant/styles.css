@@ -73,13 +73,13 @@ button {
   opacity: 0;
   transition: opacity 0.2s;
   pointer-events: none;
-  left: 50%;
+  z-index: 1000;
 }
 
 [data-tooltip]:before {
   content: attr(data-tooltip);
   bottom: calc(100% + 5px);
-  transform: translateX(-50%);
+  left: 0;
   padding: var(--common-padding) 8px;
   background: var(--gray-700);
   color: white;
@@ -91,9 +91,66 @@ button {
 [data-tooltip]:after {
   content: '';
   bottom: calc(100% - 1px);
-  transform: translateX(-50%);
+  left: 10px;
   border: 6px solid transparent;
   border-top-color: var(--gray-700);
+}
+
+#screenshot-button[data-tooltip]:before,
+#scrolling-screenshot-button[data-tooltip]:before {
+  bottom: auto;
+  top: calc(100% + 5px);
+  left: 0;
+  transform: none;
+  right: auto;
+}
+
+#screenshot-button[data-tooltip]:after,
+#scrolling-screenshot-button[data-tooltip]:after {
+  bottom: auto;
+  top: calc(100% - 1px);
+  left: 10px;
+  transform: none;
+  border-top-color: transparent;
+  border-bottom-color: var(--gray-700);
+}
+
+#analyze-content-button[data-tooltip]:before,
+#openOptions[data-tooltip]:before {
+  bottom: auto;
+  top: calc(100% + 5px);
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+#analyze-content-button[data-tooltip]:after,
+#openOptions[data-tooltip]:after {
+  bottom: auto;
+  top: calc(100% - 1px);
+  left: auto;
+  right: 10px;
+  transform: none;
+  border-top-color: transparent;
+  border-bottom-color: var(--gray-700);
+}
+
+.bottom-buttons button:nth-last-child(-n+3)[data-tooltip]:before {
+  left: auto;
+  right: 0;
+  bottom: calc(100% + 5px);
+  top: auto;
+  transform: none;
+}
+
+.bottom-buttons button:nth-last-child(-n+3)[data-tooltip]:after {
+  left: auto;
+  right: 10px;
+  bottom: calc(100% - 1px);
+  top: auto;
+  transform: none;
+  border-top-color: var(--gray-700);
+  border-bottom-color: transparent;
 }
 
 [data-tooltip]:hover:before,
