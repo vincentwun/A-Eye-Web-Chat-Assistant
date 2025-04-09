@@ -1,0 +1,205 @@
+:root {
+  --blue: #1a73e8;
+  --gray-50: #f8f9fa;
+  --gray-300: #dadce0;
+  --gray-500: #5f6368;
+  --gray-700: #3c4043;
+  --space: 6px;
+  --radius: 5px;
+  --common-padding: 5px;
+  --input-bg: #ffffff;
+  --input-border-color: var(--gray-300);
+  --button-icon-color: var(--gray-700);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 300px;
+  height: 100vh;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #fff;
+  color: var(--gray-700);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.header-section {
+  padding: var(--space);
+  border-bottom: 1px solid var(--input-border-color);
+  flex-shrink: 0;
+}
+
+.button-group {
+  display: flex;
+  gap: var(--space);
+  flex-wrap: nowrap;
+  margin-bottom: 3px;
+}
+
+.header-section .button-group button {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  font-size: 14px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.mode-button.active-mode {
+  background-color: #0b5ed7;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.15);
+}
+
+.mode-options {
+  padding-top: var(--space);
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.mode-option-line {
+  display: flex;
+  /* justify-content: space-between; /* Changed: default (flex-start) */
+  align-items: center;
+}
+
+.mode-options label {
+  margin-right: var(--space);
+  color: var(--gray-700);
+  padding-bottom: 0;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.mode-options input {
+  padding: 3px 5px;
+  border: 1px solid var(--input-border-color);
+  border-radius: var(--radius);
+  font-size: 12px;
+  /* max-width: 60%; /* Removed */
+  flex-grow: 1; /* Added */
+  min-width: 100px; /* Added */
+}
+.mode-options input:focus {
+  outline: none;
+  border-color: var(--blue);
+}
+
+.content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space);
+  overflow: hidden;
+  min-height: 0;
+}
+#preview-container {
+  flex-shrink: 0;
+  display: none;
+  background: #fff;
+  border-radius: var(--radius);
+  padding: var(--space);
+  margin-bottom: var(--space);
+  max-height: 150px;
+  overflow-y: auto;
+  border-bottom: 1px solid var(--input-border-color);
+}
+#preview-image { width: 100%; border-radius: var(--radius); object-fit: contain; }
+#preview-text { padding: var(--space); border-radius: var(--radius); border: 1px solid var(--input-border-color); font-size: 13px; line-height: 1.6; margin-top: var(--space); white-space: pre-wrap; word-wrap: break-word; text-align: left; }
+#conversation { flex: 1; overflow-y: auto; padding: var(--space); background: var(--gray-50); border-radius: var(--radius); border: 1px solid var(--input-border-color); }
+.message { max-width: 85%; margin-top: var(--space); margin-bottom: var(--space); padding: 9px; border-radius: var(--radius); background: #fff; font-size: 13px; word-wrap: break-word; display: block; }
+.message-user { float: right; background: #fff; color: var(--gray-700); margin-left: auto; margin-right: 0; clear: right; }
+.message-assistant { float: left; background: #fff; color: var(--gray-700); margin-right: auto; margin-left: 0; clear: left; }
+.message-system { clear: both; float: none; text-align: left; max-width: 100%; color: var(--gray-500); font-style: italic; background-color: var(--gray-50); padding: 5px 9px; border: none; margin-left: 0; margin-right: 0; }
+#conversation::after { content: ""; display: table; clear: both; }
+
+#input-section {
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border-color);
+  border-radius: var(--radius);
+  padding: var(--space);
+  margin: var(--space);
+  margin-top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) / 1.5);
+  flex-shrink: 0;
+}
+
+#user-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  padding: 4px 2px;
+  font-size: 14px;
+  background-color: transparent;
+  resize: none;
+  height: auto;
+  min-height: 24px;
+}
+
+.input-controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  min-height: 28px;
+}
+
+.input-action-buttons-left,
+.input-action-buttons-right {
+  display: flex;
+  gap: calc(var(--space) / 1.5);
+  align-items: center;
+}
+
+#input-section button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 14px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  background: none;
+  color: var(--button-icon-color);
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+#input-section button:hover {
+  background-color: var(--gray-300);
+}
+
+#input-section #send-button {}
+#input-section #send-button:hover {}
+
+.footer { padding: 3px var(--common-padding); background: var(--gray-50); border-top: 1px solid var(--input-border-color); color: var(--gray-500); font-size: 10px; text-align: center; flex-shrink: 0; }
+.footer a { color: var(--blue); text-decoration: none; }
+.footer a:hover { text-decoration: underline; }
+
+[data-tooltip] { position: relative; }
+[data-tooltip]:before, [data-tooltip]:after { position: absolute; visibility: hidden; opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 1000; }
+[data-tooltip]:before { content: attr(data-tooltip); bottom: calc(100% + 5px); left: 50%; transform: translateX(-50%); padding: var(--common-padding) 8px; background: var(--gray-700); color: white; font-size: 12px; white-space: nowrap; border-radius: var(--radius); }
+[data-tooltip]:after { content: ''; bottom: calc(100% - 1px); left: 50%; transform: translateX(-50%); border: 6px solid transparent; border-top-color: var(--gray-700); }
+.header-section button[data-tooltip]:before { bottom: auto; top: calc(100% + 5px); }
+.header-section button[data-tooltip]:after { bottom: auto; top: calc(100% - 1px); border-top-color: transparent; border-bottom-color: var(--gray-700); }
+#input-section button[data-tooltip]:before {}
+#input-section button[data-tooltip]:after {}
+[data-tooltip]:hover:before, [data-tooltip]:hover:after { visibility: visible; opacity: 1; }
