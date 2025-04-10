@@ -7,107 +7,29 @@ export class VoiceController {
         finalTranscript: '',
         silenceTimeout: null
       },
-      control: {
-        active: false,
-        recognition: null
-      },
       synthesis: {
         instance: window.speechSynthesis,
         selectedVoice: null,
         voices: [],
-        isSpeaking: false
-      }
-    };
-
-    this.commandMap = {
-      'screenshot': {
-        variants: ['take a screenshot'],
-        handler: null
-      },
-      'scrolling': {
-        variants: ['take a scrolling screenshot'],
-        handler: null
-      },
-      'analyze': {
-        variants: ['analyze content', 'analyse content'],
-        handler: null
+        isSpeaking: false,
+        speakingPromise: Promise.resolve()
       }
     };
 
     this.callbacks = {
       appendMessage: null,
       updateVoiceInputButtonState: null,
-      handleScreenshot: null,
-      handleScrollingScreenshot: null,
-      handleContentAnalysis: null,
-      performGoogleSearch: null,
-      navigateToWebsite: null,
       handleSendMessage: null
     };
   }
 
   setCallbacks(callbacks) {
-    this.callbacks = { ...this.callbacks, ...callbacks };
-
-    this.commandMap.screenshot.handler = async () => {
-      await this.callbacks.handleScreenshot();
-    };
-    this.commandMap.scrolling.handler = async () => {
-      await this.callbacks.handleScrollingScreenshot();
-    };
-    this.commandMap.analyze.handler = async () => {
-      await this.callbacks.handleContentAnalysis();
-    };
+    Object.assign(this.callbacks, callbacks);
   }
 
   initializeAll() {
-    this.initializeVoiceControl();
     this.initializeVoiceInput();
     this.initializeSpeechSynthesis();
-  }
-
-  initializeVoiceControl() {
-    if (!('webkitSpeechRecognition' in window)) {
-      console.error('Speech recognition not supported');
-      return;
-    }
-
-    const recognition = new webkitSpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
-
-    recognition.onstart = () => {
-      console.log('Voice control started');
-      this.state.control.active = true;
-      this.speakText('Voice control activated.');
-      this.callbacks.appendMessage('system', 'Voice control activated.');
-    };
-
-    recognition.onresult = async (event) => {
-      const command = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
-      this.callbacks.appendMessage('system', `Detected command: "${command}"`);
-      console.log('Voice command received:', command);
-      await this.handleVoiceCommand(command);
-
-      setTimeout(() => {
-        this.stopVoiceControl();
-      }, 800);
-    };
-
-    recognition.onerror = (event) => {
-      console.error('Voice control error:', event.error);
-      this.stopVoiceControl();
-    };
-
-    recognition.onend = () => {
-      if (this.state.control.active) {
-        console.log('Voice control ended');
-        this.state.control.active = false;
-      }
-    };
-
-    this.state.control.recognition = recognition;
   }
 
   initializeVoiceInput() {
@@ -180,49 +102,6 @@ export class VoiceController {
     });
   }
 
-  async handleVoiceCommand(command) {
-    console.log('Processing command:', command);
-
-    const normalizeCommand = (cmd) => {
-      return cmd
-        .toLowerCase()
-        .replace(/analyse/g, 'analyze')
-        .trim();
-    };
-
-    const matchCommand = (input, target) => {
-      const normalizedInput = normalizeCommand(input);
-      return normalizedInput.includes(target) ||
-        normalizedInput.replace(/\s+/g, '') === target.replace(/\s+/g, '');
-    };
-
-    const normalizedCommand = normalizeCommand(command);
-
-    const searchMatch = normalizedCommand.match(/^search\s+(.+)$/i);
-    if (searchMatch) {
-      const searchQuery = searchMatch[1].trim();
-      await this.callbacks.performGoogleSearch(searchQuery);
-      return;
-    }
-
-    const websiteMatch = normalizedCommand.match(/go to (.*?)(?:\.com|$)/i);
-    if (websiteMatch) {
-      const website = websiteMatch[1].trim();
-      await this.callbacks.navigateToWebsite(website);
-      return;
-    }
-
-    for (const [key, { variants, handler }] of Object.entries(this.commandMap)) {
-      if (variants.some(variant => matchCommand(normalizedCommand, variant))) {
-        await handler();
-        return;
-      }
-    }
-
-    this.callbacks.appendMessage('system', `Command not recognized: "${command}"`);
-    this.speakText("Command not recognized. Please try again.");
-  }
-
   async requestMicrophonePermission() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -230,27 +109,25 @@ export class VoiceController {
       return true;
     } catch (error) {
       console.error('Microphone permission error:', error);
-      this.callbacks.appendMessage('system', 'Please allow microphone access. Introduction: Right-click extension icon > View web permissions > Find Microphone and set it to Allow');
+      this.callbacks.appendMessage('system', 'Please allow microphone access.');
+      this.callbacks.appendMessage('system', 'Introduction: Right-click extension icon > View web permissions > Find Microphone and set it to Allow');
       this.speakText('Please allow microphone access.');
       return false;
     }
   }
 
   speakText(text) {
-    return new Promise((resolve) => {
-      if (!this.state.synthesis.instance) {
-        resolve();
-        return;
-      }
+    if (!this.state.synthesis.instance) return;
 
-      if (this.state.synthesis.isSpeaking) {
-        this.state.synthesis.instance.cancel();
-      }
+    if (this.state.synthesis.isSpeaking) {
+      this.state.synthesis.instance.cancel();
+    }
 
+    this.state.synthesis.speakingPromise = new Promise((resolve) => {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.voice = this.state.synthesis.selectedVoice;
       utterance.lang = 'en-US';
-      utterance.rate = 1.1;
+      utterance.rate = 1.3;
       utterance.pitch = 1.0;
       utterance.volume = 1.0;
 
@@ -268,29 +145,11 @@ export class VoiceController {
 
       this.state.synthesis.instance.speak(utterance);
     });
-  }
 
-  async toggleVoiceControl() {
-    if (this.state.input.active) {
-      this.stopVoiceInput();
-    }
-
-    if (!this.state.control.recognition) {
-      this.initializeVoiceControl();
-    }
-
-    if (this.state.control.active) {
-      this.stopVoiceControl();
-    } else {
-      await this.startVoiceControl();
-    }
+    return this.state.synthesis.speakingPromise;
   }
 
   async toggleVoiceInput() {
-    if (this.state.control.active) {
-      this.stopVoiceControl();
-    }
-
     if (!this.state.input.recognition) {
       this.initializeVoiceInput();
     }
@@ -299,31 +158,6 @@ export class VoiceController {
       this.stopVoiceInput();
     } else {
       await this.startVoiceInput();
-    }
-  }
-
-  async startVoiceControl() {
-    try {
-      const hasPermission = await this.requestMicrophonePermission();
-      if (!hasPermission) return;
-
-      await this.state.control.recognition.start();
-      this.state.control.active = true;
-    } catch (error) {
-      console.error('Failed to start voice control:', error);
-      this.callbacks.appendMessage('system', 'Failed to start voice control');
-      this.stopVoiceControl();
-    }
-  }
-
-  stopVoiceControl() {
-    if (!this.state.control.recognition) return;
-
-    try {
-      this.state.control.recognition.stop();
-      this.state.control.active = false;
-    } catch (error) {
-      console.error('Error stopping voice control:', error);
     }
   }
 
@@ -356,6 +190,14 @@ export class VoiceController {
     }
   }
 
+  stopSpeaking() {
+    if (this.state.synthesis.instance && this.state.synthesis.isSpeaking) {
+      console.log("Explicitly stopping speech synthesis...");
+      this.state.synthesis.instance.cancel();
+      this.state.synthesis.isSpeaking = false;
+    }
+  }
+
   cleanup() {
     if (this.state.synthesis.instance && this.state.synthesis.isSpeaking) {
       this.state.synthesis.instance.cancel();
@@ -364,10 +206,7 @@ export class VoiceController {
   }
 
   isVoiceInputActive() {
-    return this.state.input.active;
+    return this.state.input.active; a
   }
 
-  isVoiceControlActive() {
-    return this.state.control.active;
-  }
 }

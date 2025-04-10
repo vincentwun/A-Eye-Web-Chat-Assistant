@@ -1,0 +1,305 @@
+const DEFAULT_CLOUD_MODEL = 'gemini-2.5-pro-exp-03-25';
+const CLOUD_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/';
+
+function stripBase64Prefix(dataUrl) {
+  if (!dataUrl || !dataUrl.startsWith('data:image')) {
+    console.warn("Invalid or non-image data URL provided:", dataUrl);
+    return null;
+  }
+  const commaIndex = dataUrl.indexOf(',');
+  if (commaIndex === -1) {
+    console.warn("Could not find comma separator in data URL:", dataUrl);
+    return null;
+  }
+  return dataUrl.substring(commaIndex + 1);
+}
+
+export class ApiService {
+
+  async sendRequest(apiConfig, messagesHistory, currentPayload, imageDataUrl = null) {
+    console.log(`ApiService.sendRequest called. Mode: ${apiConfig.activeApiMode}, Image provided: ${!!imageDataUrl}`);
+
+    let endpoint = '';
+    const headers = { 'Content-Type': 'application/json' };
+    let body;
+    let rawBase64 = null;
+    let mimeType = 'image/png';
+
+    if (imageDataUrl) {
+      rawBase64 = stripBase64Prefix(imageDataUrl);
+      if (rawBase64) {
+        const mimeTypeMatch = imageDataUrl.match(/^data:(image\/(?:jpeg|png|webp));base64,/);
+        if (mimeTypeMatch) {
+          mimeType = mimeTypeMatch[1];
+          console.log(`Detected image MIME type: ${mimeType}`);
+        } else {
+          console.warn("Could not detect specific image MIME type from data URL, using default:", mimeType);
+        }
+      } else {
+        imageDataUrl = null;
+        rawBase64 = null;
+        console.warn("Proceeding with API request without image due to processing failure.");
+      }
+    }
+
+    try {
+      if (apiConfig.activeApiMode === 'local') {
+        if (!apiConfig.localApiUrl) throw new Error('Local Ollama URL is not configured.');
+        if (!apiConfig.ollamaMultimodalModel) throw new Error('Ollama model name is not set.');
+
+        endpoint = new URL('/api/chat', apiConfig.localApiUrl).toString();
+
+        const MAX_HISTORY_MESSAGES = 10;
+        const relevantHistory = messagesHistory.slice(-MAX_HISTORY_MESSAGES);
+        const ollamaMessages = [];
+
+        for (const message of relevantHistory) {
+          if ((message.role === 'user' || message.role === 'assistant') && message.content) {
+            const lastRole = ollamaMessages.length > 0 ? ollamaMessages[ollamaMessages.length - 1].role : null;
+            if (lastRole === message.role) {
+              ollamaMessages[ollamaMessages.length - 1].content += "\n" + message.content;
+            } else {
+              ollamaMessages.push({ role: message.role, content: message.content });
+            }
+          }
+        }
+
+        const currentUserMessage = {
+          role: 'user',
+          content: currentPayload.prompt || ""
+        };
+
+        if (rawBase64) {
+          currentUserMessage.images = [rawBase64];
+        }
+
+        if (currentUserMessage.content || (currentUserMessage.images && currentUserMessage.images.length > 0)) {
+          const lastRole = ollamaMessages.length > 0 ? ollamaMessages[ollamaMessages.length - 1].role : null;
+          if (lastRole === 'user') {
+            ollamaMessages[ollamaMessages.length - 1].content += "\n" + currentUserMessage.content;
+            if (currentUserMessage.images && !ollamaMessages[ollamaMessages.length - 1].images) {
+              ollamaMessages[ollamaMessages.length - 1].images = currentUserMessage.images;
+            }
+          } else {
+            ollamaMessages.push(currentUserMessage);
+          }
+        } else {
+          if (ollamaMessages.length === 0) {
+            throw new Error("Cannot send an empty request to Ollama chat.");
+          }
+          console.warn("Sending Ollama request with history only (no current prompt/image).");
+        }
+
+        const ollamaPayload = {
+          model: apiConfig.ollamaMultimodalModel,
+          messages: ollamaMessages,
+          stream: false
+        };
+        body = JSON.stringify(ollamaPayload);
+        console.log(`Sending to Local Ollama (/api/chat): ${endpoint} (Model: ${ollamaPayload.model}) with ${ollamaMessages.length} history turns.`);
+
+      } else if (apiConfig.activeApiMode === 'cloud') {
+        if (!apiConfig.cloudApiKey) throw new Error('Cloud Gemini API Key not configured.');
+        const modelToUse = apiConfig.cloudModelName || DEFAULT_CLOUD_MODEL;
+        if (!modelToUse) throw new Error('Cloud Gemini model name not set.');
+
+
+        const fullApiUrl = `${CLOUD_API_BASE_URL}${modelToUse}:generateContent`;
+        endpoint = `${fullApiUrl}?key=${apiConfig.cloudApiKey}`;
+
+        const MAX_HISTORY_MESSAGES = 10;
+        const relevantHistory = messagesHistory.slice(-MAX_HISTORY_MESSAGES);
+        const geminiContents = [];
+
+        for (const message of relevantHistory) {
+          let role = null;
+          let parts = [];
+
+          if (message.role === 'user' && message.content) {
+            role = 'user';
+            parts.push({ text: message.content });
+          } else if (message.role === 'assistant' && message.content) {
+            role = 'model';
+            parts.push({ text: message.content });
+          }
+
+          if (role && parts.length > 0) {
+            if (geminiContents.length === 0 && role !== 'user') {
+              continue;
+            }
+
+            const lastRole = geminiContents.length > 0 ? geminiContents[geminiContents.length - 1].role : null;
+            if (lastRole === role) {
+              const lastParts = geminiContents[geminiContents.length - 1].parts;
+              const currentText = parts.find(p => p.text)?.text;
+              if (currentText) {
+                const lastTextPartIndex = lastParts.findLastIndex(p => p.text);
+                if (lastTextPartIndex !== -1) {
+                  lastParts[lastTextPartIndex].text += "\n" + currentText;
+                } else {
+                  lastParts.push({ text: currentText });
+                }
+              }
+            } else {
+              geminiContents.push({ role, parts });
+            }
+          }
+        }
+
+        const currentUserParts = [];
+        if (currentPayload.prompt) {
+          currentUserParts.push({ text: currentPayload.prompt });
+        }
+        if (rawBase64) {
+          currentUserParts.push({
+            inline_data: {
+              mime_type: mimeType,
+              data: rawBase64
+            }
+          });
+        }
+
+        if (currentUserParts.length > 0) {
+          const lastRole = geminiContents.length > 0 ? geminiContents[geminiContents.length - 1].role : null;
+          if (lastRole === 'user') {
+            const lastParts = geminiContents[geminiContents.length - 1].parts;
+            const currentText = currentUserParts.find(p => p.text)?.text;
+            const currentImage = currentUserParts.find(p => p.inline_data);
+            if (currentText) {
+              const lastTextPartIndex = lastParts.findLastIndex(p => p.text);
+              if (lastTextPartIndex !== -1) { lastParts[lastTextPartIndex].text += "\n" + currentText; }
+              else { lastParts.push({ text: currentText }); }
+            }
+            if (currentImage && !lastParts.some(p => p.inline_data)) {
+              lastParts.push(currentImage);
+            }
+          } else {
+            geminiContents.push({ role: 'user', parts: currentUserParts });
+          }
+        } else {
+          if (geminiContents.length === 0) {
+            throw new Error("Cannot send empty request to Gemini.");
+          }
+          if (geminiContents.length > 0 && geminiContents[geminiContents.length - 1].role === 'user') {
+            console.warn("Attempting to send Gemini request ending in 'user' role without new content. API might reject this.");
+          }
+          console.warn("Sending Cloud request with history only (no current prompt/image).");
+        }
+
+        const geminiPayload = {
+          contents: geminiContents
+        };
+        body = JSON.stringify(geminiPayload);
+        console.log(`Sending to Cloud Gemini (${modelToUse}) with ${geminiContents.length} history turns.`);
+
+      } else {
+        throw new Error('Invalid API mode selected.');
+      }
+
+    } catch (error) {
+      console.error("Error preparing API request:", error);
+      throw error;
+    }
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: headers,
+        body: body
+      });
+
+      if (!response.ok) {
+        let errorBodyText = '';
+        try {
+          errorBodyText = await response.text();
+        } catch (e) {
+          console.warn("Could not read error response body:", e);
+        }
+        console.error(`API Error Response (${response.status} ${response.statusText}):`, errorBodyText);
+
+        let detailedError = `API Error (${response.status} ${response.statusText})`;
+        if (errorBodyText) {
+          try {
+            const errorJson = JSON.parse(errorBodyText);
+            if (errorJson.error && errorJson.error.message) {
+              detailedError += `: ${errorJson.error.message}`;
+              if (errorJson.error.details) console.error("Gemini Error Details:", errorJson.error.details);
+            } else if (errorJson.error) {
+              detailedError += `: ${errorJson.error}`;
+            }
+            else {
+              detailedError += `. Response: ${errorBodyText.substring(0, 200)}`;
+            }
+          } catch (e) {
+            detailedError += `. Response: ${errorBodyText.substring(0, 200)}`;
+          }
+        }
+        throw new Error(detailedError);
+      }
+
+      const data = await response.json();
+      console.log("API Response Data:", data);
+
+      let responseText = 'Error: Could not parse response.';
+
+      if (apiConfig.activeApiMode === 'local') {
+        if (data.message && typeof data.message.content === 'string') {
+          responseText = data.message.content;
+        } else if (data.error) {
+          responseText = `Ollama API Error: ${data.error}`;
+          console.error("Ollama API returned error object:", data);
+        } else if (typeof data.response === 'string') {
+          responseText = data.response;
+          console.warn("Received response in 'data.response' field, expected 'data.message.content' for /api/chat.");
+        }
+        else {
+          responseText = 'Error: Could not parse Ollama chat response content.';
+          console.warn("Unexpected Ollama /api/chat response structure:", data);
+        }
+
+      } else if (apiConfig.activeApiMode === 'cloud') {
+        try {
+          if (data.candidates && data.candidates[0]?.content?.parts) {
+            responseText = data.candidates[0].content.parts
+              .filter(part => part.text)
+              .map(part => part.text)
+              .join('');
+          }
+          else if (data.promptFeedback?.blockReason) {
+            responseText = `Request blocked by API: ${data.promptFeedback.blockReason}`;
+            if (data.promptFeedback.safetyRatings) {
+              responseText += ` - Details: ${data.promptFeedback.safetyRatings.map(r => `${r.category}: ${r.probability}`).join(', ')}`;
+            }
+            console.warn("Gemini request blocked:", data.promptFeedback);
+          } else if (data.candidates && data.candidates[0]?.finishReason && data.candidates[0].finishReason !== "STOP") {
+            responseText = `Request finished unexpectedly. Reason: ${data.candidates[0].finishReason}`;
+            const safetyRatingsInfo = data.candidates[0].safetyRatings?.map(r => `${r.category}: ${r.probability}`).join(', ');
+            if (safetyRatingsInfo) responseText += ` (Safety Ratings: ${safetyRatingsInfo})`;
+            if (data.candidates[0].content?.parts?.some(p => p.text)) {
+              const partialText = data.candidates[0].content.parts.filter(p => p.text).map(p => p.text).join('');
+              responseText += `\nPartial content: ${partialText}`;
+            }
+            console.warn(`Gemini request finished with reason: ${data.candidates[0].finishReason}`, data.candidates[0]);
+          }
+          else if (data.error) {
+            responseText = `Gemini API Error: ${data.error.message || 'Unknown error'}`;
+            console.error("Gemini API returned error object:", data.error);
+          }
+          else {
+            responseText = 'Error: Received unexpected response structure from Gemini API.';
+            console.warn("Unexpected Gemini response structure:", data);
+          }
+        } catch (parseError) {
+          console.error("Error parsing Gemini response content:", parseError, data);
+          responseText = 'Error: Failed to process Gemini response content.';
+        }
+      }
+
+      return responseText;
+
+    } catch (error) {
+      console.error("Error during API fetch or response processing:", error);
+      throw error;
+    }
+  }
+}
