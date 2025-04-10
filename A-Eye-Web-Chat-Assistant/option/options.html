@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A-Eye Assistant Options</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+        label { display: block; margin-top: 15px; font-weight: bold; }
+        textarea { width: 100%; min-height: 80px; margin-top: 5px; box-sizing: border-box; font-family: monospace; padding: 5px; border: 1px solid #ccc; border-radius: 4px;}
+        button { padding: 10px 15px; margin-top: 20px; cursor: pointer; background-color: #4CAF50; color: white; border: none; border-radius: 4px; }
+        button:hover { background-color: #45a049; }
+        #status { margin-top: 15px; color: green; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h1>A-Eye Assistant Prompt Options</h1>
+    <p>Customize the prompts used by the AI assistant.</p>
+
+    <div>
+        <label for="screenshot-prompt">Screenshot Description Prompt:</label>
+        <textarea id="screenshot-prompt"></textarea>
+    </div>
+
+    <div>
+        <label for="scrolling-screenshot-prompt">Scrolling Screenshot Prompt:</label>
+        <textarea id="scrolling-screenshot-prompt"></textarea>
+    </div>
+
+    <div>
+        <label for="analyze-content-prompt">Content Analysis Prompt:</label>
+        <textarea id="analyze-content-prompt"></textarea>
+    </div>
+
+    <div>
+        <label for="default-chat-prompt">Default Chat Prompt (Personality):</label>
+        <textarea id="default-chat-prompt"></textarea>
+    </div>
+
+    <button id="save-button">Save Prompts</button>
+    <p id="status"></p>
+
+    <script src="options.js" type="module"></script>
+</body>
+</html>
