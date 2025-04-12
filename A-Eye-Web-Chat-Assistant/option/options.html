@@ -1,22 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>A-Eye Assistant Options</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; }
-        label { display: block; margin-top: 15px; font-weight: bold; }
-        textarea { width: 100%; min-height: 80px; margin-top: 5px; box-sizing: border-box; font-family: monospace; padding: 5px; border: 1px solid #ccc; border-radius: 4px;}
-        button { padding: 10px 15px; margin-top: 20px; cursor: pointer; background-color: #4CAF50; color: white; border: none; border-radius: 4px; }
-        button:hover { background-color: #45a049; }
-        #status { margin-top: 15px; color: green; font-weight: bold; }
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: auto;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        textarea {
+            width: 100%;
+            margin-top: 5px;
+            box-sizing: border-box;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        textarea {
+            min-height: 80px;
+            font-family: monospace;
+            overflow-y: auto;
+            resize: none;
+        }
+
+        button {
+            padding: 10px 15px;
+            margin-top: 20px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #status {
+            margin-top: 15px;
+            color: green;
+            font-weight: bold;
+        }
+
+        hr {
+            margin-top: 25px;
+            margin-bottom: 25px;
+            border: 0;
+            border-top: 1px solid #eee;
+        }
     </style>
 </head>
+
 <body>
 
-    <h1>A-Eye Assistant Prompt Options</h1>
-    <p>Customize the prompts used by the AI assistant.</p>
+    <h1>A-Eye Assistant Options</h1>
+
+    <h2>API Settings</h2>
+
+    <div>
+        <label for="local-url-input">Local API URL:</label>
+        <input type="text" id="local-url-input" placeholder="e.g., http://localhost:11434">
+    </div>
+
+    <div>
+        <label for="local-model-name-input">Local Model Name:</label>
+        <input type="text" id="local-model-name-input" placeholder="e.g., gemma3:4b">
+    </div>
+
+    <hr>
+
+    <h3>Cloud API Settings</h3>
+
+    <div>
+        <label for="cloud-api-url-input">Cloud API Base URL:</label>
+        <input type="text" id="cloud-api-url-input" placeholder="Usually leave as default">
+    </div>
+
+    <div>
+        <label for="cloud-api-key-input">Cloud API Key:</label>
+        <input type="password" id="cloud-api-key-input" placeholder="Enter your API Key">
+    </div>
+
+    <div>
+        <label for="cloud-model-name-input">Cloud Model Name:</label>
+        <input type="text" id="cloud-model-name-input" placeholder="e.g., gemini-2.0-flash-lite">
+    </div>
+
+    <hr>
+
+    <h2>Prompt Settings</h2>
+
+    <div>
+        <label for="default-chat-prompt">Default System Prompt:</label>
+        <textarea id="default-chat-prompt"></textarea>
+    </div>
 
     <div>
         <label for="screenshot-prompt">Screenshot Description Prompt:</label>
@@ -33,14 +125,10 @@
         <textarea id="analyze-content-prompt"></textarea>
     </div>
 
-    <div>
-        <label for="default-chat-prompt">Default Chat Prompt (Personality):</label>
-        <textarea id="default-chat-prompt"></textarea>
-    </div>
-
-    <button id="save-button">Save Prompts</button>
+    <button id="save-button">Save All Settings</button>
     <p id="status"></p>
 
     <script src="options.js" type="module"></script>
 </body>
+
 </html>

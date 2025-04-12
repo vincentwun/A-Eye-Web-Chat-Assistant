@@ -1,6 +1,3 @@
-const DEFAULT_CLOUD_MODEL = 'gemini-2.5-pro-exp-03-25';
-const CLOUD_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/';
-
 function stripBase64Prefix(dataUrl) {
   if (!dataUrl || !dataUrl.startsWith('data:image')) {
     console.warn("Invalid or non-image data URL provided:", dataUrl);
@@ -15,9 +12,9 @@ function stripBase64Prefix(dataUrl) {
 }
 
 export class ApiService {
-
-  async sendRequest(apiConfig, messagesHistory, currentPayload, imageDataUrl = null) {
-    console.log(`ApiService.sendRequest called. Mode: ${apiConfig.activeApiMode}, Image provided: ${!!imageDataUrl}`);
+  async sendRequest(apiConfig, messagesHistory, currentPayload, imageDataUrl = null, systemPrompt = null) {
+    console.log(`ApiService.sendRequest called. Mode: ${apiConfig.activeApiMode}, Image provided: ${!!imageDataUrl}, System Prompt Provided: ${!!systemPrompt}`);
+    console.log("Using API Config:", apiConfig);
 
     let endpoint = '';
     const headers = { 'Content-Type': 'application/json' };
@@ -46,13 +43,18 @@ export class ApiService {
       if (apiConfig.activeApiMode === 'local') {
         if (!apiConfig.localApiUrl) throw new Error('Local Ollama URL is not configured.');
         if (!apiConfig.ollamaMultimodalModel) throw new Error('Ollama model name is not set.');
-
-        endpoint = new URL('/api/chat', apiConfig.localApiUrl).toString();
-
+        try {
+          endpoint = new URL('/api/chat', apiConfig.localApiUrl).toString();
+        } catch (e) {
+          throw new Error(`Invalid Local Ollama URL provided: ${apiConfig.localApiUrl}`);
+        }
         const MAX_HISTORY_MESSAGES = 10;
         const relevantHistory = messagesHistory.slice(-MAX_HISTORY_MESSAGES);
         const ollamaMessages = [];
-
+        if (systemPrompt) {
+          ollamaMessages.push({ role: 'system', content: systemPrompt });
+          console.log("Prepending Ollama system prompt.");
+        }
         for (const message of relevantHistory) {
           if ((message.role === 'user' || message.role === 'assistant') && message.content) {
             const lastRole = ollamaMessages.length > 0 ? ollamaMessages[ollamaMessages.length - 1].role : null;
@@ -63,22 +65,21 @@ export class ApiService {
             }
           }
         }
-
         const currentUserMessage = {
           role: 'user',
           content: currentPayload.prompt || ""
         };
-
         if (rawBase64) {
           currentUserMessage.images = [rawBase64];
         }
-
         if (currentUserMessage.content || (currentUserMessage.images && currentUserMessage.images.length > 0)) {
           const lastRole = ollamaMessages.length > 0 ? ollamaMessages[ollamaMessages.length - 1].role : null;
           if (lastRole === 'user') {
             ollamaMessages[ollamaMessages.length - 1].content += "\n" + currentUserMessage.content;
             if (currentUserMessage.images && !ollamaMessages[ollamaMessages.length - 1].images) {
               ollamaMessages[ollamaMessages.length - 1].images = currentUserMessage.images;
+            } else if (currentUserMessage.images) {
+              console.warn("Cannot merge images into existing user message images for Ollama.");
             }
           } else {
             ollamaMessages.push(currentUserMessage);
@@ -87,34 +88,33 @@ export class ApiService {
           if (ollamaMessages.length === 0) {
             throw new Error("Cannot send an empty request to Ollama chat.");
           }
-          console.warn("Sending Ollama request with history only (no current prompt/image).");
+          console.warn("Sending Ollama request with history/system prompt only (no current user prompt/image).");
         }
-
         const ollamaPayload = {
           model: apiConfig.ollamaMultimodalModel,
           messages: ollamaMessages,
           stream: false
         };
         body = JSON.stringify(ollamaPayload);
-        console.log(`Sending to Local Ollama (/api/chat): ${endpoint} (Model: ${ollamaPayload.model}) with ${ollamaMessages.length} history turns.`);
+        console.log(`Sending to Local Ollama (/api/chat): ${endpoint} (Model: ${ollamaPayload.model}) with ${ollamaMessages.length} message turns.`);
 
       } else if (apiConfig.activeApiMode === 'cloud') {
         if (!apiConfig.cloudApiKey) throw new Error('Cloud Gemini API Key not configured.');
-        const modelToUse = apiConfig.cloudModelName || DEFAULT_CLOUD_MODEL;
-        if (!modelToUse) throw new Error('Cloud Gemini model name not set.');
+        if (!apiConfig.cloudApiUrl) throw new Error('Cloud API Base URL not configured.');
+        if (!apiConfig.cloudModelName) throw new Error('Cloud Gemini model name not set.');
 
+        const modelToUse = apiConfig.cloudModelName;
+        const cloudBaseUrl = apiConfig.cloudApiUrl.endsWith('/') ? apiConfig.cloudApiUrl : apiConfig.cloudApiUrl + '/';
+        const fullApiUrl = `${cloudBaseUrl}${modelToUse}:generateContent`;
 
-        const fullApiUrl = `${CLOUD_API_BASE_URL}${modelToUse}:generateContent`;
         endpoint = `${fullApiUrl}?key=${apiConfig.cloudApiKey}`;
 
         const MAX_HISTORY_MESSAGES = 10;
         const relevantHistory = messagesHistory.slice(-MAX_HISTORY_MESSAGES);
         const geminiContents = [];
-
         for (const message of relevantHistory) {
           let role = null;
           let parts = [];
-
           if (message.role === 'user' && message.content) {
             role = 'user';
             parts.push({ text: message.content });
@@ -122,30 +122,26 @@ export class ApiService {
             role = 'model';
             parts.push({ text: message.content });
           }
-
           if (role && parts.length > 0) {
             if (geminiContents.length === 0 && role !== 'user') {
+              console.warn("Skipping initial non-user message in Gemini history build.");
               continue;
             }
-
             const lastRole = geminiContents.length > 0 ? geminiContents[geminiContents.length - 1].role : null;
             if (lastRole === role) {
               const lastParts = geminiContents[geminiContents.length - 1].parts;
               const currentText = parts.find(p => p.text)?.text;
               if (currentText) {
                 const lastTextPartIndex = lastParts.findLastIndex(p => p.text);
-                if (lastTextPartIndex !== -1) {
-                  lastParts[lastTextPartIndex].text += "\n" + currentText;
-                } else {
-                  lastParts.push({ text: currentText });
-                }
+                if (lastTextPartIndex !== -1) { lastParts[lastTextPartIndex].text += "\n" + currentText; }
+                else { lastParts.push({ text: currentText }); }
               }
+              console.warn(`Merging consecutive ${role} messages for Gemini.`);
             } else {
               geminiContents.push({ role, parts });
             }
           }
         }
-
         const currentUserParts = [];
         if (currentPayload.prompt) {
           currentUserParts.push({ text: currentPayload.prompt });
@@ -158,7 +154,6 @@ export class ApiService {
             }
           });
         }
-
         if (currentUserParts.length > 0) {
           const lastRole = geminiContents.length > 0 ? geminiContents[geminiContents.length - 1].role : null;
           if (lastRole === 'user') {
@@ -177,25 +172,24 @@ export class ApiService {
             geminiContents.push({ role: 'user', parts: currentUserParts });
           }
         } else {
-          if (geminiContents.length === 0) {
+          if (geminiContents.length === 0 && !systemPrompt) {
             throw new Error("Cannot send empty request to Gemini.");
           }
           if (geminiContents.length > 0 && geminiContents[geminiContents.length - 1].role === 'user') {
             console.warn("Attempting to send Gemini request ending in 'user' role without new content. API might reject this.");
           }
-          console.warn("Sending Cloud request with history only (no current prompt/image).");
+          console.warn("Sending Cloud request with history/system prompt only (no current prompt/image).");
         }
 
         const geminiPayload = {
-          contents: geminiContents
+          contents: geminiContents,
+          ...(systemPrompt && { systemInstruction: { parts: [{ text: systemPrompt }] } })
         };
         body = JSON.stringify(geminiPayload);
-        console.log(`Sending to Cloud Gemini (${modelToUse}) with ${geminiContents.length} history turns.`);
-
+        console.log(`Sending to Cloud Gemini (${modelToUse}) using endpoint ${fullApiUrl} with ${geminiContents.length} history turns` + (systemPrompt ? " and system instruction." : "."));
       } else {
         throw new Error('Invalid API mode selected.');
       }
-
     } catch (error) {
       console.error("Error preparing API request:", error);
       throw error;
@@ -216,7 +210,6 @@ export class ApiService {
           console.warn("Could not read error response body:", e);
         }
         console.error(`API Error Response (${response.status} ${response.statusText}):`, errorBodyText);
-
         let detailedError = `API Error (${response.status} ${response.statusText})`;
         if (errorBodyText) {
           try {
@@ -226,8 +219,7 @@ export class ApiService {
               if (errorJson.error.details) console.error("Gemini Error Details:", errorJson.error.details);
             } else if (errorJson.error) {
               detailedError += `: ${errorJson.error}`;
-            }
-            else {
+            } else {
               detailedError += `. Response: ${errorBodyText.substring(0, 200)}`;
             }
           } catch (e) {
@@ -251,12 +243,10 @@ export class ApiService {
         } else if (typeof data.response === 'string') {
           responseText = data.response;
           console.warn("Received response in 'data.response' field, expected 'data.message.content' for /api/chat.");
-        }
-        else {
+        } else {
           responseText = 'Error: Could not parse Ollama chat response content.';
           console.warn("Unexpected Ollama /api/chat response structure:", data);
         }
-
       } else if (apiConfig.activeApiMode === 'cloud') {
         try {
           if (data.candidates && data.candidates[0]?.content?.parts) {
@@ -264,8 +254,7 @@ export class ApiService {
               .filter(part => part.text)
               .map(part => part.text)
               .join('');
-          }
-          else if (data.promptFeedback?.blockReason) {
+          } else if (data.promptFeedback?.blockReason) {
             responseText = `Request blocked by API: ${data.promptFeedback.blockReason}`;
             if (data.promptFeedback.safetyRatings) {
               responseText += ` - Details: ${data.promptFeedback.safetyRatings.map(r => `${r.category}: ${r.probability}`).join(', ')}`;
@@ -280,8 +269,7 @@ export class ApiService {
               responseText += `\nPartial content: ${partialText}`;
             }
             console.warn(`Gemini request finished with reason: ${data.candidates[0].finishReason}`, data.candidates[0]);
-          }
-          else if (data.error) {
+          } else if (data.error) {
             responseText = `Gemini API Error: ${data.error.message || 'Unknown error'}`;
             console.error("Gemini API returned error object:", data.error);
           }
