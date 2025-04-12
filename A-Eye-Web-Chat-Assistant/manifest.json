@@ -34,6 +34,13 @@
     "extension_pages": "script-src 'self'; object-src 'self'"
   },
   "commands": {
+    "toggle-api-mode": {
+      "suggested_key": {
+        "default": "Alt+Shift+1",
+        "mac": "Alt+Shift+1"
+      },
+      "description": "Toggle between local and cloud AI"
+    },
     "toggle-voice-input": {
       "suggested_key": {
         "default": "Alt+Shift+2",

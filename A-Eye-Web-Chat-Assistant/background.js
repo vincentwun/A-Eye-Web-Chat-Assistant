@@ -27,12 +27,13 @@ chrome.commands.onCommand.addListener((command) => {
   console.log('Command received:', command);
 
   const commandActions = {
-    'toggle-voice-input': () => chrome.runtime.sendMessage({ type: 'toggleVoiceInput' }),
-    'toggle-repeat': () => chrome.runtime.sendMessage({ type: 'toggleRepeat' })
+    'toggle-api-mode': { type: 'toggleApiMode' },
+    'toggle-voice-input': { type: 'toggleVoiceInput' },
+    'toggle-repeat': { type: 'toggleRepeat' }
   };
 
   if (commandActions[command]) {
-    chrome.runtime.sendMessage(commandActions[command]())
+    chrome.runtime.sendMessage(commandActions[command])
       .catch(error => {
         if (error.message.includes('Receiving end does not exist.')) {
           console.log(`Side panel not open or listening for command: ${command}`);
@@ -69,6 +70,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       console.log(`Background received unhandled message type: ${request.type}`);
       break;
   }
+  return false;
 });
 
 console.log("Background script loaded and listeners attached.");
