@@ -2,7 +2,7 @@ import { VoiceController } from './components/voiceControl.js';
 import { ScreenshotController } from './components/screenShot.js';
 import { ApiService } from './components/apiService.js';
 import { ContentExtractor } from './components/contentExtractor.js';
-import { UIManager } from './components/UIManager.js';
+import { UIManager } from './components/uiManager.js';
 import { defaultPrompts, promptsStorageKey } from './option/prompts.js';
 import { settingsStorageKey, defaultApiSettings } from './option/apiRoute.js';
 
