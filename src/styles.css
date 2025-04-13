@@ -40,7 +40,6 @@ body {
 .button-group {
   display: flex;
   gap: var(--space);
-  margin-bottom: 3px;
 }
 
 .header-section .button-group button {
@@ -62,40 +61,6 @@ body {
 .header-section .button-group button.mode-button.active-mode {
   background-color: var(--green-active);
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
-}
-
-.mode-options {
-  padding-top: var(--space);
-  font-size: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.mode-option-line {
-  display: flex;
-  align-items: center;
-}
-
-.mode-options label {
-  margin-right: var(--space);
-  color: var(--gray-700);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.mode-options input {
-  padding: 3px 5px;
-  border: 1px solid var(--input-border-color);
-  border-radius: var(--radius);
-  font-size: 12px;
-  flex-grow: 1;
-  min-width: 100px;
-}
-
-.mode-options input:focus {
-  outline: none;
-  border-color: var(--blue);
 }
 
 .content-wrapper {
@@ -206,10 +171,16 @@ body {
   outline: none;
   padding: 4px 2px;
   font-size: 14px;
+  line-height: 1.4;
   background-color: transparent;
   resize: none;
-  min-height: 24px;
-  line-height: 1.4;
+  overflow-y: auto;
+  font-family: inherit;
+  color: inherit;
+  box-sizing: border-box;
+  field-sizing: content;
+  min-height: calc(1.4em + 8px);
+  max-height: calc(3 * 1.4em + 8px);
 }
 
 .input-controls-row {

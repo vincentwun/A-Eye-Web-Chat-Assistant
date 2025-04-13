@@ -26,31 +26,8 @@ Third-Party Components
 
 This extension incorporates the following third-party components:
 
-1. Moondream2
-   - Licensed under the Apache License 2.0
-   - Copyright (c) 2024 Xenova
-   - Source: https://huggingface.co/Xenova/moondream2
-   - License: https://www.apache.org/licenses/LICENSE-2.0
-
-2. Readability.js
+1. Readability.js
    - Licensed under the Apache License 2.0
    - Copyright (c) 2010 Arc90 Inc
    - Source: https://github.com/mozilla/readability
    - License: https://www.apache.org/licenses/LICENSE-2.0
-
-3. Transformers.js
-   - Licensed under the Apache License 2.0
-   - Copyright (c) 2024 Xenova
-   - Source: https://github.com/xenova/transformers.js
-   - License: https://www.apache.org/licenses/LICENSE-2.0
-
----
-
-Additional Notices:
-
-1. This extension requires Google Chrome Dev or Canary Version to function properly.
-2. Some features may be experimental and subject to change.
-3. Any modifications to this extension must maintain these notices and comply 
-   with all applicable license terms.
-4. The use of AI models and features is subject to their respective terms of 
-   service and acceptable use policies.
