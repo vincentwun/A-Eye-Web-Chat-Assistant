@@ -76,16 +76,25 @@ and unzip it.
    | > 20GB        | Gemma 3 27B    | `ollama pull gemma3:27b` |
 
 3.  **Allow the A-eye to communicate with Ollama:**
-    (Windows users):
+    Windows users (cmd):
     ```
     set OLLAMA_ORIGINS='chrome-extension://*'
     ```
-    (Linux or macOS users):
+    Linux users:
     ```
     export OLLAMA_ORIGINS='chrome-extension://*'
     ```
+    macOS users:
+    ```
+    launchctl setenv OLLAMA_ORIGINS 'chrome-extension://*'
+    ```
 
-4.  In the extension's **Settings**, make sure "Local Model Name" is `gemma3:4b` (or the model you chose).
+4.  **Run Gemma 3**
+    ```
+    ollama run gemma3:4b
+    ```
+
+5.  In the extension's **Settings**, make sure "Local Model Name" is `gemma3:4b` (or the model you chose).
 
 ### Setting up Cloud AI Mode (Gemini API)
 1. Get your Gemini API Key from [Google AI Studio](https://aistudio.google.com/)
@@ -95,16 +104,16 @@ and unzip it.
 ### Basic Interaction
 
 1.  **Open Side Panel**: Use shortcut `Alt+Shift+Q`.
-2.  **Select AI Mode**: Use shortcut `Alt+Shift+1` or click the Desktop icon (Local) <i class="fas fa-desktop"></i> / Cloud icon (Cloud) <i class="fas fa-cloud"></i> in the header.
-3.  **Voice Input**: Use shortcut `Alt+Shift+2` or Click the Microphone icon (<i class="fas fa-microphone"></i>).
-4. **Repeat Last Response**: Use shortcut `Alt+Shift+3` or click the Redo icon (<i class="fas fa-redo"></i>).
-5. **Clear Conversation**: Click the Trash icon (<i class="fas fa-trash-alt"></i>) in the header to clear the chat.
+2.  **Select AI Mode**: Use shortcut `Alt+Shift+1` or click the Desktop icon (Local) / Cloud icon (Cloud) in the header.
+3.  **Voice Input**: Use shortcut `Alt+Shift+2` or Click the Microphone icon .
+4. **Repeat Last Response**: Use shortcut `Alt+Shift+3` or click the Redo icon.
+5. **Clear Conversation**: Click the Trash icon in the header to clear the chat.
 
 ### Analyzing Web Content
 
--   **Capture Visible Area**: Click Camera <i class="fas fa-camera"></i>: Sends visible part of the webpage to AI.
--   **Capture Full Page**: Click Scroll <i class="fas fa-scroll"></i>: Sends the entire webpage (scrolling) to AI.
--   **Analyze Text Content**: Click File <i class="fas fa-file-lines"></i>: Sends the main text of the webpage to AI.
+-   **Capture Visible Area**: Click Camera icon: Sends visible part of the webpage to AI.
+-   **Capture Full Page**: Click Scroll icon: Sends the entire webpage (scrolling) to AI.
+-   **Analyze Text Content**: Click File icon: Sends the main text of the webpage to AI.
 
 ---
 ## Privacy
