@@ -1,3 +1,7 @@
+import { defaultApiSettings, settingsStorageKey } from './option/apiRoute.js';
+import { defaultPrompts, promptsStorageKey } from './option/prompts.js';
+import { defaultVoiceSettings, voiceSettingsStorageKey } from './option/voiceSettings.js';
+
 async function getPageDimensions(tabId) {
   try {
     const results = await chrome.scripting.executeScript({
@@ -20,6 +24,46 @@ async function getPageDimensions(tabId) {
     return null;
   }
 }
+
+async function initializeDefaultSettings() {
+  console.log('Checking and initializing default settings...');
+  try {
+    const keysToGet = [settingsStorageKey, promptsStorageKey, voiceSettingsStorageKey];
+    const currentSettings = await chrome.storage.local.get(keysToGet);
+    const settingsToSave = {};
+
+    if (currentSettings[settingsStorageKey] === undefined) {
+      settingsToSave[settingsStorageKey] = { ...defaultApiSettings };
+      console.log('Initializing default API settings.');
+    }
+    if (currentSettings[promptsStorageKey] === undefined) {
+      settingsToSave[promptsStorageKey] = { ...defaultPrompts };
+      console.log('Initializing default prompts.');
+    }
+    if (currentSettings[voiceSettingsStorageKey] === undefined) {
+      settingsToSave[voiceSettingsStorageKey] = { ...defaultVoiceSettings };
+      console.log('Initializing default voice settings.');
+    }
+
+    if (Object.keys(settingsToSave).length > 0) {
+      await chrome.storage.local.set(settingsToSave);
+      console.log('Default settings saved to chrome.storage.local:', settingsToSave);
+    } else {
+      console.log('All settings already exist. No initialization needed.');
+    }
+  } catch (error) {
+    console.error('Error initializing default settings:', error);
+  }
+}
+
+chrome.runtime.onInstalled.addListener(async (details) => {
+  if (details.reason === 'install') {
+    console.log('Extension installed. Initializing default settings...');
+    await initializeDefaultSettings();
+  } else if (details.reason === 'update') {
+    console.log('Extension updated to version', chrome.runtime.getManifest().version);
+  }
+});
 
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 

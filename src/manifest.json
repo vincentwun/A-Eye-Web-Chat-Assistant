@@ -25,7 +25,8 @@
   },
   "options_page": "option/options.html",
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "action": {
     "default_title": "Open A-Eye Web Chat Assistant"

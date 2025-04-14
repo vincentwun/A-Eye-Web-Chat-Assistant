@@ -32,9 +32,19 @@ body {
 }
 
 .header-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: var(--space);
   border-bottom: 1px solid var(--input-border-color);
   flex-shrink: 0;
+}
+
+.mode-indicator {
+  font-size: 15px;
+  color: var(--gray-500);
+  font-weight: 500;
+  margin-right: var(--space);
 }
 
 .button-group {
@@ -79,7 +89,7 @@ body {
   border-radius: var(--radius);
   padding: var(--space);
   margin-bottom: var(--space);
-  max-height: 150px;
+  max-height: 100px;
   overflow-y: auto;
   border-bottom: 1px solid var(--input-border-color);
 }
@@ -304,4 +314,8 @@ body {
 #local-mode-button[data-tooltip]:before {
   left: 0;
   transform: translateX(0);
+}
+
+#clear-button {
+  background-color: #dc3545;
 }

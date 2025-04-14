@@ -7,7 +7,6 @@ import { ScreenshotAction } from './BrowserControl/screenshotAction.js';
 import { ScrollingScreenshotAction } from './BrowserControl/scrollingScreenshotAction.js';
 import { ContentAnalysisAction } from './BrowserControl/contentAnalysisAction.js';
 import { UrlAction } from './BrowserControl/urlAction.js';
-
 import { defaultPrompts, promptsStorageKey } from './option/prompts.js';
 import { settingsStorageKey, defaultApiSettings } from './option/apiRoute.js';
 
@@ -47,6 +46,7 @@ class AIScreenReader {
             clearButton: document.getElementById('clear-button'),
             localModeButton: document.getElementById('local-mode-button'),
             cloudModeButton: document.getElementById('cloud-mode-button'),
+            currentModeIndicator: document.getElementById('current-mode-indicator')
         };
 
         this.uiManager = new UIManager(this.elements);
@@ -189,6 +189,7 @@ class AIScreenReader {
             if (areaName !== 'local') return;
             let settingsChanged = false;
             let promptsChanged = false;
+            const activeModeBeforeChange = this.state.activeApiMode;
 
             if (changes[this.settingsStorageKey]) {
                 const newSettings = changes[this.settingsStorageKey].newValue || {};
@@ -208,6 +209,7 @@ class AIScreenReader {
                 console.log('Prompts updated via storage listener:', this.prompts);
             }
             if (settingsChanged) {
+                console.log(`Mode changed via storage: ${activeModeBeforeChange} -> ${this.state.activeApiMode}`);
                 this.uiManager.updateModeUI(this.state.activeApiMode);
             }
         });
@@ -227,6 +229,7 @@ class AIScreenReader {
         } catch (error) {
             console.error('Initialization failed:', error);
             this.handleError('Initialization failed', error);
+            this.uiManager.updateModeUI(this.state.activeApiMode);
             this.state.activeApiMode = this.state.activeApiMode ?? defaultApiSettings.activeApiMode;
             this.state.localApiUrl = this.state.localApiUrl ?? defaultApiSettings.localApiUrl;
             this.state.ollamaMultimodalModel = this.state.ollamaMultimodalModel ?? defaultApiSettings.ollamaMultimodalModel;

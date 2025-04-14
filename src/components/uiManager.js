@@ -4,6 +4,9 @@ export class UIManager {
         if (!this.elements || !this.elements.conversation || !this.elements.localModeButton || !this.elements.cloudModeButton) {
             console.error("UIManager initialized with missing essential elements (conversation or mode buttons).");
         }
+        if (!this.elements.currentModeIndicator) {
+            console.warn("UIManager initialized without currentModeIndicator element.");
+        }
     }
 
     appendMessage(role, formattedContent) {
@@ -57,7 +60,15 @@ export class UIManager {
 
         localBtn.classList.toggle('active-mode', isLocal);
         cloudBtn.classList.toggle('active-mode', !isLocal);
+        this.updateModeIndicator(activeMode);
+    }
 
+    updateModeIndicator(activeMode) {
+        if (!this.elements.currentModeIndicator) {
+            return;
+        }
+        const modeText = activeMode === 'local' ? 'Local' : 'Cloud';
+        this.elements.currentModeIndicator.textContent = `Current Mode: ${modeText}`;
     }
 
     updateInputState(inputValue) {

@@ -12,6 +12,7 @@
 
 <body>
     <header class="header-section">
+        <span id="current-mode-indicator" class="mode-indicator">Current Mode: Local</span>
         <nav class="button-group">
             <button id="local-mode-button" class="mode-button" data-tooltip="Local Mode">
                 <i class="fas fa-desktop"></i>
@@ -22,31 +23,10 @@
             <button id="options-button" data-tooltip="Settings (Options Page)">
                 <i class="fas fa-cog"></i>
             </button>
+            <button id="clear-button" data-tooltip="Clear">
+                <i class="fas fa-trash-alt"></i>
+            </button>
         </nav>
-
-        <div id="mode-options-container">
-            <div id="local-mode-options" class="mode-options" style="display: none;">
-                <div class="mode-option-line">
-                    <label for="local-url-input">Local URL:</label>
-                    <input type="text" id="local-url-input" placeholder="e.g., http://localhost:11434"
-                        value="http://localhost:11434">
-                </div>
-                <div class="mode-option-line">
-                    <label for="local-model-name-input">Local Model:</label>
-                    <input type="text" id="local-model-name-input" placeholder="e.g., gemma3:4b" value="gemma3:4b">
-                </div>
-            </div>
-            <div id="cloud-mode-options" class="mode-options" style="display: none;">
-                <div class="mode-option-line">
-                    <label for="cloud-api-url-input">API URL:</label>
-                    <input type="text" id="cloud-api-url-input" placeholder="Enter API Base URL (Optional)">
-                </div>
-                <div class="mode-option-line">
-                    <label for="cloud-api-key-input">API Key:</label>
-                    <input type="password" id="cloud-api-key-input" placeholder="Enter your API Key">
-                </div>
-            </div>
-        </div>
     </header>
 
     <main class="content-wrapper">
@@ -79,9 +59,6 @@
                 <button id="repeat-button" data-tooltip="Repeat">
                     <i class="fas fa-redo"></i>
                 </button>
-                <button id="clear-button" data-tooltip="Clear">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
                 <button id="send-button" data-tooltip="Send">
                     <i class="fas fa-paper-plane"></i>
                 </button>
@@ -91,7 +68,7 @@
 
     <footer class="footer">
         <div class="footer-content">
-            <a href="https://github.com/" target="_blank">Open-Source Project</a> |
+            <a href="https://github.com/vincentwun/A-Eye-Web-Chat-Assistant" target="_blank">Open-Source Project</a> |
             Developed by Students of HD in Cloud and Data Centre Administration | HKIIT at IVE (LWL)
         </div>
     </footer>
