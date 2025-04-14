@@ -1,4 +1,6 @@
-# A-Eye Web Chat Assistant
+<p align="center">
+    <h1 align="center">A-Eye Web Chat Assistant</h1>
+</p>
 
 <div align="center">
 
@@ -12,10 +14,16 @@ A-Eye Web Chat Assistant is a free and open-source Chrome extension. It's design
 
 ---
 ## Table of Contents
+- [Table of Contents](#table-of-contents)
 - [Features](#features)
 - [Architecture](#architecture)
 - [Installation Guide](#installation-guide)
+  - [Get Extension from GitHub](#get-extension-from-github)
 - [How to Use](#how-to-use)
+  - [Setting up Local AI Mode (Ollama)](#setting-up-local-ai-mode-ollama)
+  - [Setting up Cloud AI Mode (Gemini API)](#setting-up-cloud-ai-mode-gemini-api)
+  - [Basic Interaction](#basic-interaction)
+  - [Analyzing Web Content](#analyzing-web-content)
 - [Privacy](#privacy)
 - [Credits](#credits)
 - [License](#license)
@@ -27,7 +35,7 @@ A-Eye Web Chat Assistant is a free and open-source Chrome extension. It's design
 -   **Analyze Text Content**: Get the main text of a webpage (like an article) and have the AI summarize it or answer your questions.
 -   **Speak to Text**: Talk to the AI with your voice using your microphone.
 -   **Text to Speech**: The AI reads its answers to you using your computer's voices.
--   **Two Ways to Use AI**: Easily switch between two AI power sources:
+-   **Two Ways to Use AI**:
     *   **Local Mode**: Runs AI on your computer (via Ollama) for better privacy. Requires initial setup.
     *   **Cloud Mode**: Uses powerful online AI (like Google Gemini). Requires your own API key.
 -   **Cross-Platform Compatibility**: Works on Windows, macOS, and Linux computers using the Google Chrome browser.
@@ -42,52 +50,39 @@ A-Eye Web Chat Assistant is a free and open-source Chrome extension. It's design
 ---
 ## Installation Guide
 
-### Option 1: Get Extension from GitHub
+### Get Extension from GitHub
 
-1.  **Download Source Code**:
-    Download the repository ZIP file:
-    ```
-    https://github.com/vincentwun/A-Eye-Web-Chat-Assistant/archive/refs/heads/main.zip
-    ```
-    and extract it to a local folder.
-2.  **Enable Chrome Developer Mode**:
-    -   Open Chrome and navigate to `chrome://extensions`.
-    -   In the top-right corner, toggle on "Developer mode".
-3.  **Load the Extension**:
-    -   Click the "Load unpacked" button that appears.
-    -   Navigate to the directory where you extracted the ZIP file.
-    -   Select the **src** directory (the one containing **manifest.json**).
-    -   Click "Select Folder".
-
-### Option 2: Get Extension from Chrome Web Store
-```
-https://chromewebstore.google.com/detail/a-eye-web-chat-assistant/cdjignhknhdkldbjijipaaamodpfjflp
-```
+1. Download the ZIP file from this link: 
+[https://github.com/vincentwun/A-Eye-Web-Chat-Assistant/archive/refs/heads/main.zip](https://github.com/vincentwun/A-Eye-Web-Chat-Assistant/archive/refs/heads/main.zip) 
+and unzip it.
+2. Open Chrome, go to `chrome://extensions`, and turn on "Developer mode" in the top right.
+3. Click "Load unpacked" at the top left and select the **src** folder from where you unzipped the file.
 
 ---
 ## How to Use
 
 ### Setting up Local AI Mode (Ollama)
 
-1. To use Local AI Mode: Install [Ollama](https://ollama.com/) and then run this command to get **Gemma 3**:
+1. Install [Ollama](https://ollama.com/).
 
-2. **Open the command line** (Command Prompt on Windows, Terminal on Mac/Linux).
+2. **Open the command line and run the following command to get Gemma 3** 
+(Command Prompt on Windows, Terminal on Mac/Linux).
    **You can refer to the table below to get Gemma 3:**
 
-   | Your GPU VRAM | Recommend Size | Command                   |
-   |-----------|-------------------|---------------------------|
-   | 6 ~ 8GB   | Gemma 3 4B        | `ollama pull gemma3:4b`   |
-   | > 10GB    | Gemma 3 12B       | `ollama pull gemma3:12b`  |
-   | > 20GB    | Gemma 3 27B       | `ollama pull gemma3:27b`  |
+   | Your GPU VRAM | Recommend Size | Command                  |
+   | ------------- | -------------- | ------------------------ |
+   | 6 ~ 8GB       | Gemma 3 4B     | `ollama pull gemma3:4b`  |
+   | > 10GB        | Gemma 3 12B    | `ollama pull gemma3:12b` |
+   | > 20GB        | Gemma 3 27B    | `ollama pull gemma3:27b` |
 
 3.  **Allow the A-eye to communicate with Ollama:**
     (Windows users):
     ```
-    set origins_host='chrome-extension://*'
+    set OLLAMA_ORIGINS='chrome-extension://*'
     ```
     (Linux or macOS users):
     ```
-    export origins_host='chrome-extension://*'
+    export OLLAMA_ORIGINS='chrome-extension://*'
     ```
 
 4.  In the extension's **Settings**, make sure "Local Model Name" is `gemma3:4b` (or the model you chose).
