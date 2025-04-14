@@ -2,222 +2,133 @@
 
 <div align="center">
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Chrome](https://img.shields.io/badge/Chrome--Dev%2FCanary-v128.0.6545.0%2B-green.svg)
+![Chrome](https://img.shields.io/badge/browser-Chrome-blue)
 ![Platform](https://img.shields.io/badge/platform-Windows%20|%20MacOS%20|%20Linux-lightgrey)
-![Status](https://img.shields.io/badge/status-beta-orange)
-
-
-
-> ⚠️ **Important**: This extension requires Chrome Dev or Canary channel (≥ 128.0.6545.0) to function properly.
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
 </div>
 
-An advanced Chrome extension leveraging Web AI and Chrome's built-in AI (Gemini Nano) for real-time web voice chat with privacy-first approach for visually impaired or handicap.
-
-## Table of Contents
-- [Overview](#overview)
-- [Technical Architecture](#technical-architecture)
-- [Key Features](#key-features)
-- [Requirements](#requirements)
-- [Installation Guide](#installation-guide)
-- [Browser Configuration](#browser-configuration)
-- [How to Use](#how-to-use)
-- [Current Limitations](#current-limitations)
-- [License](#license)
-
-## Overview
-A-Eye Web Chat Assistant is a specialized Chrome extension designed to enhance web accessibility for visually impaired users. By integrating advanced AI chat capabilities with traditional screen reader functions, users can naturally converse with web content and receive comprehensive page interpretations. Powered by Chrome's built-in Gemini Nano, it provides secure on-device processing for real-time image descriptions and content analysis. Currently in beta development with regular updates, this extension is completely free and is an open-source project.
-
-
-## Technical Architecture
-
-This Chrome extension is built on a modular architecture featuring advanced technologies to deliver a professional and accessible experience. It integrates:
-
-### AI Model Integration
-- **Moondream2**: Accelerates image recognition and description with WebGPU, optimizing performance through FP16 and Q4 quantization.
-- **Gemini Nano**: Enables lightweight and secure text analysis and summarization with on-device AI.
-- **Transformers.js**: Provides seamless browser-based AI inference.
-
-### Voice Interaction System
-- Combines Web Speech API technologies for real-time voice recognition and dynamic text-to-speech synthesis, offering multi-language support and customization.
-
-### Key Technical Features
-- **Performance Optimization**: Utilizes WebGPU for efficient AI acceleration and asynchronous operations for a smooth user experience.
-- **Accessibility-Driven Design**: Integrates intelligent voice control, audio descriptions, and web content summarization for enhanced usability.
-
-![architecture](/images/architecture.png)
-
-## Key Features
-
-- **Privacy-First**: Ensures all processing is done locally on your device, safeguarding your data with AI on Chrome and WebAI.
-- **Voice Interaction**: Allows users to control the screen reader with voice commands using the Web Speech API.
-- **Real-Time Image Descriptions**: Provides real-time descriptions of images through WebAI and HuggingFace.js.
-- **Comprehensive Content Chat**: Offers detailed interpretations of web pages and image descriptions using Chrome’s built-in prompt API.
-- **Speech Synthesis**: Reads out responses using advanced speech synthesis technology via the Web Speech API.
-- **Conversation Management**: Keeps track of conversation history and state for seamless interactions.
-- **Dual AI Models**: Utilizes both Gemini Nano and Moondream2 for superior accuracy.
-- **Cross-Platform Compatibility**: Available on Windows, macOS, and Linux.
-- **Chrome Extension**: Easily accessible as a Chrome extension.
-
-## Requirements
-
-### System Requirements
-
-| Component | Minimum Requirement |
-|-----------|-------------------|
-| Browser | Chrome Dev/Canary (≥ 128.0.6545.0) **REQUIRED** |
-| Operating System | Windows 10+, macOS 13+, or Linux |
-| CPU | Multi-core processor (Intel/AMD) |
-| GPU/VRAM | GPU with 6GB+ VRAM (integrated or discrete) that must support FP16 (half-precision floating point) |
-| Storage | 24GB free space (22GB Gemini Nano, 2GB Moondream2) |
+A-Eye Web Chat Assistant is a free and open-source Chrome extension. It's designed to make web Browse easier for visually impaired users through AI chat, screen analysis, and voice controls. You can choose between privacy-focused local AI (via Ollama with Gemma 3) or powerful cloud-based AI (like Google Gemini API).
 
 ---
+## Table of Contents
+- [Features](#features)
+- [Architecture](#architecture)
+- [Installation Guide](#installation-guide)
+- [How to Use](#how-to-use)
+- [Privacy](#privacy)
+- [Credits](#credits)
+- [License](#license)
 
+---
+## Features
+
+-   **See the Webpage and Ask**: Take a picture of what you see on the webpage (or the whole page) and ask the AI about it.
+-   **Analyze Text Content**: Get the main text of a webpage (like an article) and have the AI summarize it or answer your questions.
+-   **Speak to Text**: Talk to the AI with your voice using your microphone.
+-   **Text to Speech**: The AI reads its answers to you using your computer's voices.
+-   **Two Ways to Use AI**: Easily switch between two AI power sources:
+    *   **Local Mode**: Runs AI on your computer (via Ollama) for better privacy. Requires initial setup.
+    *   **Cloud Mode**: Uses powerful online AI (like Google Gemini). Requires your own API key.
+-   **Cross-Platform Compatibility**: Works on Windows, macOS, and Linux computers using the Google Chrome browser.
+
+---
+## Architecture
+
+(Update Soon)
+
+![architecture](/images/architecture_v2.png)
+
+---
 ## Installation Guide
 
-#### Installation Guide Video:
-```
-https://youtu.be/fOlDYf1J7PM?si=gu3BitSG1W2zhKBe
-```
+### Option 1: Get Extension from GitHub
 
-### Get Chrome Dev or Chrome Canary Browser
-- Download [Chrome Dev](https://www.google.com/chrome/dev/) or [Chrome Canary](https://www.google.com/chrome/canary/)
-- Verify version ≥ 128.0.6545.0 at `chrome://settings/help`
+1.  **Download Source Code**:
+    Download the repository ZIP file:
+    ```
+    https://github.com/vincentwun/A-Eye-Web-Chat-Assistant/archive/refs/heads/main.zip
+    ```
+    and extract it to a local folder.
+2.  **Enable Chrome Developer Mode**:
+    -   Open Chrome and navigate to `chrome://extensions`.
+    -   In the top-right corner, toggle on "Developer mode".
+3.  **Load the Extension**:
+    -   Click the "Load unpacked" button that appears.
+    -   Navigate to the directory where you extracted the ZIP file.
+    -   Select the **src** directory (the one containing **manifest.json**).
+    -   Click "Select Folder".
 
-### Get Extension from GitHub
-
-1. Download Extension
-   ```
-   https://github.com/vincentwun/A-Eye-Web-Chat-Assistant/archive/refs/heads/main.zip
-   ```
-
-2. Chrome Configuration
-   - Launch Chrome browser
-   - Navigate to `chrome://extensions`
-   - Enable "Developer mode" (top-right corner)
-   - Select "Load unpacked"
-   - Navigate to extracted extension directory
-   - Select `A-Eye-Web-Chat-Assistant-main/A-Eye-Web-Chat-Assistant` directory
-
-### Alternatively: Get Extension from Chrome Web Store
+### Option 2: Get Extension from Chrome Web Store
 ```
 https://chromewebstore.google.com/detail/a-eye-web-chat-assistant/cdjignhknhdkldbjijipaaamodpfjflp
 ```
 
 ---
-
-## Browser Configuration
-
-### Chrome Flags Setup
-
-| Category | Flag | Setting |
-|----------|------|---------|
-| WebGPU | `chrome://flags/#enable-webgpu-developer-features` | Enabled |
-| Gemini Nano | `chrome://flags/#optimization-guide-on-device-model` | Enabled BypassPerfRequirement |
-| Prompt API | `chrome://flags/#prompt-api-for-gemini-nano` | Enabled |
-| Text Classifier | `chrome://flags/#text-safety-classifier` | Disabled |
-
-**Important:**  
-After modifying the flags above, Please **Restart Chrome** to apply the changes!!!
-
-### Built-in AI Model (Gemini Nano) Setup
-
-1. To trigger the Gemini Nano download, open the [Prompt API Playground](https://chrome.dev/web-ai-demos/prompt-api-playground/)  
-```
-https://chrome.dev/web-ai-demos/prompt-api-playground/
-```
-2. Launch the **DevTools Console** (`F12`).
-3. Execute:  
-   ```javascript
-   (await ai.languageModel.capabilities()).available;
-   ```
-- Manually type "allow pasting" if prompted.
-  
-4. Check the return value from the command:  
-- If the return value is `"no"`, proceed to Step 5.
-- If the return value is `"after-download"`, skip to Step 6.
-
-5. In **DevTools Console**, run:  
-     ```javascript
-     await ai.languageModel.create();
-     ```  
-   - Note: This command may fail, which is expected.
-   - Relaunch Chrome, reopen the DevTools Console, and run: 
-     ```javascript
-     (await ai.languageModel.capabilities()).available;
-     ```
-   - The return value should now be `"after-download"`. Proceed to Step 6.
-
-6. Go to ```chrome://components```
-- Locate **Optimization Guide On Device Model**
-- Click **"Check for update"** to download the latest version.
-- (Note: Download times may vary depending on your network speed.)
-
-### Web AI Model (Moondream2) Setup
-
-**Initialization Process**
-1. Press `Alt + Shift + Q` to open the **A-Eye Web Chat Assistant**.  
-2. During the first run, the Web AI model will automatically download from the **Hugging Face Hub**.  
-3. Once the initialization is complete:  
-   - A message **"Model initialization complete"** will appear at the top of the screen.  
-   - The system will announce the message using **text-to-speech (TTS)**.
-
----
-
 ## How to Use
 
-### Prerequisite
-- Ensure microphone access is granted to the extension to utilize voice features.
+### Setting up Local AI Mode (Ollama)
 
-### Keyboard Shortcuts
-#### 1. Open the A-Eye Web Chat Assistant
-- **Shortcut**: `Alt + Shift + Q`  
+1. To use Local AI Mode: Install [Ollama](https://ollama.com/) and then run this command to get **Gemma 3**:
 
-#### 2. Activate Voice Control
-- **Shortcut**: `Alt + Shift + 1`  
-- Enables voice control for browser and extension operations.  
-- **Available Voice Commands**:  
-  - **Search**  
-    - Command: `"Search [query]"`  
-    - Example: `"Search the weather today"`  
-    - Action: Opens a Google search for the specified query.  
+2. **Open the command line** (Command Prompt on Windows, Terminal on Mac/Linux).
+   **You can refer to the table below to get Gemma 3:**
 
-  - **Navigate to a Website**  
-    - Command: `"Go to [website]"`  
-    - Example: `"Go to google.com"`  
-    - Action: Opens the specified website. *(Currently, only .com websites are supported.)*
+   | Your GPU VRAM | Recommend Size | Command                   |
+   |-----------|-------------------|---------------------------|
+   | 6 ~ 8GB   | Gemma 3 4B        | `ollama pull gemma3:4b`   |
+   | > 10GB    | Gemma 3 12B       | `ollama pull gemma3:12b`  |
+   | > 20GB    | Gemma 3 27B       | `ollama pull gemma3:27b`  |
 
-  - **Take Screenshot**  
-    - Commands: `"Take a screenshot"`
-    - Action: Captures a screenshot of the current view and provides an AI-generated description.  
+3.  **Allow the A-eye to communicate with Ollama:**
+    (Windows users):
+    ```
+    set origins_host='chrome-extension://*'
+    ```
+    (Linux or macOS users):
+    ```
+    export origins_host='chrome-extension://*'
+    ```
 
-  - **Take Scrolling Screenshot**
-    - Commands: `"Take a scrolling screenshot"`
-    - Action: Captures a scrolling screenshot and provides an AI-generated description.  
+4.  In the extension's **Settings**, make sure "Local Model Name" is `gemma3:4b` (or the model you chose).
 
-  - **Analyze Content**
-    - Commands: `"Analyze content"`
-    - Action: Performs content analysis of the current page using **Gemini Nano**.
+### Setting up Cloud AI Mode (Gemini API)
+1. Get your Gemini API Key from [Google AI Studio](https://aistudio.google.com/)
+2. Go to the extension's **Settings**, input your API Key under "Cloud API Key".
 
-#### 3. Interact with the AI After Actions
-- **Shortcut**: `Alt + Shift + 2`  
-- Use this after executing **Screenshot**, **Scrolling Screenshot**, or **Analyze Content** to chat with the AI for additional insights.
+---
+### Basic Interaction
 
-#### 4. Repeat the AI's Last Response
-- **Shortcut**: `Alt + Shift + 3`  
+1.  **Open Side Panel**: Use shortcut `Alt+Shift+Q`.
+2.  **Select AI Mode**: Use shortcut `Alt+Shift+1` or click the Desktop icon (Local) <i class="fas fa-desktop"></i> / Cloud icon (Cloud) <i class="fas fa-cloud"></i> in the header.
+3.  **Voice Input**: Use shortcut `Alt+Shift+2` or Click the Microphone icon (<i class="fas fa-microphone"></i>).
+4. **Repeat Last Response**: Use shortcut `Alt+Shift+3` or click the Redo icon (<i class="fas fa-redo"></i>).
+5. **Clear Conversation**: Click the Trash icon (<i class="fas fa-trash-alt"></i>) in the header to clear the chat.
 
+### Analyzing Web Content
 
+-   **Capture Visible Area**: Click Camera <i class="fas fa-camera"></i>: Sends visible part of the webpage to AI.
+-   **Capture Full Page**: Click Scroll <i class="fas fa-scroll"></i>: Sends the entire webpage (scrolling) to AI.
+-   **Analyze Text Content**: Click File <i class="fas fa-file-lines"></i>: Sends the main text of the webpage to AI.
 
-These shortcuts allow you to seamlessly navigate and interact with web content using voice commands.
+---
+## Privacy
 
-## Current Limitations
+A-Eye Web Chat Assistant is designed with privacy in mind:
 
-| Limitation | Description |
-|------------|-------------|
-| Language Support | English only |
-| Chrome Version | Requires Dev/Canary Channel |
-| Hardware Requirements | Significant storage space needed |
+-   **No Data Collection:** This extension does not collect or send your personal data or Browse history to our servers. When using Cloud Mode, data is sent directly to the AI service you have configured.
+-   **Local Storage:** All your settings, including API keys for Cloud Mode, are stored securely in your browser's local storage and cannot be accessed by websites.
+-   **Local AI:** When you use Local Mode (Ollama), all AI processing stays on your computer, giving you maximum privacy for your data.
 
+---
+## Credits
+
+This extension incorporates the following third-party components:
+-   **Readability.js**: Used for extracting article text content.
+    -   Source: [https://github.com/mozilla/readability](https://github.com/mozilla/readability)
+-   **Font Awesome**: Provides icons for the user interface.
+    -   Source: [https://fontawesome.com/](https://fontawesome.com/)
+
+---
 ## License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for full details.
+Under the MIT License.
