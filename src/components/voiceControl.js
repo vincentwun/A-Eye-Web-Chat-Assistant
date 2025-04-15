@@ -109,6 +109,7 @@ export class VoiceController {
         console.log('Voice input started');
         this.state.input.active = true;
         this.callbacks.updateVoiceInputButtonState?.(true);
+        this.speakText('Voice Input Activated');
         const userInput = document.getElementById('user-input');
         if (userInput) userInput.placeholder = 'Listening...';
         this.state.input.finalTranscript = '';

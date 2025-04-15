@@ -16,9 +16,8 @@ A-Eye Web Chat Assistant is a free and open-source Chrome extension. It's design
 ## Table of Contents
 - [Table of Contents](#table-of-contents)
 - [Features](#features)
-- [Architecture](#architecture)
+- [Architecture and Technologies](#architecture-and-technologies)
 - [Installation Guide](#installation-guide)
-  - [Get Extension from GitHub](#get-extension-from-github)
 - [How to Use](#how-to-use)
   - [Setting up Local AI Mode (Ollama)](#setting-up-local-ai-mode-ollama)
   - [Setting up Cloud AI Mode (Gemini API)](#setting-up-cloud-ai-mode-gemini-api)
@@ -31,70 +30,67 @@ A-Eye Web Chat Assistant is a free and open-source Chrome extension. It's design
 ---
 ## Features
 
--   **See the Webpage and Ask**: Take a picture of what you see on the webpage (or the whole page) and ask the AI about it.
--   **Analyze Text Content**: Get the main text of a webpage (like an article) and have the AI summarize it or answer your questions.
--   **Speak to Text**: Talk to the AI with your voice using your microphone.
--   **Text to Speech**: The AI reads its answers to you using your computer's voices.
--   **Two Ways to Use AI**:
-    *   **Local Mode**: Runs AI on your computer (via Ollama) for better privacy. Requires initial setup.
-    *   **Cloud Mode**: Uses powerful online AI (like Google Gemini). Requires your own API key.
+-   **AI Screen Analysis (Visual & Text)**: Instantly analyzes screenshots or full page content using Gemini/Gemma 3.
+-   **Full Voice Control & Q&A**: Operate everything and ask questions about the page using your voice.
+-   **Selectable AI**: Cloud Gemini / Local Gemma 3: One-click switch between powerful cloud AI and private local AI (via Ollama).
 -   **Cross-Platform Compatibility**: Works on Windows, macOS, and Linux computers using the Google Chrome browser.
 
 ---
-## Architecture
+## Architecture and Technologies
 
-(Update Soon)
+**Chrome Extension APIs:**
+`chrome.scripting`: Executing content scripts with Readability.js.
+`chrome.tabs`: Controlling browser tabs, such as opening new tabs and capturing visible tabs (`captureVisibleTab`).
+`chrome.storage`: Using `local` storage to save user settings (API Keys, URLs, Prompts, Voice Settings).
+`chrome.commands`: Handling keyboard shortcuts.
+
+**Web APIs:**
+**Canvas API:** Used to merge multiple screenshots to implement the Scrolling Screenshot feature.
+**Fetch API:** Used to make network requests to backend APIs (Gemini / Ollama).
+**Web Speech API:**
+`SpeechRecognition`: Converting speech to text (STT).
+`SpeechSynthesis`: Converting text to speech (TTS).
+
 
 ![architecture](/images/architecture_v2.png)
 
 ---
 ## Installation Guide
 
-### Get Extension from GitHub
-
 1. Download the ZIP file from this link: 
 [https://github.com/vincentwun/A-Eye-Web-Chat-Assistant/archive/refs/heads/main.zip](https://github.com/vincentwun/A-Eye-Web-Chat-Assistant/archive/refs/heads/main.zip) 
 and unzip it.
-2. Open Chrome, go to `chrome://extensions`, and turn on "Developer mode" in the top right.
-3. Click "Load unpacked" at the top left and select the **src** folder from where you unzipped the file.
+1. Open Chrome, go to `chrome://extensions`, and turn on "Developer mode" in the top right.
+2. Click "Load unpacked" at the top left and select the **src** folder from where you unzipped the file.
 
 ---
 ## How to Use
 
 ### Setting up Local AI Mode (Ollama)
 
-1. Install [Ollama](https://ollama.com/).
-
-2. **Open the command line and run the following command to get Gemma 3** 
-(Command Prompt on Windows, Terminal on Mac/Linux).
-   **You can refer to the table below to get Gemma 3:**
-
-   | Your GPU VRAM | Recommend Size | Command                  |
-   | ------------- | -------------- | ------------------------ |
-   | 6 ~ 8GB       | Gemma 3 4B     | `ollama pull gemma3:4b`  |
-   | > 10GB        | Gemma 3 12B    | `ollama pull gemma3:12b` |
-   | > 20GB        | Gemma 3 27B    | `ollama pull gemma3:27b` |
-
-3.  **Allow the A-eye to communicate with Ollama:**
-    Windows users (cmd):
+1. **Install [Ollama](https://ollama.com/).**
+2. **Enable Ollama CORS** (For Windows users using cmd)
+    Allow Ollama CORS with all Chrome extensions
     ```
     set OLLAMA_ORIGINS='chrome-extension://*'
     ```
-    Linux users:
+    Then run
     ```
-    export OLLAMA_ORIGINS='chrome-extension://*'
+    echo %OLLAMA_ORIGINS%
     ```
-    macOS users:
-    ```
-    launchctl setenv OLLAMA_ORIGINS 'chrome-extension://*'
-    ```
+    to verify, the output should be **'chrome-extension://*'**
 
-4.  **Run Gemma 3**
-    ```
-    ollama run gemma3:4b
-    ```
+3. **Get and Run Gemma 3** 
+   You can refer to the table below to get Gemma 3:
 
-5.  In the extension's **Settings**, make sure "Local Model Name" is `gemma3:4b` (or the model you chose).
+   | GPU VRAM | Recommend Model | Command                  |
+   | ------------- | -------------- | ------------------------ |
+   | <= 8GB       | Gemma 3 4B     | `ollama run gemma3:4b`  |
+   | >= 10GB        | Gemma 3 12B    | `ollama run gemma3:12b` |
+   | >= 20GB        | Gemma 3 27B    | `ollama run gemma3:27b` |
+
+
+4.  In the extension's **Settings**, make sure "Local Model Name" is `gemma3:4b` (or the model you chose).
 
 ### Setting up Cloud AI Mode (Gemini API)
 1. Get your Gemini API Key from [Google AI Studio](https://aistudio.google.com/)
@@ -111,9 +107,9 @@ and unzip it.
 
 ### Analyzing Web Content
 
--   **Capture Visible Area**: Click Camera icon: Sends visible part of the webpage to AI.
--   **Capture Full Page**: Click Scroll icon: Sends the entire webpage (scrolling) to AI.
--   **Analyze Text Content**: Click File icon: Sends the main text of the webpage to AI.
+-   **Capture Visible Area**: Click the Camera icon or activate voice input to say "Take a screenshot."
+-   **Capture Full Page**: Click the Scroll icon or activate voice input to say "Take a scrolling screenshot."
+-   **Analyze Text Content**: Click the File icon or activate voice input to say "Analyze content."
 
 ---
 ## Privacy
