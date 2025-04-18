@@ -69,10 +69,11 @@ and unzip it.
 ### Setting up Local AI Mode (Ollama)
 
 1. **Install [Ollama](https://ollama.com/).**
-2. **Enable Ollama CORS** (For Windows users using cmd)
+2. **Enable Ollama CORS** (For Windows users with admin CMD)
     Allow Ollama CORS with all Chrome extensions
     ```
-    set OLLAMA_ORIGINS='chrome-extension://*'
+    set OLLAMA_ORIGINS="chrome-extension://*"
+    setx OLLAMA_ORIGINS "chrome-extension://*" /M
     ```
     Then run
     ```

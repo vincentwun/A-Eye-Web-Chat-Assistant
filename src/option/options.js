@@ -138,22 +138,30 @@ function saveSetting(element) {
 }
 
 function resetToDefaults() {
-    const settingsToReset = {};
-    settingsToReset[settingsStorageKey] = { ...defaultApiSettings };
-    settingsToReset[promptsStorageKey] = { ...defaultPrompts };
-    settingsToReset[voiceSettingsStorageKey] = { ...defaultVoiceSettings };
+    chrome.storage.local.get(settingsStorageKey, (result) => {
+        const currentSettings = result[settingsStorageKey] || {};
+        const preservedApiKey = currentSettings.cloudApiKey || defaultApiSettings.cloudApiKey;
 
+        const settingsToReset = {};
 
-    chrome.storage.local.set(settingsToReset, () => {
-        if (chrome.runtime.lastError) {
-            const errorMessage = `Error resetting settings: ${chrome.runtime.lastError.message}`;
-            console.error(errorMessage);
-            showNotification(errorMessage, true);
-        } else {
-            console.log("All settings reset to default.");
-            loadOptions();
-            showNotification('Settings reset to defaults successfully!');
-        }
+        settingsToReset[settingsStorageKey] = {
+            ...defaultApiSettings,
+            cloudApiKey: preservedApiKey
+        };
+        settingsToReset[promptsStorageKey] = { ...defaultPrompts };
+        settingsToReset[voiceSettingsStorageKey] = { ...defaultVoiceSettings };
+
+        chrome.storage.local.set(settingsToReset, () => {
+            if (chrome.runtime.lastError) {
+                const errorMessage = `Error resetting settings: ${chrome.runtime.lastError.message}`;
+                console.error(errorMessage);
+                showNotification(errorMessage, true);
+            } else {
+                console.log("Settings reset to default, preserving Cloud API Key.");
+                loadOptions();
+                showNotification('Settings reset to defaults successfully!');
+            }
+        });
     });
 }
 
