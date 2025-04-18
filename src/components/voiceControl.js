@@ -382,7 +382,7 @@ export class VoiceController {
             console.log("Silence detected, stopping input.");
             this.stopVoiceInput();
           }
-        }, 1200);
+        }, 500);
       };
 
       recognition.onerror = (event) => {

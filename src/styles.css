@@ -155,7 +155,7 @@ body {
   max-width: 95%;
   width: auto;
   text-align: center;
-  color: var(--gray-500);
+  color: var(--gray-700);
   font-style: italic;
   background-color: transparent;
   padding: 5px 9px;
@@ -232,7 +232,7 @@ body {
   padding: 3px var(--common-padding);
   background: var(--gray-50);
   border-top: 1px solid var(--input-border-color);
-  color: var(--gray-500);
+  color: var(--gray-700);
   font-size: 10px;
   text-align: center;
   flex-shrink: 0;
@@ -314,6 +314,10 @@ body {
 #local-mode-button[data-tooltip]:before {
   left: 0;
   transform: translateX(0);
+}
+
+#options-button {
+  background-color: var(--gray-500);
 }
 
 #clear-button {

@@ -81,6 +81,6 @@ export const availableLanguages = {
     'zh-CN': 'Mandarin Chinese (China)',
     'zh-HK': 'Chinese (Simplified Hong Kong)',
     'zh-TW': 'Chinese (Traditional Taiwan)',
-    'zh-yue': 'Yue Chinese (Hong Kong)',
+    'zh-yue': '粵語 (Hong Kong)',
     'zu': 'Zulu'
 };
