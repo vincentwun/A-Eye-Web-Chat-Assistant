@@ -123,7 +123,7 @@
     <div>
         <label for="local-model-name-input">Local Model Name:</label>
         <input type="text" id="local-model-name-input" data-storage-key="ollamaMultimodalModel"
-            data-storage-type="settings" placeholder="e.g., gemma3:4b">
+            data-storage-type="settings" placeholder="e.g., llava:latest">
     </div>
 
     <hr>
@@ -145,7 +145,7 @@
     <div>
         <label for="cloud-model-name-input">Cloud Model Name:</label>
         <input type="text" id="cloud-model-name-input" data-storage-key="cloudModelName" data-storage-type="settings"
-            placeholder="e.g., gemini-2.0-flash-lite">
+            placeholder="e.g., gemini-1.5-flash-latest">
     </div>
 
     <hr>
@@ -159,7 +159,14 @@
     </div>
 
     <div>
-        <label for="tts-language-select">Text-to-Speech Language:</label>
+        <label for="tts-voice-select">Text-to-Speech Voice:</label>
+        <select id="tts-voice-select" data-storage-key="ttsVoiceName" data-storage-type="voice">
+            <option value="">Loading voices...</option>
+        </select>
+    </div>
+
+    <div style="display: none;">
+        <label for="tts-language-select">(Fallback) Text-to-Speech Language:</label>
         <select id="tts-language-select" data-storage-key="ttsLanguage" data-storage-type="voice">
         </select>
     </div>

@@ -26,10 +26,10 @@ export class VoiceController {
       handleSendMessage: null
     };
 
-    this.state.synthesis.initializationPromise = this.loadSettings();
+    this.state.synthesis.initializationPromise = this.loadSettingsAndInitTTS();
   }
 
-  async loadSettings() {
+  async loadSettingsAndInitTTS() {
     try {
       console.log('Loading voice settings...');
       const result = await chrome.storage.local.get(voiceSettingsStorageKey);
@@ -50,22 +50,257 @@ export class VoiceController {
     }
   }
 
+  initializeSpeechSynthesis() {
+    return new Promise((resolve, reject) => {
+      if (!this.state.synthesis.instance) {
+        console.error("SpeechSynthesis API not available.");
+        return reject(new Error("SpeechSynthesis API not available."));
+      }
+
+      let timeoutId = null;
+      const TIMEOUT_DURATION = 3000;
+
+      const findAndSetVoice = () => {
+        if (timeoutId) clearTimeout(timeoutId);
+
+        this.state.synthesis.voices = this.state.synthesis.instance.getVoices();
+        console.log('Available TTS voices:', this.state.synthesis.voices.map(v => ({ name: v.name, lang: v.lang })));
+
+        if (this.state.synthesis.voices.length === 0) {
+          console.warn('No TTS voices found immediately after event or timeout check.');
+          if (!timeoutId) {
+            return reject(new Error('No TTS voices found.'));
+          }
+          return reject(new Error('No TTS voices found.'));
+        }
+
+        const targetVoiceName = this.state.settings.ttsVoiceName;
+        const targetLang = this.state.settings.ttsLanguage;
+        let foundVoice = null;
+
+        if (targetVoiceName) {
+          console.log(`Attempting to find TTS voice by name: "${targetVoiceName}"`);
+          foundVoice = this.state.synthesis.voices.find(voice => voice.name === targetVoiceName);
+          if (foundVoice) {
+            console.log(`Found voice by name: ${foundVoice.name} (${foundVoice.lang})`);
+          } else {
+            console.warn(`Saved voice name "${targetVoiceName}" not found.`);
+          }
+        }
+
+        if (!foundVoice) {
+          console.log(targetVoiceName ? `Falling back to find by language: ${targetLang}` : `Finding voice by language: ${targetLang}`);
+          foundVoice = this.state.synthesis.voices.find(voice => voice.lang === targetLang);
+
+          if (!foundVoice && targetLang && targetLang.includes('-')) {
+            const baseLang = targetLang.split('-')[0];
+            console.log(`No exact match for ${targetLang}, trying base language variants starting with: ${baseLang}-`);
+            foundVoice = this.state.synthesis.voices.find(voice => voice.lang.startsWith(baseLang + '-'));
+            if (!foundVoice) {
+              console.log(`No regional variant found, trying exact base language: ${baseLang}`);
+              foundVoice = this.state.synthesis.voices.find(voice => voice.lang === baseLang);
+            }
+          }
+        }
+
+        if (!foundVoice) {
+          console.warn(`No specific voice found for language ${targetLang} or its base. Trying system default for this language.`);
+          foundVoice = this.state.synthesis.voices.find(voice => voice.lang === targetLang && voice.default);
+        }
+
+        if (!foundVoice) {
+          console.warn(`No suitable voice found for ${targetLang}. Falling back to en-US.`);
+          foundVoice = this.state.synthesis.voices.find(voice => voice.lang === 'en-US');
+          if (!foundVoice) {
+            foundVoice = this.state.synthesis.voices.find(voice => voice.lang === 'en-US' && voice.default);
+          }
+        }
+
+        if (!foundVoice) {
+          console.warn(`Fallback en-US voice not found. Trying overall system default voice.`);
+          foundVoice = this.state.synthesis.voices.find(voice => voice.default);
+        }
+
+        if (!foundVoice && this.state.synthesis.voices.length > 0) {
+          console.warn(`No default voice found. Using the first available voice: ${this.state.synthesis.voices[0].name}`);
+          foundVoice = this.state.synthesis.voices[0];
+        }
+
+        if (foundVoice) {
+          console.log(`Selected TTS voice: ${foundVoice.name} (${foundVoice.lang})`);
+          this.state.synthesis.selectedVoice = foundVoice;
+          resolve();
+        } else {
+          console.error('Could not find ANY suitable TTS voice.');
+          this.state.synthesis.selectedVoice = null;
+          reject(new Error('No suitable TTS voice found.'));
+        }
+      };
+
+      timeoutId = setTimeout(() => {
+        console.warn(`TTS voice initialization check timed out after ${TIMEOUT_DURATION}ms. Checking available voices now.`);
+        timeoutId = null;
+        findAndSetVoice();
+      }, TIMEOUT_DURATION);
+
+      const onVoicesChanged = () => {
+        console.log("System 'voiceschanged' event fired.");
+        findAndSetVoice();
+      };
+
+      const initialVoices = this.state.synthesis.instance.getVoices();
+      if (initialVoices.length > 0) {
+        console.log("TTS voices available immediately.");
+        findAndSetVoice();
+      } else {
+        console.log("TTS voices not immediately available, waiting for 'voiceschanged' event or timeout...");
+        this.state.synthesis.instance.addEventListener('voiceschanged', onVoicesChanged, { once: true });
+      }
+    });
+  }
+
+  async speakText(text) {
+    try {
+      await this.state.synthesis.initializationPromise;
+    } catch (initError) {
+      console.error("Cannot speak text because TTS initialization failed:", initError);
+      return Promise.reject(new Error("TTS not initialized, cannot speak."));
+    }
+
+    if (!this.state.synthesis.instance || !this.state.synthesis.selectedVoice) {
+      console.error("Speech synthesis not ready or no voice selected, even after initialization wait.");
+      return Promise.reject(new Error("TTS voice not available. Ensure TTS is enabled in your system/browser."));
+    }
+
+    this.state.synthesis.speakingPromise = this.state.synthesis.speakingPromise
+      .catch((prevError) => {
+        console.warn("Previous speech ended with error or was cancelled:", prevError?.message);
+      })
+      .then(() => {
+        if (!this.state.synthesis.instance || !this.state.synthesis.selectedVoice) {
+          console.error("TTS Instance or Voice became invalid before speak call.");
+          throw new Error("TTS Instance or Voice became invalid");
+        }
+
+        if (this.state.synthesis.isSpeaking) {
+          console.log("Cancelling previous speech before starting new one.");
+          this.state.synthesis.instance.cancel();
+        }
+
+        return new Promise((resolve, reject) => {
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.voice = this.state.synthesis.selectedVoice;
+          utterance.lang = this.state.synthesis.selectedVoice.lang;
+          utterance.rate = 1.0;
+          utterance.pitch = 1.0;
+          utterance.volume = 1.0;
+
+          console.log(`Attempting to speak: "${text.substring(0, 50)}..." with voice: ${utterance.voice.name} (${utterance.lang})`);
+
+          let hasStarted = false;
+          let utteranceTimeout = null;
+
+          const startTimeoutDuration = 5000;
+          utteranceTimeout = setTimeout(() => {
+            if (!hasStarted) {
+              console.error(`Utterance did not start within ${startTimeoutDuration}ms. Cancelling.`);
+              this.state.synthesis.instance?.cancel();
+              this.state.synthesis.isSpeaking = false;
+              reject(new Error("Speech synthesis timed out starting."));
+            }
+          }, startTimeoutDuration);
+
+
+          utterance.onstart = () => {
+            if (utteranceTimeout) clearTimeout(utteranceTimeout);
+            console.log("Speech started.");
+            hasStarted = true;
+            this.state.synthesis.isSpeaking = true;
+          };
+
+          utterance.onend = () => {
+            if (utteranceTimeout) clearTimeout(utteranceTimeout);
+            if (hasStarted) {
+              console.log("Speech finished.");
+            } else {
+              console.log("Speech 'onend' fired but 'onstart' did not (likely cancelled).");
+            }
+            this.state.synthesis.isSpeaking = false;
+            resolve();
+          };
+
+          utterance.onerror = (event) => {
+            if (utteranceTimeout) clearTimeout(utteranceTimeout);
+            if (event.error === 'interrupted') {
+              console.log("Speech synthesis was interrupted (likely intentional).");
+            } else {
+              console.error('Speech synthesis error:', event.error);
+              let errorMsg = event.error || 'Unknown speech synthesis error';
+              if (event.error === 'synthesis-failed') {
+                errorMsg = "Synthesis failed. The voice might be unavailable or the text too long.";
+              } else if (event.error === 'audio-busy') {
+                errorMsg = "Audio output is busy. Please try again.";
+              }
+              this.state.synthesis.isSpeaking = false;
+              reject(new Error(errorMsg));
+              return;
+            }
+            this.state.synthesis.isSpeaking = false;
+            resolve();
+          };
+
+          if (!this.state.synthesis.instance) {
+            if (utteranceTimeout) clearTimeout(utteranceTimeout);
+            console.error("Synthesis instance lost just before speak()");
+            reject(new Error("Synthesis instance lost"));
+            return;
+          }
+
+          this.state.synthesis.instance.speak(utterance);
+        });
+      })
+      .catch(error => {
+        console.error("Error encountered in speakText promise chain:", error);
+        this.state.synthesis.isSpeaking = false;
+      });
+
+    return this.state.synthesis.speakingPromise;
+  }
+
+  stopSpeaking() {
+    if (this.state.synthesis.instance && this.state.synthesis.instance.speaking) {
+      console.log("Explicitly stopping speech synthesis...");
+      this.state.synthesis.instance.cancel();
+      this.state.synthesis.isSpeaking = false;
+    } else if (this.state.synthesis.instance && this.state.synthesis.instance.pending) {
+      console.log("Explicitly clearing pending speech synthesis queue...");
+      this.state.synthesis.instance.cancel();
+      this.state.synthesis.isSpeaking = false;
+    }
+    this.state.synthesis.speakingPromise = Promise.resolve();
+  }
+
   setCallbacks(callbacks) {
     Object.assign(this.callbacks, callbacks);
   }
 
   async initializeAll() {
-    await this.state.synthesis.initializationPromise;
+    try {
+      await this.state.synthesis.initializationPromise;
+    } catch (error) {
+      console.error("TTS Initialization failed, voice output might not work.", error);
+    }
 
     this.initializeVoiceInput();
 
     chrome.storage.onChanged.addListener((changes, namespace) => {
       if (namespace === 'local' && changes[voiceSettingsStorageKey]) {
         console.log('Voice settings changed in storage, reloading...');
-        this.loadSettings().then(() => {
+        this.loadSettingsAndInitTTS().then(() => {
           if (this.state.input.recognition) {
-            if (this.state.input.recognition.lang !== this.state.settings.sttLanguage) {
-              console.log(`Updating STT language to: ${this.state.settings.sttLanguage} after settings change.`);
+            const newSttLang = this.state.settings.sttLanguage;
+            if (this.state.input.recognition.lang !== newSttLang) {
+              console.log(`Updating STT language to: ${newSttLang} after settings change.`);
               if (this.state.input.active) {
                 this.stopVoiceInput();
               }
@@ -81,14 +316,17 @@ export class VoiceController {
     });
   }
 
-
   initializeVoiceInput() {
-    if (!('webkitSpeechRecognition' in window)) {
-      console.error('Speech recognition not supported');
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognitionAPI) {
+      console.error('Speech recognition not supported in this browser.');
       return;
     }
 
-    if (this.state.input.recognition && this.state.input.recognition.lang === this.state.settings.sttLanguage) {
+    const targetSttLang = this.state.settings.sttLanguage;
+
+    if (this.state.input.recognition && this.state.input.recognition.lang === targetSttLang) {
       return;
     }
 
@@ -96,14 +334,14 @@ export class VoiceController {
       if (this.state.input.active) {
         this.stopVoiceInput();
       }
-      console.log(`Updating existing STT instance language to: ${this.state.settings.sttLanguage}`);
-      this.state.input.recognition.lang = this.state.settings.sttLanguage;
+      console.log(`Updating existing STT instance language to: ${targetSttLang}`);
+      this.state.input.recognition.lang = targetSttLang;
     } else {
-      console.log(`Initializing STT with language: ${this.state.settings.sttLanguage}`);
-      const recognition = new webkitSpeechRecognition();
+      console.log(`Initializing STT with language: ${targetSttLang}`);
+      const recognition = new SpeechRecognitionAPI();
       recognition.continuous = true;
       recognition.interimResults = true;
-      recognition.lang = this.state.settings.sttLanguage;
+      recognition.lang = targetSttLang;
 
       recognition.onstart = () => {
         console.log('Voice input started');
@@ -157,88 +395,18 @@ export class VoiceController {
         if (this.state.input.active) {
           this.stopVoiceInput();
         }
+        if (this.state.input.silenceTimeout) {
+          clearTimeout(this.state.input.silenceTimeout);
+          this.state.input.silenceTimeout = null;
+        }
       };
+
       this.state.input.recognition = recognition;
     }
+    if (this.state.input.recognition && this.state.input.recognition.lang !== this.state.settings.sttLanguage) {
+      this.state.input.recognition.lang = this.state.settings.sttLanguage;
+    }
   }
-
-  initializeSpeechSynthesis() {
-    return new Promise((resolve, reject) => {
-      if (!this.state.synthesis.instance) {
-        console.error("SpeechSynthesis API not available.");
-        return reject(new Error("SpeechSynthesis API not available."));
-      }
-
-      let timeoutId = null;
-
-      const findAndSetVoice = () => {
-        if (timeoutId) clearTimeout(timeoutId);
-
-        this.state.synthesis.voices = this.state.synthesis.instance.getVoices();
-        console.log('Available TTS voices:', this.state.synthesis.voices.map(v => ({ name: v.name, lang: v.lang })));
-
-        if (this.state.synthesis.voices.length === 0) {
-          console.error('No TTS voices found even after trying.');
-          return reject(new Error('No TTS voices found.'));
-        }
-
-        const targetLang = this.state.settings.ttsLanguage;
-        console.log(`Attempting to find TTS voice for language: ${targetLang}`);
-        let foundVoice = this.state.synthesis.voices.find(voice => voice.lang === targetLang);
-
-        if (!foundVoice && targetLang && targetLang.includes('-')) {
-          const baseLang = targetLang.split('-')[0];
-          console.log(`No exact match for ${targetLang}, trying base language: ${baseLang}`);
-          foundVoice = this.state.synthesis.voices.find(voice => voice.lang.startsWith(baseLang + '-'));
-          if (!foundVoice) {
-            foundVoice = this.state.synthesis.voices.find(voice => voice.lang === baseLang);
-          }
-        }
-
-        if (!foundVoice) {
-          console.warn(`No suitable voice found for ${targetLang} or base language. Falling back to en-US.`);
-          foundVoice = this.state.synthesis.voices.find(voice => voice.lang === 'en-US');
-        }
-
-        if (!foundVoice && this.state.synthesis.voices.length > 0) {
-          console.warn(`Fallback to en-US failed. Using the first available voice: ${this.state.synthesis.voices[0].name}`);
-          foundVoice = this.state.synthesis.voices[0];
-        }
-
-        if (foundVoice) {
-          console.log(`Selected TTS voice: ${foundVoice.name} (${foundVoice.lang})`);
-          this.state.synthesis.selectedVoice = foundVoice;
-          resolve();
-        } else {
-          console.error('Could not find any suitable TTS voice.');
-          this.state.synthesis.selectedVoice = null;
-          reject(new Error('No suitable TTS voice found.'));
-        }
-      };
-
-      const TIMEOUT_DURATION = 3000;
-      timeoutId = setTimeout(() => {
-        console.error(`TTS voice initialization timed out after ${TIMEOUT_DURATION}ms.`);
-        this.state.synthesis.instance?.removeEventListener('voiceschanged', onVoicesChanged);
-        reject(new Error('TTS voice initialization timed out.'));
-      }, TIMEOUT_DURATION);
-
-      const onVoicesChanged = () => {
-        console.log("System 'voiceschanged' event fired.");
-        findAndSetVoice();
-      };
-
-      const initialVoices = this.state.synthesis.instance.getVoices();
-      if (initialVoices.length > 0) {
-        console.log("TTS voices available immediately.");
-        findAndSetVoice();
-      } else {
-        console.log("TTS voices not immediately available, waiting for 'voiceschanged' event...");
-        this.state.synthesis.instance.addEventListener('voiceschanged', onVoicesChanged, { once: true });
-      }
-    });
-  }
-
 
   async requestMicrophonePermission() {
     try {
@@ -257,88 +425,9 @@ export class VoiceController {
     }
   }
 
-  async speakText(text) {
-    try {
-      await this.state.synthesis.initializationPromise;
-    } catch (initError) {
-      console.error("Cannot speak text because TTS initialization failed:", initError);
-      return Promise.reject(new Error("TTS not initialized, cannot speak."));
-    }
-
-
-    if (!this.state.synthesis.instance || !this.state.synthesis.selectedVoice) {
-      console.error("Speech synthesis not ready or no voice selected, even after initialization wait.");
-      return Promise.reject(new Error("TTS voice not available."));
-    }
-
-    this.state.synthesis.speakingPromise = this.state.synthesis.speakingPromise
-      .catch(() => { })
-      .then(() => {
-        if (this.state.synthesis.isSpeaking) {
-          console.log("Cancelling previous speech before starting new one.");
-          this.state.synthesis.instance.cancel();
-        }
-
-        if (!this.state.synthesis.instance || !this.state.synthesis.selectedVoice) {
-          console.error("TTS Instance or Voice became invalid before speak call.");
-          return Promise.reject(new Error("TTS Instance or Voice became invalid"));
-        }
-
-        return new Promise((resolve, reject) => {
-          const utterance = new SpeechSynthesisUtterance(text);
-          utterance.voice = this.state.synthesis.selectedVoice;
-          utterance.lang = this.state.synthesis.selectedVoice.lang;
-          utterance.rate = 1.0;
-          utterance.pitch = 1.0;
-          utterance.volume = 1.0;
-
-          console.log(`Attempting to speak: "${text.substring(0, 30)}..." with voice: ${utterance.voice.name} (${utterance.lang})`);
-
-          let hasStarted = false;
-
-          utterance.onstart = () => {
-            console.log("Speech started.");
-            hasStarted = true;
-            this.state.synthesis.isSpeaking = true;
-          };
-
-          utterance.onend = () => {
-            if (hasStarted) {
-              console.log("Speech finished.");
-            } else {
-              console.log("Speech 'onend' fired but 'onstart' did not (possibly cancelled before start).");
-            }
-            this.state.synthesis.isSpeaking = false;
-            resolve();
-          };
-
-          utterance.onerror = (event) => {
-            console.error('Speech synthesis error:', event.error);
-            this.state.synthesis.isSpeaking = false;
-            reject(new Error(event.error || 'Unknown speech synthesis error'));
-          };
-
-          if (!this.state.synthesis.instance) {
-            console.error("Synthesis instance lost just before speak()");
-            reject(new Error("Synthesis instance lost"));
-            return;
-          }
-
-          this.state.synthesis.instance.speak(utterance);
-        });
-      })
-      .catch(error => {
-        console.error("Error encountered in speakText promise chain:", error);
-        this.state.synthesis.isSpeaking = false;
-        return Promise.reject(error);
-      });
-
-    return this.state.synthesis.speakingPromise;
-  }
-
-
   async toggleVoiceInput() {
     await this.state.synthesis.initializationPromise;
+
     if (!this.state.input.recognition) {
       this.initializeVoiceInput();
       if (!this.state.input.recognition) {
@@ -379,8 +468,8 @@ export class VoiceController {
         this.state.input.recognition.lang = this.state.settings.sttLanguage;
       }
 
-      console.log("Starting voice input recognition...");
-      await this.state.input.recognition.start();
+      console.log('Starting recognition with lang:', this.state.input.recognition.lang);
+      this.state.input.recognition.start();
 
     } catch (error) {
       if (error.name === 'InvalidStateError') {
@@ -390,9 +479,6 @@ export class VoiceController {
         }
       } else if (error.name === 'NotAllowedError') {
         console.error("Voice input start failed: Permission denied.");
-      } else if (error.name === 'NoSpeech') {
-        console.warn("Voice input start failed: No speech detected.");
-        this.stopVoiceInput();
       }
       else {
         console.error('Failed to start voice input:', error);
@@ -405,6 +491,11 @@ export class VoiceController {
 
   stopVoiceInput() {
     if (!this.state.input.recognition) return;
+
+    if (this.state.input.silenceTimeout) {
+      clearTimeout(this.state.input.silenceTimeout);
+      this.state.input.silenceTimeout = null;
+    }
 
     if (this.state.input.active) {
       try {
@@ -432,26 +523,18 @@ export class VoiceController {
       const userInput = document.getElementById('user-input');
       if (userInput) userInput.placeholder = 'Type your message here...';
     }
-
-    if (this.state.input.silenceTimeout) {
-      clearTimeout(this.state.input.silenceTimeout);
-      this.state.input.silenceTimeout = null;
-    }
-  }
-
-  stopSpeaking() {
-    if (this.state.synthesis.instance && this.state.synthesis.isSpeaking) {
-      console.log("Explicitly stopping speech synthesis...");
-      this.state.synthesis.instance.cancel();
-      this.state.synthesis.isSpeaking = false;
-    }
-    this.state.synthesis.speakingPromise = Promise.resolve();
   }
 
   cleanup() {
     console.log("Cleaning up VoiceController resources...");
     this.stopSpeaking();
     this.stopVoiceInput();
+    if (this.state.input.recognition) {
+      this.state.input.recognition.onstart = null;
+      this.state.input.recognition.onresult = null;
+      this.state.input.recognition.onerror = null;
+      this.state.input.recognition.onend = null;
+    }
   }
 
   isVoiceInputActive() {

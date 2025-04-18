@@ -293,7 +293,7 @@ class AIScreenReader {
         });
         if (this.elements.userInput) {
             this.elements.userInput.addEventListener('input', () => this.uiManager.updateInputState(this.elements.userInput.value));
-            this.elements.userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.handleSendMessage(); } });
+            this.elements.userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.voiceController.stopSpeaking(); this.handleSendMessage(); } });
         } else { console.error("User input element not found!"); }
     }
 
@@ -400,6 +400,9 @@ class AIScreenReader {
             this.handleError('Message sending failed', error);
         } finally {
             this.setProcessing(false);
+            if (this.elements.userInput) {
+                this.elements.userInput.focus();
+            }
             console.log("handleSendMessage finished");
         }
     }

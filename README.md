@@ -41,7 +41,7 @@ A-Eye Web Chat Assistant is a free and open-source Chrome extension. It's design
 
 **Chrome Extension APIs:**
 `chrome.scripting`: Executing content scripts with Readability.js.
-`chrome.tabs`: Controlling browser tabs, such as opening new tabs and capturing visible tabs (`captureVisibleTab`).
+`chrome.tabs`: Controlling browser tabs, such as opening new tabs and capturing visible tabs.
 `chrome.storage`: Using `local` storage to save user settings (API Keys, URLs, Prompts, Voice Settings).
 `chrome.commands`: Handling keyboard shortcuts.
 
