@@ -19,7 +19,8 @@ A-Eye Web Chat Assistant is a free and open-source Chrome extension. It's design
 - [Architecture and Technologies](#architecture-and-technologies)
 - [Installation Guide](#installation-guide)
 - [How to Use](#how-to-use)
-  - [Setting up Local AI Mode (Ollama)](#setting-up-local-ai-mode-ollama)
+  - [Setting up Local AI Mode (Ollama) Manually](#setting-up-local-ai-mode-ollama-manually)
+  - [Setting up Local AI Mode (Ollama) using the Script](#setting-up-local-ai-mode-ollama-using-the-script)
   - [Setting up Cloud AI Mode (Gemini API)](#setting-up-cloud-ai-mode-gemini-api)
   - [Basic Interaction](#basic-interaction)
   - [Analyzing Web Content](#analyzing-web-content)
@@ -66,10 +67,10 @@ and unzip it.
 ---
 ## How to Use
 
-### Setting up Local AI Mode (Ollama)
+### Setting up Local AI Mode (Ollama) Manually
 
 1. **Install [Ollama](https://ollama.com/).**
-2. **Enable Ollama CORS** (For Windows users with admin CMD)
+2. **Set Ollama CORS Permissions** (For Windows users with admin CMD)
     Allow Ollama CORS with all Chrome extensions
     ```
     set OLLAMA_ORIGINS="chrome-extension://*"
@@ -81,7 +82,7 @@ and unzip it.
     ```
     to verify, the output should be **'chrome-extension://*'**
 
-3. **Get and Run Gemma 3** 
+3. **Download and Run Gemma 3** 
    You can refer to the table below to get Gemma 3:
 
    | GPU VRAM | Recommend Model | Command                  |
@@ -90,8 +91,21 @@ and unzip it.
    | >= 10GB        | Gemma 3 12B    | `ollama run gemma3:12b` |
    | >= 20GB        | Gemma 3 27B    | `ollama run gemma3:27b` |
 
-
 4.  In the extension's **Settings**, make sure "Local Model Name" is `gemma3:4b` (or the model you chose).
+
+### Setting up Local AI Mode (Ollama) using the Script
+*   **Easiest method.** Handles installation¹, CORS setup², and model execution³.
+*   *(Requires Admin permission)*
+
+1. **Choose your model and run the matching script:**
+
+   | Model | PowerShell |
+   | ------------- | -------------- |
+   | Gemma 3 4B | setup_ollama_gemma3_4b.ps1     |
+   | Gemma 3 12B | setup_ollama_gemma3_12b.ps1    |
+   | Gemma 3 27B | setup_ollama_gemma3_27b.ps1    |
+
+2.  In the extension's **Settings**, make sure "Local Model Name" is `gemma3:4b` (or the model you chose).
 
 ### Setting up Cloud AI Mode (Gemini API)
 1. Get your Gemini API Key from [Google AI Studio](https://aistudio.google.com/)
