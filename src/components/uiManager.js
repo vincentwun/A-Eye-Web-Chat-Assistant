@@ -15,7 +15,7 @@ export class UIManager {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', `message-${role}`);
 
-        let rolePrefix = 'AI';
+        let rolePrefix = 'A-Eye';
         if (role === 'user') rolePrefix = 'You';
         else if (role === 'system') rolePrefix = 'System';
 
