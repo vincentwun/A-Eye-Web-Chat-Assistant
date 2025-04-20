@@ -508,7 +508,6 @@ class AIScreenReader {
 
     handleRepeat() {
         this.voiceController.stopSpeaking();
-        if (this.state.isProcessing) { this.appendMessage('system', 'Processing, please wait...'); return; }
         if (!this.state.settingsLoaded) { this.appendMessage('system', 'Initializing, please wait...'); return; }
         const lastAIMessage = [...this.state.messages].reverse().find(m => m.role === 'assistant');
         if (lastAIMessage && lastAIMessage.content) {
