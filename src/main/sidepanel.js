@@ -1,14 +1,14 @@
-import { VoiceController } from './components/voiceControl.js';
-import { ScreenshotController } from './components/screenShot.js';
-import { ApiService } from './components/apiService.js';
-import { UIManager } from './components/uiManager.js';
-import { CommandProcessor } from './BrowserControl/commandMap.js';
-import { ScreenshotAction } from './BrowserControl/screenshotAction.js';
-import { ScrollingScreenshotAction } from './BrowserControl/scrollingScreenshotAction.js';
-import { ContentAnalysisAction } from './BrowserControl/contentAnalysisAction.js';
-import { UrlAction } from './BrowserControl/urlAction.js';
-import { defaultPrompts, promptsStorageKey } from './option/prompts.js';
-import { settingsStorageKey, defaultApiSettings } from './option/apiRoute.js';
+import { VoiceController } from '../components/voiceControl.js';
+import { ScreenshotController } from '../components/screenShot.js';
+import { ApiService } from '../components/apiService.js';
+import { UIManager } from '../components/uiManager.js';
+import { CommandProcessor } from '../BrowserControl/commandMap.js';
+import { ScreenshotAction } from '../BrowserControl/screenshotAction.js';
+import { ScrollingScreenshotAction } from '../BrowserControl/scrollingScreenshotAction.js';
+import { ContentAnalysisAction } from '../BrowserControl/contentAnalysisAction.js';
+import { defaultPrompts, promptsStorageKey } from '../option/prompts.js';
+import { settingsStorageKey, defaultApiSettings } from '../option/apiRoute.js';
+import { ActionFlowController } from '../components/actionFlowController.js';
 
 class AIScreenReader {
     constructor() {
@@ -27,7 +27,8 @@ class AIScreenReader {
             messages: [],
             lastCommandTime: 0,
             commandCooldown: 1000,
-            settingsLoaded: false
+            settingsLoaded: false,
+            lastImageData: { dataUrl: null, mimeType: null }
         };
 
         this.elements = {
@@ -72,6 +73,30 @@ class AIScreenReader {
             uiManager: this.uiManager,
             voiceController: this.voiceController,
             apiService: this.apiService,
+            state: this.state,
+            getApiConfig: this.getApiConfig.bind(this),
+            getHistoryToSend: this.getHistoryToSend.bind(this),
+            handleResponse: this.handleResponse.bind(this),
+            handleError: this.handleError.bind(this),
+            setProcessing: this.setProcessing.bind(this),
+            appendMessage: this.appendMessage.bind(this),
+            updateLastImageData: this.updateLastImageData.bind(this)
+        };
+
+        this.screenshotAction = new ScreenshotAction(actionDependencies);
+        this.scrollingScreenshotAction = new ScrollingScreenshotAction(actionDependencies);
+        this.contentAnalysisAction = new ContentAnalysisAction(actionDependencies);
+
+        const commandProcessorActions = {
+            _executeScreenshot: this.screenshotAction.execute.bind(this.screenshotAction),
+            _executeScrollingScreenshot: this.scrollingScreenshotAction.execute.bind(this.scrollingScreenshotAction),
+            _executeContentAnalysis: this.contentAnalysisAction.execute.bind(this.contentAnalysisAction),
+            handleError: this.handleError.bind(this)
+        };
+        this.commandProcessor = new CommandProcessor(commandProcessorActions);
+
+        const flowControllerDependencies = {
+            apiService: this.apiService,
             prompts: this.prompts,
             state: this.state,
             getApiConfig: this.getApiConfig.bind(this),
@@ -79,32 +104,29 @@ class AIScreenReader {
             handleResponse: this.handleResponse.bind(this),
             handleError: this.handleError.bind(this),
             setProcessing: this.setProcessing.bind(this),
-            appendMessage: this.appendMessage.bind(this)
+            appendMessage: this.appendMessage.bind(this),
+            voiceController: this.voiceController
         };
-
-        this.screenshotAction = new ScreenshotAction(actionDependencies);
-        this.scrollingScreenshotAction = new ScrollingScreenshotAction(actionDependencies);
-        this.contentAnalysisAction = new ContentAnalysisAction(actionDependencies);
-        this.urlAction = new UrlAction(actionDependencies);
-
-        const commandActions = {
-            _executeScreenshot: this.screenshotAction.execute.bind(this.screenshotAction),
-            _executeScrollingScreenshot: this.scrollingScreenshotAction.execute.bind(this.scrollingScreenshotAction),
-            _executeContentAnalysis: this.contentAnalysisAction.execute.bind(this.contentAnalysisAction),
-            _executeOpenUrl: this.urlAction.execute.bind(this.urlAction),
-            handleError: this.handleError.bind(this)
-        };
-        this.commandProcessor = new CommandProcessor(commandActions);
+        this.actionFlowController = new ActionFlowController(flowControllerDependencies);
 
         this.setupMessageListener();
         this.initializeAll();
         this.setupStorageListener();
     }
 
+    updateLastImageData(dataUrl, mimeType) {
+        console.log("Updating last image data in state.");
+        this.state.lastImageData = { dataUrl, mimeType };
+        if (this.uiManager && typeof this.uiManager.showPreview === 'function') {
+            this.uiManager.showPreview('image', dataUrl);
+        } else {
+            console.error("UIManager or showPreview method not found!");
+        }
+    }
+
     async handleScreenshot() {
         console.log("handleScreenshot called (public)");
-        if (!this.state.settingsLoaded) { /*...*/ this.appendMessage('system', 'Initializing, please wait...'); return; }
-        if (this.state.isProcessing) { /*...*/ this.appendMessage('system', 'Processing, please wait...'); return; }
+        if (!this.state.settingsLoaded || this.state.isProcessing) return;
         if (this.state.activeApiMode === 'local' && !this.isLocalModeConfigValid()) return;
         if (this.state.activeApiMode === 'cloud' && !this.isCloudModeConfigValid()) return;
         try {
@@ -116,8 +138,7 @@ class AIScreenReader {
 
     async handleScrollingScreenshot() {
         console.log("handleScrollingScreenshot called (public)");
-        if (!this.state.settingsLoaded) { /*...*/ this.appendMessage('system', 'Initializing, please wait...'); return; }
-        if (this.state.isProcessing) { /*...*/ this.appendMessage('system', 'Processing, please wait...'); return; }
+        if (!this.state.settingsLoaded || this.state.isProcessing) return;
         if (this.state.activeApiMode === 'local' && !this.isLocalModeConfigValid()) return;
         if (this.state.activeApiMode === 'cloud' && !this.isCloudModeConfigValid()) return;
         try {
@@ -129,8 +150,7 @@ class AIScreenReader {
 
     async handleContentAnalysis() {
         console.log("handleContentAnalysis called (public)");
-        if (!this.state.settingsLoaded) { /*...*/ this.appendMessage('system', 'Initializing, please wait...'); return; }
-        if (this.state.isProcessing) { /*...*/ this.appendMessage('system', 'Processing, please wait...'); return; }
+        if (!this.state.settingsLoaded || this.state.isProcessing) return;
         if (this.state.activeApiMode === 'local' && !this.isLocalModeConfigValid()) return;
         if (this.state.activeApiMode === 'cloud' && !this.isCloudModeConfigValid()) return;
         try {
@@ -144,10 +164,7 @@ class AIScreenReader {
         chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             console.log('Message received in sidepanel:', request);
             const messageHandlers = {
-                toggleApiMode: () => {
-                    const nextMode = this.state.activeApiMode === 'local' ? 'cloud' : 'local';
-                    this.handleModeChange(nextMode);
-                },
+                toggleApiMode: () => this.handleModeChange(this.state.activeApiMode === 'local' ? 'cloud' : 'local'),
                 toggleVoiceInput: () => this.voiceController.toggleVoiceInput(),
                 toggleRepeat: () => this.handleRepeat(),
                 executeScreenshot: () => this.handleScreenshot(),
@@ -157,24 +174,15 @@ class AIScreenReader {
 
             if (messageHandlers[request.type]) {
                 if (this.state.isProcessing) {
-                    console.log(`Sidepanel busy, cannot execute command: ${request.type}`);
-                    this.appendMessage('system', 'Processing, please wait...');
-                    sendResponse({ success: false, error: 'Busy processing' });
-                    return true;
+                    this.appendMessage('system', 'Processing, please wait...'); sendResponse({ success: false, error: 'Busy processing' }); return true;
                 }
                 if (!this.state.settingsLoaded) {
-                    console.warn(`Settings not loaded yet, delaying command: ${request.type}`);
-                    this.appendMessage('system', 'Initializing, please wait...');
-                    sendResponse({ success: false, error: 'Initializing' });
-                    return true;
+                    this.appendMessage('system', 'Initializing, please wait...'); sendResponse({ success: false, error: 'Initializing' }); return true;
                 }
                 try {
-                    messageHandlers[request.type]();
-                    sendResponse({ success: true });
+                    messageHandlers[request.type](); sendResponse({ success: true });
                 } catch (error) {
-                    console.error(`Error executing command ${request.type} from message listener:`, error);
-                    this.handleError(`Failed to execute ${request.type}`, error);
-                    sendResponse({ success: false, error: error.message });
+                    this.handleError(`Failed to execute ${request.type}`, error); sendResponse({ success: false, error: error.message });
                 }
                 return true;
             }
@@ -227,7 +235,6 @@ class AIScreenReader {
             this.state.settingsLoaded = true;
             console.log("Initialization complete. Settings loaded:", this.state);
         } catch (error) {
-            console.error('Initialization failed:', error);
             this.handleError('Initialization failed', error);
             this.uiManager.updateModeUI(this.state.activeApiMode);
             this.state.activeApiMode = this.state.activeApiMode ?? defaultApiSettings.activeApiMode;
@@ -258,8 +265,7 @@ class AIScreenReader {
             console.log("Successfully loaded and merged settings:", this.state);
             console.log("Successfully loaded and merged prompts:", this.prompts);
         } catch (error) {
-            console.error('Error loading settings/prompts from chrome.storage.local:', error);
-            this.appendMessage('system', 'Error loading settings/prompts. Using default values.');
+            this.handleError('Error loading settings/prompts. Using default values.');
             this.state.activeApiMode = defaultApiSettings.activeApiMode;
             this.state.localApiUrl = defaultApiSettings.localApiUrl;
             this.state.ollamaMultimodalModel = defaultApiSettings.ollamaMultimodalModel;
@@ -298,26 +304,19 @@ class AIScreenReader {
     }
 
     handleModeChange(newMode) {
-        if (!this.state.settingsLoaded) { /*...*/ this.appendMessage('system', 'Initializing, please wait...'); return; }
-        if (this.state.isProcessing) { /*...*/ this.appendMessage('system', 'Processing, please wait...'); return; }
-
-        if (newMode !== this.state.activeApiMode) {
-            if (newMode === 'local') {
-                if (!this.isLocalModeConfigValid()) return;
-            } else if (newMode === 'cloud') {
-                if (!this.isCloudModeConfigValid()) return;
-            }
-            this.state.activeApiMode = newMode;
-            this.uiManager.updateModeUI(this.state.activeApiMode);
-            this.saveActiveModePreference(newMode);
-            const modeName = newMode === 'local' ? 'Local' : 'Cloud';
-            this.appendMessage('system', `Switched to ${modeName} Mode.`);
-            this.voiceController.speakText(`Switched to ${modeName} Mode.`);
-        }
+        if (!this.state.settingsLoaded || this.state.isProcessing || newMode === this.state.activeApiMode) return;
+        if (newMode === 'local' && !this.isLocalModeConfigValid()) return;
+        if (newMode === 'cloud' && !this.isCloudModeConfigValid()) return;
+        this.state.activeApiMode = newMode;
+        this.uiManager.updateModeUI(this.state.activeApiMode);
+        this.saveActiveModePreference(newMode);
+        const modeName = newMode === 'local' ? 'Local' : 'Cloud';
+        this.appendMessage('system', `Switched to ${modeName} Mode.`);
+        this.voiceController.speakText(`Switched to ${modeName} Mode.`);
     }
 
     async saveActiveModePreference(mode) {
-        if (!this.state.settingsLoaded) { /*...*/ return; }
+        if (!this.state.settingsLoaded) return;
         try {
             const result = await chrome.storage.local.get(this.settingsStorageKey);
             const currentSettings = result[this.settingsStorageKey] || { ...defaultApiSettings };
@@ -362,48 +361,67 @@ class AIScreenReader {
     }
 
     getHistoryToSend(commandToExclude = null) {
-        return this.state.messages.filter(m =>
+        const baseHistory = this.state.messages.filter(m =>
             (m.role === 'user' || m.role === 'assistant') &&
             (!commandToExclude || m.content !== commandToExclude) &&
-            (!m.content.startsWith || !m.content.startsWith('openUrl:')) &&
-            !['takeScreenshot', 'scrollingScreenshot', 'analyzeContent'].includes(m.content.trim())
+            (!m.content?.startsWith || !m.content.startsWith('openUrl:')) &&
+            !['takeScreenshot', 'scrollingScreenshot', 'analyzeContent', 'getElement'].includes(m.content?.trim())
         );
+        const MAX_HISTORY_FOR_API = 10;
+        return baseHistory.slice(-MAX_HISTORY_FOR_API);
     }
 
     async handleSendMessage() {
         const userInput = this.elements.userInput.value.trim();
         if (!userInput) { return; }
-        if (!this.state.settingsLoaded) { /*...*/ this.appendMessage('system', 'Initializing, please wait...'); return; }
-        if (this.state.isProcessing) { /*...*/ this.appendMessage('system', 'Processing, please wait...'); return; }
+        if (!this.state.settingsLoaded) { this.appendMessage('system', 'Initializing, please wait...'); return; }
+        if (this.state.isProcessing) { this.appendMessage('system', 'Processing, please wait...'); return; }
         if (this.state.activeApiMode === 'local' && !this.isLocalModeConfigValid()) return;
         if (this.state.activeApiMode === 'cloud' && !this.isCloudModeConfigValid()) return;
 
         this.setProcessing(true);
         this.appendMessage('user', userInput);
         this.uiManager.clearUserInput();
-        this.uiManager.hidePreview();
+
+        let imageDataToSend = null;
+        let mimeTypeToSend = null;
+        let systemPrompt = this.prompts.system_prompt;
+
+        const isPreviewVisible = this.elements.previewContainer && this.elements.previewContainer.style.display !== 'none';
+        const previewHasImage = this.elements.previewImage && this.elements.previewImage.src && this.elements.previewImage.src !== location.href;
+
+        if (isPreviewVisible && previewHasImage && this.state.lastImageData.dataUrl) {
+            console.log("Assuming question is about the displayed image. Attaching image data.");
+            imageDataToSend = this.state.lastImageData.dataUrl;
+            mimeTypeToSend = this.state.lastImageData.mimeType;
+        } else {
+            console.log("Not attaching image data. Hiding preview.");
+            this.uiManager.hidePreview();
+        }
 
         try {
             const payload = { prompt: userInput };
             const apiConfig = this.getApiConfig();
             const historyToSend = this.getHistoryToSend();
-            const systemPrompt = this.prompts.defaultChat;
+
+            console.log(`Sending request to LLM. Image attached: ${!!imageDataToSend}`);
             const responseContent = await this.apiService.sendRequest(
                 apiConfig,
                 historyToSend,
                 payload,
-                null,
+                imageDataToSend,
                 systemPrompt
             );
-            this.handleResponse(responseContent);
+            await this.handleResponse(responseContent);
+
         } catch (error) {
             this.handleError('Message sending failed', error);
-        } finally {
             this.setProcessing(false);
+        } finally {
             if (this.elements.userInput) {
                 this.elements.userInput.focus();
             }
-            console.log("handleSendMessage finished");
+            console.log("handleSendMessage flow finished");
         }
     }
 
@@ -412,42 +430,45 @@ class AIScreenReader {
             console.log("Skipping empty message append for role:", role);
             return;
         }
-
         const formattedContent = this.uiManager.escapeHTML(content);
         this.uiManager.appendMessage(role, formattedContent);
-
-        const knownCommands = ['takeScreenshot', 'scrollingScreenshot', 'analyzeContent'];
-        const isCommand = content.startsWith('openUrl:') || knownCommands.includes(content.trim());
-
+        const knownCommands = ['takeScreenshot', 'scrollingScreenshot', 'analyzeContent', 'getElement'];
+        const isCommand = content.startsWith('openUrl:') || knownCommands.includes(content.trim()) || (content.startsWith('[') && content.endsWith(']'));
         if (role !== 'system' && !isCommand) {
             const lastMessage = this.state.messages.length > 0 ? this.state.messages[this.state.messages.length - 1] : null;
             if (!lastMessage || lastMessage.role !== role || lastMessage.content !== content) {
                 this.state.messages.push({ role, content });
             } else {
-                console.log("Skipping duplicate message history append:", role, content.substring(0, 50) + "...");
+                console.log("Skipping duplicate message history append.");
             }
         } else {
-            console.log("Message not added to API history:", { role, content: content.substring(0, 50) + "..." });
+            console.log("Message not added to API history.");
         }
-
         const MAX_HISTORY = 20;
         if (this.state.messages.length > MAX_HISTORY) {
             this.state.messages = this.state.messages.slice(this.state.messages.length - MAX_HISTORY);
         }
     }
 
-    handleResponse(responseContent) {
-        console.log('Handling final API response:', responseContent);
+    async handleResponse(responseContent) {
+        console.log('AIScreenReader: Handling API response:', responseContent);
         const responseText = (typeof responseContent === 'string') ? responseContent : JSON.stringify(responseContent);
-
-        const commandHandled = this.commandProcessor.processResponse(responseText);
-
-        if (!commandHandled) {
+        const commandResult = this.commandProcessor.processResponse(responseText);
+        if (commandResult === true) {
+            console.log("Command handled internally by CommandProcessor.");
+            this.setProcessing(false);
+        } else if (commandResult && commandResult.command === 'getElement') {
+            console.log("Delegating 'getElement' request to ActionFlowController.");
+            await this.actionFlowController.handleGetElementRequest();
+        } else if (commandResult && commandResult.command === 'executeActions') {
+            console.log("Delegating 'executeActions' request to ActionFlowController.");
+            await this.actionFlowController.handleExecuteActionsRequest(commandResult.actions);
+        } else {
+            console.log("Response is not a command, displaying as assistant message.");
             const displayContent = (typeof responseContent === 'string') ? responseContent : 'Received non-text response.';
             this.appendMessage('assistant', displayContent);
             this.voiceController.speakText(displayContent);
-        } else {
-            console.log("Command processor initiated an action. Action handler provides feedback.");
+            this.setProcessing(false);
         }
     }
 
@@ -472,21 +493,23 @@ class AIScreenReader {
     }
 
     handleClear() {
-        if (this.state.isProcessing) { /*...*/ this.appendMessage('system', 'Processing, please wait...'); return; }
+        if (this.state.isProcessing) { this.appendMessage('system', 'Processing, please wait...'); return; }
         console.log("Clearing conversation and state.");
         this.voiceController.stopSpeaking();
         this.uiManager.clearConversation();
         this.uiManager.clearUserInput();
         this.uiManager.hidePreview();
         this.state.messages = [];
+        this.state.lastImageData = { dataUrl: null, mimeType: null };
         this.appendMessage('system', 'Conversation cleared.');
         this.voiceController.speakText('Conversation cleared.');
         this.setProcessing(false);
     }
 
     handleRepeat() {
-        if (this.state.isProcessing) { /*...*/ this.appendMessage('system', 'Processing, please wait...'); return; }
-        if (!this.state.settingsLoaded) { /*...*/ this.appendMessage('system', 'Initializing, please wait...'); return; }
+        this.voiceController.stopSpeaking();
+        if (this.state.isProcessing) { this.appendMessage('system', 'Processing, please wait...'); return; }
+        if (!this.state.settingsLoaded) { this.appendMessage('system', 'Initializing, please wait...'); return; }
         const lastAIMessage = [...this.state.messages].reverse().find(m => m.role === 'assistant');
         if (lastAIMessage && lastAIMessage.content) {
             console.log("Repeating last AI message:", lastAIMessage.content);

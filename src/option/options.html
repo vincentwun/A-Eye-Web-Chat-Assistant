@@ -66,8 +66,8 @@
             border: 1px solid #ccc;
             border-radius: 4px;
             background-color: white;
-            font-family: inherit;
-            font-size: inherit;
+            font-family: monospace;
+            font-size: 13px;
         }
 
         textarea {
@@ -177,24 +177,25 @@
     <h2>Prompt Settings</h2>
 
     <div>
-        <label for="default-chat-prompt">Default System Prompt:</label>
-        <textarea id="default-chat-prompt" data-storage-key="defaultChat" data-storage-type="prompts"></textarea>
+        <label for="system_prompt">Default System Prompt:</label>
+        <textarea id="system_prompt" data-storage-key="system_prompt" data-storage-type="prompts"></textarea>
     </div>
 
     <div>
-        <label for="screenshot-prompt">Screenshot Description Prompt:</label>
-        <textarea id="screenshot-prompt" data-storage-key="screenshot" data-storage-type="prompts"></textarea>
+        <label for="screenshot_prompt">Screenshot Description Prompt:</label>
+        <textarea id="screenshot_prompt" data-storage-key="screenshot_prompt" data-storage-type="prompts"></textarea>
     </div>
 
     <div>
-        <label for="scrolling-screenshot-prompt">Scrolling Screenshot Prompt:</label>
-        <textarea id="scrolling-screenshot-prompt" data-storage-key="scrollingScreenshot"
+        <label for="scrollingScreenshot_prompt">Scrolling Screenshot Prompt:</label>
+        <textarea id="scrollingScreenshot_prompt" data-storage-key="scrollingScreenshot_prompt"
             data-storage-type="prompts"></textarea>
     </div>
 
     <div>
-        <label for="analyze-content-prompt">Content Analysis Prompt:</label>
-        <textarea id="analyze-content-prompt" data-storage-key="analyzeContent" data-storage-type="prompts"></textarea>
+        <label for="analyzeContent_prompt">Content Analysis Prompt:</label>
+        <textarea id="analyzeContent_prompt" data-storage-key="analyzeContent_prompt"
+            data-storage-type="prompts"></textarea>
     </div>
 
     <div class="button-container">

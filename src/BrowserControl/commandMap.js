@@ -1,94 +1,72 @@
 export class CommandProcessor {
   constructor(actions) {
-    if (!actions || typeof actions !== 'object') {
-      throw new Error('CommandProcessor requires an actions object');
-    }
+    if (!actions || typeof actions !== 'object') { throw new Error('CommandProcessor requires an actions object'); }
     this.actions = actions;
+    if (typeof this.actions.handleError !== 'function') { console.warn("CommandProcessor initialized without a valid handleError function."); this.actions.handleError = (message, error) => { console.error("CommandProcessor Error:", message, error); }; }
     console.log('CommandProcessor initialized with actions:', Object.keys(this.actions));
   }
 
   processResponse(responseText) {
-    const normalizedText = responseText.trim();
+    const normalizedText = responseText?.trim() ?? '';
     console.log('CommandProcessor processing:', normalizedText);
 
-    if (normalizedText.startsWith('openUrl:')) {
-      const url = normalizedText.substring('openUrl:'.length).trim();
-      if (url && typeof this.actions._executeOpenUrl === 'function') {
-        console.log(`Executing command internally: openUrl with URL: ${url}`);
-        try {
-          this.actions._executeOpenUrl(url);
-          return true;
-        } catch (error) {
-          console.error('Error executing _executeOpenUrl command:', error);
-          if (typeof this.actions.handleError === 'function') {
-            this.actions.handleError(`Failed to execute internal open URL command for: ${url}`, error);
+    const jsonRegex = /```(?:json)?\s*(\[[\s\S]*?\])\s*```/s;
+    const match = normalizedText.match(jsonRegex);
+    let potentialJson = null;
+
+    if (match && match[1]) {
+      potentialJson = match[1];
+      console.log("Potential JSON array found within code fences:", potentialJson);
+    }
+    else if (normalizedText.startsWith('[') && normalizedText.endsWith(']')) {
+      potentialJson = normalizedText;
+      console.log("Potential raw JSON array found:", potentialJson);
+    }
+
+    if (potentialJson !== null) {
+      try {
+        const parsedJson = JSON.parse(potentialJson);
+        if (Array.isArray(parsedJson)) {
+          if (parsedJson.length > 0 && typeof parsedJson[0] === 'object' && parsedJson[0]?.action) {
+            console.log('Command recognized: JSON Action Array. Indicating action to caller.');
+            return { command: 'executeActions', actions: parsedJson };
+          } else {
+            console.warn("Parsed JSON array is empty or first item lacks 'action' property.");
           }
-          return true;
         }
-      } else if (!url) {
-        console.warn('Command "openUrl:" recognized, but URL is missing.');
-        return false;
-      }
-      else {
-        console.warn('Command "openUrl:" recognized, but internal action handler _executeOpenUrl is missing or not a function.');
-        return false;
+      } catch (e) {
+        console.warn(`Failed to parse potential JSON: ${e.message}`);
       }
     }
 
-    else if (normalizedText === 'takeScreenshot') {
+    if (normalizedText === 'getElement') {
+      console.log('Command recognized: getElement. Indicating action to caller.');
+      return { command: 'getElement' };
+    }
+
+    if (normalizedText === 'takeScreenshot') {
       if (typeof this.actions._executeScreenshot === 'function') {
-        console.log('Executing command internally: takeScreenshot');
-        try {
-          this.actions._executeScreenshot();
-          return true;
-        } catch (error) {
-          console.error('Error executing _executeScreenshot command:', error);
-          if (typeof this.actions.handleError === 'function') {
-            this.actions.handleError('Failed to execute internal screenshot command', error);
-          }
-          return true;
-        }
-      } else {
-        console.warn('Command "takeScreenshot" recognized, but internal action handler _executeScreenshot is missing or not a function.');
-        return false;
-      }
-    } else if (normalizedText === 'scrollingScreenshot') {
+        console.log('Executing internal command: takeScreenshot');
+        try { this.actions._executeScreenshot(); return true; }
+        catch (error) { this.actions.handleError('Failed internal screenshot command', error); return true; }
+      } else { console.warn('takeScreenshot handler missing.'); return false; }
+    }
+    else if (normalizedText === 'scrollingScreenshot') {
       if (typeof this.actions._executeScrollingScreenshot === 'function') {
-        console.log('Executing command internally: scrollingScreenshot');
-        try {
-          this.actions._executeScrollingScreenshot();
-          return true;
-        } catch (error) {
-          console.error('Error executing _executeScrollingScreenshot command:', error);
-          if (typeof this.actions.handleError === 'function') {
-            this.actions.handleError('Failed to execute internal scrolling screenshot command', error);
-          }
-          return true;
-        }
-      } else {
-        console.warn('Command "scrollingScreenshot" recognized, but internal action handler _executeScrollingScreenshot is missing or not a function.');
-        return false;
-      }
-    } else if (normalizedText === 'analyzeContent') {
+        console.log('Executing internal command: scrollingScreenshot');
+        try { this.actions._executeScrollingScreenshot(); return true; }
+        catch (error) { this.actions.handleError('Failed internal scrolling screenshot command', error); return true; }
+      } else { console.warn('scrollingScreenshot handler missing.'); return false; }
+    }
+    else if (normalizedText === 'analyzeContent') {
       if (typeof this.actions._executeContentAnalysis === 'function') {
-        console.log('Executing command internally: analyzeContent');
-        try {
-          this.actions._executeContentAnalysis();
-          return true;
-        } catch (error) {
-          console.error('Error executing _executeContentAnalysis command:', error);
-          if (typeof this.actions.handleError === 'function') {
-            this.actions.handleError('Failed to execute internal content analysis command', error);
-          }
-          return true;
-        }
-      } else {
-        console.warn('Command "analyzeContent" recognized, but internal action handler _executeContentAnalysis is missing or not a function.');
-        return false;
-      }
+        console.log('Executing internal command: analyzeContent');
+        try { this.actions._executeContentAnalysis(); return true; }
+        catch (error) { this.actions.handleError('Failed internal content analysis command', error); return true; }
+      } else { console.warn('analyzeContent handler missing.'); return false; }
     }
 
-    console.log('No command recognized in response.');
+    console.log('No specific command recognized in response by CommandProcessor.');
     return false;
   }
 }

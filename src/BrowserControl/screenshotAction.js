@@ -1,10 +1,10 @@
+import { defaultPrompts, promptsStorageKey } from '../option/prompts.js';
 export class ScreenshotAction {
   constructor(dependencies) {
     this.screenshotController = dependencies.screenshotController;
     this.uiManager = dependencies.uiManager;
     this.voiceController = dependencies.voiceController;
     this.apiService = dependencies.apiService;
-    this.prompts = dependencies.prompts;
     this.state = dependencies.state;
     this.getApiConfig = dependencies.getApiConfig;
     this.getHistoryToSend = dependencies.getHistoryToSend;
@@ -12,8 +12,9 @@ export class ScreenshotAction {
     this.handleError = dependencies.handleError;
     this.setProcessing = dependencies.setProcessing;
     this.appendMessage = dependencies.appendMessage;
+    this.updateLastImageData = dependencies.updateLastImageData;
 
-    if (!this.screenshotController || !this.uiManager || !this.voiceController || !this.apiService || !this.prompts || !this.state || !this.getApiConfig || !this.getHistoryToSend || !this.handleResponse || !this.handleError || !this.setProcessing || !this.appendMessage) {
+    if (!this.screenshotController || !this.uiManager || !this.voiceController || !this.apiService /* || !this.prompts */ || !this.state || !this.getApiConfig || !this.getHistoryToSend || !this.handleResponse || !this.handleError || !this.setProcessing || !this.appendMessage || !this.updateLastImageData) {
       console.error("ScreenshotAction missing dependencies:", dependencies);
       throw new Error("ScreenshotAction initialized with missing dependencies.");
     }
@@ -31,12 +32,20 @@ export class ScreenshotAction {
       const screenshotDataUrl = await this.screenshotController.captureVisibleTab();
 
       if (screenshotDataUrl) {
-        this.uiManager.showPreview('image', screenshotDataUrl);
+        const mimeTypeMatch = screenshotDataUrl.match(/^data:(image\/(?:jpeg|png|webp));base64,/);
+        const mimeType = mimeTypeMatch ? mimeTypeMatch[1] : 'image/png';
+        this.updateLastImageData(screenshotDataUrl, mimeType);
+
         this.appendMessage('user', '[Screenshot Attached]');
         this.appendMessage('system', 'Screenshot captured. Sending for analysis...');
         await this.voiceController.speakText("Analyzing screenshot.");
 
-        const payload = { prompt: this.prompts.screenshot };
+        const result = await chrome.storage.local.get(promptsStorageKey);
+        const currentPrompts = result[promptsStorageKey] || { ...defaultPrompts };
+        const screenshotPromptText = currentPrompts.screenshot_prompt ?? defaultPrompts.screenshot;
+        console.log("Using screenshot prompt:", screenshotPromptText);
+
+        const payload = { prompt: screenshotPromptText };
         const apiConfig = this.getApiConfig();
         const historyToSend = this.getHistoryToSend('takeScreenshot');
         const systemPromptForTask = null;
@@ -54,10 +63,11 @@ export class ScreenshotAction {
         throw new Error('Screenshot capture returned empty data.');
       }
     } catch (error) {
+
       this.handleError('Screenshot analysis failed', error);
-    } finally {
       this.setProcessing(false);
-      console.log("ScreenshotAction execute finished");
+    } finally {
+      console.log("ScreenshotAction execute finished trigger");
     }
   }
 }

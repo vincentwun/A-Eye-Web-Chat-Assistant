@@ -1,10 +1,11 @@
+import { defaultPrompts, promptsStorageKey } from '../option/prompts.js';
+
 export class ScrollingScreenshotAction {
     constructor(dependencies) {
         this.screenshotController = dependencies.screenshotController;
         this.uiManager = dependencies.uiManager;
         this.voiceController = dependencies.voiceController;
         this.apiService = dependencies.apiService;
-        this.prompts = dependencies.prompts;
         this.state = dependencies.state;
         this.getApiConfig = dependencies.getApiConfig;
         this.getHistoryToSend = dependencies.getHistoryToSend;
@@ -12,8 +13,9 @@ export class ScrollingScreenshotAction {
         this.handleError = dependencies.handleError;
         this.setProcessing = dependencies.setProcessing;
         this.appendMessage = dependencies.appendMessage;
+        this.updateLastImageData = dependencies.updateLastImageData;
 
-        if (!this.screenshotController || !this.uiManager || !this.voiceController || !this.apiService || !this.prompts || !this.state || !this.getApiConfig || !this.getHistoryToSend || !this.handleResponse || !this.handleError || !this.setProcessing || !this.appendMessage) {
+        if (!this.screenshotController || !this.uiManager || !this.voiceController || !this.apiService /* || !this.prompts */ || !this.state || !this.getApiConfig || !this.getHistoryToSend || !this.handleResponse || !this.handleError || !this.setProcessing || !this.appendMessage || !this.updateLastImageData) {
             console.error("ScrollingScreenshotAction missing dependencies:", dependencies);
             throw new Error("ScrollingScreenshotAction initialized with missing dependencies.");
         }
@@ -32,12 +34,19 @@ export class ScrollingScreenshotAction {
             const mergedImageDataUrl = await this.screenshotController.handleScrollingScreenshot(tab);
 
             if (mergedImageDataUrl) {
-                this.uiManager.showPreview('image', mergedImageDataUrl);
+                const mimeType = 'image/png';
+                this.updateLastImageData(mergedImageDataUrl, mimeType);
+
                 this.appendMessage('user', '[Scrolling Screenshot Attached]');
                 this.appendMessage('system', 'Scrolling screenshot captured. Sending for analysis...');
                 await this.voiceController.speakText("Analyzing scrolling screenshot.");
 
-                const payload = { prompt: this.prompts.scrollingScreenshot };
+                const result = await chrome.storage.local.get(promptsStorageKey);
+                const currentPrompts = result[promptsStorageKey] || { ...defaultPrompts };
+                const scrollingPromptText = currentPrompts.scrollingScreenshot_prompt ?? defaultPrompts.scrollingScreenshot;
+                console.log("Using scrolling screenshot prompt:", scrollingPromptText);
+
+                const payload = { prompt: scrollingPromptText };
                 const apiConfig = this.getApiConfig();
                 const historyToSend = this.getHistoryToSend('scrollingScreenshot');
                 const systemPromptForTask = null;
@@ -56,9 +65,9 @@ export class ScrollingScreenshotAction {
             }
         } catch (error) {
             this.handleError('Scrolling screenshot analysis failed', error);
-        } finally {
             this.setProcessing(false);
-            console.log("ScrollingScreenshotAction execute finished");
+        } finally {
+            console.log("ScrollingScreenshotAction execute finished trigger");
         }
     }
 }

@@ -1,11 +1,11 @@
 import { ContentExtractor } from '../components/contentExtractor.js';
+import { defaultPrompts, promptsStorageKey } from '../option/prompts.js';
 
 export class ContentAnalysisAction {
     constructor(dependencies) {
         this.uiManager = dependencies.uiManager;
         this.voiceController = dependencies.voiceController;
         this.apiService = dependencies.apiService;
-        this.prompts = dependencies.prompts;
         this.state = dependencies.state;
         this.getApiConfig = dependencies.getApiConfig;
         this.getHistoryToSend = dependencies.getHistoryToSend;
@@ -14,7 +14,7 @@ export class ContentAnalysisAction {
         this.setProcessing = dependencies.setProcessing;
         this.appendMessage = dependencies.appendMessage;
 
-        if (!this.uiManager || !this.voiceController || !this.apiService || !this.prompts || !this.state || !this.getApiConfig || !this.getHistoryToSend || !this.handleResponse || !this.handleError || !this.setProcessing || !this.appendMessage) {
+        if (!this.uiManager || !this.voiceController || !this.apiService /* || !this.prompts */ || !this.state || !this.getApiConfig || !this.getHistoryToSend || !this.handleResponse || !this.handleError || !this.setProcessing || !this.appendMessage) {
             console.error("ContentAnalysisAction missing dependencies:", dependencies);
             throw new Error("ContentAnalysisAction initialized with missing dependencies.");
         }
@@ -49,7 +49,12 @@ export class ContentAnalysisAction {
                 this.appendMessage('system', 'Content extracted. Sending for analysis...');
                 await this.voiceController.speakText("Analyzing content.");
 
-                const fullPrompt = `${this.prompts.analyzeContent}\n\n---\n\n${extractedText}`;
+                const result = await chrome.storage.local.get(promptsStorageKey);
+                const currentPrompts = result[promptsStorageKey] || { ...defaultPrompts };
+                const analyzeContentPromptText = currentPrompts.analyzeContent_prompt ?? defaultPrompts.analyzeContent;
+                console.log("Using content analysis prompt:", analyzeContentPromptText);
+
+                const fullPrompt = `${analyzeContentPromptText}\n\n---\n\n${extractedText}`;
                 const payload = { prompt: fullPrompt };
                 const apiConfig = this.getApiConfig();
                 const historyToSend = this.getHistoryToSend('analyzeContent');
@@ -71,9 +76,9 @@ export class ContentAnalysisAction {
 
         } catch (error) {
             this.handleError('Content analysis failed', error);
-        } finally {
             this.setProcessing(false);
-            console.log("ContentAnalysisAction execute finished");
+        } finally {
+            console.log("ContentAnalysisAction execute finished trigger");
         }
     }
 }

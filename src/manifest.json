@@ -11,21 +11,21 @@
   },
   "permissions": [
     "sidePanel",
-    "activeTab",
     "scripting",
     "microphone",
     "commands",
-    "storage"
+    "storage",
+    "tabs"
   ],
   "host_permissions": [
     "<all_urls>"
   ],
   "side_panel": {
-    "default_path": "sidepanel.html"
+    "default_path": "main/sidepanel.html"
   },
   "options_page": "option/options.html",
   "background": {
-    "service_worker": "background.js",
+    "service_worker": "main/background.js",
     "type": "module"
   },
   "action": {
