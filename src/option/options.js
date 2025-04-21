@@ -112,6 +112,7 @@ function loadOptions() {
 
     const localUrlInput = document.getElementById('local-url-input');
     const cloudApiUrlInput = document.getElementById('cloud-api-url-input');
+    const cloudProxyUrlInput = document.getElementById('cloud-proxy-url-input');
     const cloudApiKeyInput = document.getElementById('cloud-api-key-input');
     const cloudModelNameInput = document.getElementById('cloud-model-name-input');
     const systemPromptTextarea = document.getElementById('system_prompt');
@@ -164,6 +165,19 @@ function loadOptions() {
         }
 
         if (cloudApiUrlInput) cloudApiUrlInput.value = savedApiSettings.cloudApiUrl ?? defaultApiSettings.cloudApiUrl;
+        if (cloudProxyUrlInput) cloudProxyUrlInput.value = savedApiSettings.cloudProxyUrl ?? defaultApiSettings.cloudProxyUrl;
+
+        const savedMethod = savedApiSettings.cloudApiMethod ?? defaultApiSettings.cloudApiMethod;
+        const directRadio = document.getElementById('cloud-method-direct');
+        const proxyRadio = document.getElementById('cloud-method-proxy');
+        if (directRadio && proxyRadio) {
+            if (savedMethod === 'proxy') {
+                proxyRadio.checked = true;
+            } else {
+                directRadio.checked = true;
+            }
+        }
+
         if (cloudApiKeyInput) cloudApiKeyInput.value = savedApiSettings.cloudApiKey ?? defaultApiSettings.cloudApiKey;
         if (cloudModelNameInput) cloudModelNameInput.value = savedApiSettings.cloudModelName ?? defaultApiSettings.cloudModelName;
 
@@ -231,9 +245,15 @@ function resetToDefaults() {
         if (chrome.runtime.lastError) { console.error("Error getting settings before reset:", chrome.runtime.lastError); showNotification("Error resetting: could not read current settings", true); return; }
         const currentSettings = result[settingsStorageKey] || {};
         const preservedApiKey = currentSettings.cloudApiKey || defaultApiSettings.cloudApiKey;
+        const preservedProxyUrl = currentSettings.cloudProxyUrl || defaultApiSettings.cloudProxyUrl;
 
         const settingsToReset = {};
-        settingsToReset[settingsStorageKey] = { ...defaultApiSettings, cloudApiKey: preservedApiKey };
+        settingsToReset[settingsStorageKey] = {
+            ...defaultApiSettings,
+            cloudApiKey: preservedApiKey,
+            cloudApiMethod: 'direct',
+            cloudProxyUrl: preservedProxyUrl
+        };
         settingsToReset[promptsStorageKey] = { ...defaultPrompts };
 
         chrome.storage.local.set(settingsToReset, () => {
@@ -241,9 +261,9 @@ function resetToDefaults() {
                 const errorMessage = `Error resetting settings: ${chrome.runtime.lastError.message}`;
                 console.error(errorMessage); showNotification(errorMessage, true);
             } else {
-                console.log("API and Prompt settings reset to default, preserving Cloud API Key. Voice settings remain unchanged.");
+                console.log("API and Prompt settings reset to default, preserving Cloud API Key and Proxy URL. Voice settings remain unchanged.");
                 loadOptions();
-                showNotification('API and Prompt settings reset. Voice settings kept.');
+                showNotification('API and Prompt settings reset. API Key and Proxy URL kept.');
             }
         });
     });
@@ -268,6 +288,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const selectsToSave = document.querySelectorAll('select[data-storage-key]');
     selectsToSave.forEach(select => { select.addEventListener('change', () => saveSetting(select)); });
+
+    const radioButtons = document.querySelectorAll('input[type="radio"][name="cloudApiMethod"]');
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', () => {
+            if (radio.checked) {
+                saveSetting(radio);
+            }
+        });
+    });
 
     const resetButton = document.getElementById('reset-button');
     if (resetButton) { resetButton.addEventListener('click', resetToDefaults); }

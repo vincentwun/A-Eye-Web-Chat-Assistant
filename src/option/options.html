@@ -134,9 +134,29 @@
     <h3>Cloud API Settings</h3>
 
     <div>
-        <label for="cloud-api-url-input">Cloud API Base URL:</label>
+        <label>Cloud Connection Method:</label>
+        <div style="margin-top: 5px;">
+            <input type="radio" id="cloud-method-direct" name="cloudApiMethod" value="direct"
+                data-storage-key="cloudApiMethod" data-storage-type="settings" checked>
+            <label for="cloud-method-direct" style="display: inline; font-weight: normal; margin-right: 15px;">Direct
+                Connection</label>
+
+            <input type="radio" id="cloud-method-proxy" name="cloudApiMethod" value="proxy"
+                data-storage-key="cloudApiMethod" data-storage-type="settings">
+            <label for="cloud-method-proxy" style="display: inline; font-weight: normal;">Proxy Connection</label>
+        </div>
+    </div>
+
+    <div>
+        <label for="cloud-api-url-input">Cloud API Base URL (Direct):</label>
         <input type="text" id="cloud-api-url-input" data-storage-key="cloudApiUrl" data-storage-type="settings"
             placeholder="Usually leave as default">
+    </div>
+
+    <div>
+        <label for="cloud-proxy-url-input">Cloud Function URL (Proxy):</label>
+        <input type="text" id="cloud-proxy-url-input" data-storage-key="cloudProxyUrl" data-storage-type="settings"
+            placeholder="Enter your deployed Cloud Function URL here">
     </div>
 
     <div>

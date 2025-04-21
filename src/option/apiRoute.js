@@ -6,5 +6,7 @@ export const defaultApiSettings = {
   cloudApiUrl: 'https://generativelanguage.googleapis.com/v1beta/models/',
   cloudApiKey: '',
   cloudModelName: 'gemini-2.0-flash',
-  activeApiMode: 'cloud'
+  activeApiMode: 'cloud',
+  cloudApiMethod: 'direct',
+  cloudProxyUrl: ''
 };
