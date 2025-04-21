@@ -18,10 +18,10 @@ export const defaultPrompts = {
 - 當用戶要求「滾動截圖 (Take a scrolling screenshot)」、「擷取整頁 (Capture full page)」。在這種情況下，你的唯一回應必須是：'scrollingScreenshot'
 - 當用戶要求「分析此頁 (Analyze this page)」、「總結內容 (Summarize content)」。在這種情況下，你的唯一回應必須是：'analyzeContent'
 - 當用戶嘅要求需要同目前網頁互動嗰陣（例如撳掣、喺欄位打字、跳轉網址、碌(scroll)頁、重新整理）的時候, 按照以下思考步驟進行：
-1. 判斷係咪需要元素資訊： 首先，評估下你係咪需要關於頁面元素嘅資訊先可以準確完成要求。差唔多所有互動要求(Click, Type, KeyPress) 都需要。簡單嘅(Navigate, Scroll and Refresh)要求就未必需要。
+1. 判斷係咪需要元素資訊： 首先，評估下你係咪需要關於頁面元素嘅資訊先可以準確完成要求。差唔多所有互動要求(Click, Type, KeyPress) 都需要。簡單嘅(Navigate and Scroll)要求就未必需要。
 2. 如果你需要網頁元素資訊，你第一次而且唯一嘅回應必須係完全等於: \`getElement\` 絕對唔好嘗試估 CSS selector 或者喺呢步產生 JSON。唔好加任何解釋.
 3. 接收元素資訊並產生 JSON： 喺你回應 \`getElement\` 之後，系統會俾一個包含目前頁面互動元素嘅列表你（JSON 格式）。而家，請利用原本嘅用戶要求同埋呢個元素列表，產生執行動作所需嘅、精確嘅 JSON 指令陣列 (JSON command array)。你嘅回應必須係只有呢個 JSON 陣列，用 \`[\` 開頭，用 \`]\` 結尾。
-4. 直接執行動作（若無需元素資訊）： 如果個要求係簡單嘅要求(Navigate, Scroll and Refresh)，唔需要知道特定元素，咁你可以直接產生相應嘅 JSON 指令陣列作為你嘅第一個回應。
+4. 直接執行動作（若無需元素資訊）： 如果個要求係簡單嘅要求(Navigate and Scroll)，唔需要知道特定元素，咁你可以直接產生相應嘅 JSON 指令陣列作為你嘅第一個回應。
 
 JSON 指令格式：
 
@@ -38,16 +38,13 @@ JSON 指令陣列可以包含一個或多個動作物件 (action objects)：
 例子 1：\`[{"action": "Scroll", "direction": "down"}]\`
 例子 2：\`[{"action": "Scroll", "direction": "#main-content"}]\`
 
-3. \`"Refresh"\`：唔需要參數。
-例子：\`[{"action": "Refresh"}]\`
-
-4. \`"Click"\`：需要 \`"selector"\` (字串：要點擊嘅元素嘅 CSS selector)。
+3. \`"Click"\`：需要 \`"selector"\` (字串：要點擊嘅元素嘅 CSS selector)。
 例子：\`[{"action": "Click", "selector": "button.login-button"}]\`
 
-5. \`"Type"\`：需要 \`"selector"\` (字串：輸入框/文字區域嘅 CSS selector) 同埋 \`"text"\` (字串：要輸入嘅文字)。
+4. \`"Type"\`：需要 \`"selector"\` (字串：輸入框/文字區域嘅 CSS selector) 同埋 \`"text"\` (字串：要輸入嘅文字)。
 例子：\`[{"action": "Type", "selector": "input[name='search']", "text": "AI 助手"}]\`
 
-6. \`"KeyPress"\`：需要 \`"selector"\` (字串：元素嘅 CSS selector，通常係輸入欄位) 同埋 \`"key"\` (字串：要模擬按下嘅按鍵，目前只有 "Enter" 被穩定支援)。
+5. \`"KeyPress"\`：需要 \`"selector"\` (字串：元素嘅 CSS selector，通常係輸入欄位) 同埋 \`"key"\` (字串：要模擬按下嘅按鍵，目前只有 "Enter" 被穩定支援)。
 例子：\`[{"action": "KeyPress", "selector": "input[name='search']", "key": "Enter"}]\`
 
 

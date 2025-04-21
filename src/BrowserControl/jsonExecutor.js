@@ -34,12 +34,6 @@ export async function executeJSON(actions, dependencies) {
           if (!action.direction) throw new Error("Scroll action requires 'direction'.");
           result = await executeScriptOnTab(tab.id, scrollPage, [action.direction, action.amount]);
           break;
-        case 'refresh':
-          await chrome.tabs.reload(tab.id);
-          await waitForTabLoad(tab.id);
-          tab = await chrome.tabs.get(tab.id);
-          result = { status: 'Refreshed' };
-          break;
         default:
           if (actionType !== '') {
             throw new Error(`Unsupported JSON action: ${actionType}`);
