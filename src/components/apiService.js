@@ -222,6 +222,17 @@ export class ApiService {
       contents: geminiContents,
       ...(systemPrompt && { systemInstruction: { parts: [{ text: systemPrompt }] } })
     };
+
+    // For Gemini 2.5 Flash Preview, add thinkingConfig if specified in apiConfig
+    if (modelToUse === "gemini-2.5-flash-preview-04-17") {
+      geminiPayload.generationConfig = {
+        thinkingConfig: {
+          thinkingBudget: apiConfig.geminiThinkingBudget || 0
+        }
+      };
+      console.log(`Adding thinkingConfig with budget ${geminiPayload.generationConfig.thinkingConfig.thinkingBudget} under generationConfig for model ${modelToUse}`);
+    }
+
     body = JSON.stringify(geminiPayload);
     console.log(`Sending to Cloud Gemini (${modelToUse}) using endpoint ${fullApiUrl} with ${geminiContents.length} history turns` + (systemPrompt ? " and system instruction." : "."));
 
