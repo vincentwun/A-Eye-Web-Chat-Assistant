@@ -7,8 +7,6 @@ let notificationTimeout;
 let currentVoiceSettings = null;
 
 const localModelSelect = document.getElementById('local-model-name-select');
-const localModelInputOther = document.getElementById('local-model-name-input-other');
-const localModelWarning = document.getElementById('local-model-name-warning');
 const predefinedLocalModels = ["gemma3:4b", "gemma3:12b", "gemma3:27b"];
 
 function showNotification(message, isError = false) {
@@ -23,20 +21,6 @@ function showNotification(message, isError = false) {
     notificationTimeout = setTimeout(() => {
         notificationBar.classList.remove('show');
     }, 2500);
-}
-
-function showLocalModelWarning(message) {
-    if (localModelWarning) {
-        localModelWarning.textContent = message;
-        localModelWarning.style.display = 'block';
-    }
-}
-
-function hideLocalModelWarning() {
-    if (localModelWarning) {
-        localModelWarning.textContent = '';
-        localModelWarning.style.display = 'none';
-    }
 }
 
 function populateSttLanguageDropdown() {
@@ -123,23 +107,7 @@ function populateVoiceList() {
     }
 }
 
-
-function updateLocalModelVisibility(selectedValue) {
-    if (!localModelSelect || !localModelInputOther) return;
-    hideLocalModelWarning();
-    if (selectedValue === 'others') {
-        localModelInputOther.style.display = 'block';
-        if (!localModelInputOther.value || predefinedLocalModels.includes(localModelInputOther.value)) {
-            localModelInputOther.value = '';
-        }
-    } else {
-        localModelInputOther.style.display = 'none';
-        localModelInputOther.value = '';
-    }
-}
-
 function loadOptions() {
-    hideLocalModelWarning();
     populateSttLanguageDropdown();
 
     const localUrlInput = document.getElementById('local-url-input');
@@ -188,13 +156,10 @@ function loadOptions() {
         if (localModelSelect) {
             if (predefinedLocalModels.includes(savedLocalModel)) {
                 localModelSelect.value = savedLocalModel;
-                updateLocalModelVisibility(savedLocalModel);
             } else {
-                localModelSelect.value = 'others';
-                if (localModelInputOther) {
-                    localModelInputOther.value = savedLocalModel;
-                }
-                updateLocalModelVisibility('others');
+                console.warn(`Saved local model "${savedLocalModel}" is not in the predefined list. Setting to default: ${defaultApiSettings.ollamaMultimodalModel}`);
+                localModelSelect.value = defaultApiSettings.ollamaMultimodalModel;
+                saveSetting(localModelSelect);
             }
         }
 
@@ -218,40 +183,7 @@ function loadOptions() {
 function saveSetting(element) {
     const storageKey = element.dataset.storageKey;
     const storageType = element.dataset.storageType;
-    let value;
-    let isCustomEmpty = false;
-
-    hideLocalModelWarning();
-
-    if (element.id === 'local-model-name-select') {
-        value = element.value;
-        if (value === 'others') {
-            if (localModelInputOther) {
-                value = localModelInputOther.value.trim();
-                if (!value) {
-                    value = defaultApiSettings.ollamaMultimodalModel;
-                    isCustomEmpty = true;
-                    console.warn("Custom local model name was empty, saving default.");
-                }
-            } else {
-                console.error("Could not find the 'other' input for local model name.");
-                value = defaultApiSettings.ollamaMultimodalModel;
-            }
-        }
-    } else if (element.id === 'local-model-name-input-other') {
-        if (localModelSelect && localModelSelect.value === 'others') {
-            value = element.value.trim();
-            if (!value) {
-                value = defaultApiSettings.ollamaMultimodalModel;
-                isCustomEmpty = true;
-                console.warn("Custom local model name was empty, saving default.");
-            }
-        } else {
-            return;
-        }
-    } else {
-        value = element.type === 'checkbox' ? element.checked : element.value;
-    }
+    let value = element.type === 'checkbox' ? element.checked : element.value;
 
     if (!storageKey || !storageType) { console.error("Missing data attributes on element:", element); return; }
 
@@ -286,14 +218,8 @@ function saveSetting(element) {
             if (chrome.runtime.lastError) {
                 const errorMessage = `Error saving ${storageKey}: ${chrome.runtime.lastError.message}`;
                 console.error(errorMessage, element); showNotification(errorMessage, true);
-                hideLocalModelWarning();
             } else {
                 console.log(`${storageKey} saved successfully:`, value);
-                if (isCustomEmpty && (element.id === 'local-model-name-select' || element.id === 'local-model-name-input-other')) {
-                    showLocalModelWarning(`Custom local model name was empty. Will use default setting: ${defaultApiSettings.ollamaMultimodalModel}.`);
-                } else {
-                    hideLocalModelWarning();
-                }
                 showNotification('Saved successfully!');
             }
         });
@@ -301,7 +227,6 @@ function saveSetting(element) {
 }
 
 function resetToDefaults() {
-    hideLocalModelWarning();
     chrome.storage.local.get(settingsStorageKey, (result) => {
         if (chrome.runtime.lastError) { console.error("Error getting settings before reset:", chrome.runtime.lastError); showNotification("Error resetting: could not read current settings", true); return; }
         const currentSettings = result[settingsStorageKey] || {};
@@ -328,32 +253,12 @@ document.addEventListener('DOMContentLoaded', () => {
     loadOptions();
 
     if (localModelSelect) {
-        localModelSelect.addEventListener('change', (e) => {
-            updateLocalModelVisibility(e.target.value);
-            if (e.target.value !== 'others') {
-                saveSetting(localModelSelect);
-            }
+        localModelSelect.addEventListener('change', () => {
+            saveSetting(localModelSelect);
         });
     }
 
-    if (localModelInputOther) {
-        localModelInputOther.addEventListener('input', hideLocalModelWarning);
-        localModelInputOther.addEventListener('blur', () => {
-            if (localModelSelect && localModelSelect.value === 'others') {
-                saveSetting(localModelInputOther);
-            }
-        });
-        localModelInputOther.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                if (localModelSelect && localModelSelect.value === 'others') {
-                    saveSetting(localModelInputOther);
-                    localModelInputOther.blur();
-                }
-            }
-        });
-    }
-
-    const inputsToSave = document.querySelectorAll('input[data-storage-key]:not(#local-model-name-input-other), textarea[data-storage-key]');
+    const inputsToSave = document.querySelectorAll('input[data-storage-key], textarea[data-storage-key]');
     inputsToSave.forEach(input => {
         input.addEventListener('blur', () => saveSetting(input));
         if (input.type === 'text' || input.type === 'password') {
@@ -361,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    const selectsToSave = document.querySelectorAll('select[data-storage-key]:not(#local-model-name-select)');
+    const selectsToSave = document.querySelectorAll('select[data-storage-key]');
     selectsToSave.forEach(select => { select.addEventListener('change', () => saveSetting(select)); });
 
     const resetButton = document.getElementById('reset-button');
