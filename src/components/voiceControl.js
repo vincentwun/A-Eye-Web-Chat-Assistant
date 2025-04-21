@@ -410,18 +410,175 @@ export class VoiceController {
 
   async requestMicrophonePermission() {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach(track => track.stop());
-      console.log("Microphone permission granted.");
-      return true;
+      if (!navigator.permissions || typeof navigator.permissions.query !== 'function') {
+        console.warn("Navigator Permissions API not available. Attempting direct getUserMedia call trigger.");
+        throw new Error('Permissions API unavailable');
+      }
+
+      const permissionStatus = await navigator.permissions.query({ name: 'microphone' });
+      console.log(`Microphone permission status: ${permissionStatus.state}`);
+
+      if (permissionStatus.state === 'granted') {
+        console.log("Microphone permission already granted.");
+        return true;
+      } else if (permissionStatus.state === 'denied') {
+        console.log("Microphone permission denied by user.");
+        this.callbacks.appendMessage?.('system', 'Microphone access denied. Please enable it in browser settings and try again.');
+        this.speakText('Microphone access denied.').catch(e => console.error("Error speaking permission denied message:", e));
+        return false;
+      } else {
+        console.log(`Microphone permission state is 'prompt'. Requesting via content script iframe.`);
+
+        return new Promise(async (resolve) => {
+          let listenerInstalled = false;
+          const messageListener = (message, sender, sendResponse) => {
+            if (message && message.type === "micPermissionResult") {
+              console.log("Received permission result from iframe:", message.status);
+              if (listenerInstalled) {
+                chrome.runtime.onMessage.removeListener(messageListener);
+                listenerInstalled = false;
+              }
+              if (message.status === "granted") {
+                this.speakText('Microphone access granted.').catch(e => console.error("Error speaking grant confirmation:", e));
+                resolve(true);
+              } else {
+                this.callbacks.appendMessage?.('system', 'Microphone access was not granted.');
+                this.speakText('Access not granted.').catch(e => console.error("Error speaking denial confirmation:", e));
+                resolve(false);
+              }
+            }
+          };
+
+          try {
+            chrome.runtime.onMessage.addListener(messageListener);
+            listenerInstalled = true;
+
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (tab && tab.id) {
+              console.log(`Attempting to inject content script into tab ${tab.id}...`);
+              try {
+                await chrome.scripting.executeScript({
+                  target: { tabId: tab.id },
+                  files: ['permission/permissionContent.js']
+                });
+                console.log(`Content script potentially injected into tab ${tab.id}.`);
+              } catch (injectionError) {
+                if (injectionError.message.includes("Could not establish connection") || injectionError.message.includes("Cannot access contents of url") || injectionError.message.includes("Frame with ID")) {
+                  console.warn(`Could not inject content script into tab ${tab.id} (may be restricted page or already injected): ${injectionError.message}`);
+                } else {
+                  console.error(`Failed to inject content script into tab ${tab.id}:`, injectionError);
+                  throw new Error(`Failed to prepare page script: ${injectionError.message}`);
+                }
+              }
+
+              console.log(`Sending requestMicPermission message to tab ${tab.id}...`);
+              await chrome.tabs.sendMessage(tab.id, { action: "requestMicPermission" });
+              console.log("Message sent to content script to request permission.");
+              this.callbacks.appendMessage?.('system', 'Please allow microphone access in the browser prompt.');
+              this.speakText('Please allow microphone access.').catch(e => console.error("Error speaking prompt instruction:", e));
+
+            } else {
+              throw new Error("Could not find the active tab.");
+            }
+          } catch (error) {
+            console.error('Error initiating microphone permission request:', error);
+            if (listenerInstalled) {
+              chrome.runtime.onMessage.removeListener(messageListener);
+              listenerInstalled = false;
+            }
+            let errorMsg = `Error requesting permission: ${error.message || 'Unknown error'}`;
+            let speakMsg = 'Error requesting permission.';
+            if (error.message && error.message.includes("Could not establish connection")) {
+              errorMsg = 'Cannot connect to page script. Reload the page or check if the page is restricted.';
+              speakMsg = 'Cannot connect to page script.';
+            } else if (error.message.includes("Failed to prepare page script")) {
+              errorMsg = error.message;
+              speakMsg = 'Failed to prepare page script.';
+            }
+            this.callbacks.appendMessage?.('system', errorMsg);
+            this.speakText(speakMsg).catch(e => console.error("Error speaking permission request error message:", e));
+            resolve(false);
+          }
+        });
+      }
     } catch (error) {
-      console.error('Microphone permission error:', error);
-      const message = error.name === 'NotAllowedError' ?
-        'Microphone access denied. Please enable it in extension settings or site settings.' :
-        'Could not access microphone. Please ensure it is connected and allowed.';
-      this.callbacks.appendMessage?.('system', message);
-      this.speakText(message).catch(e => console.error("Failed to speak permission message:", e));
-      return false;
+      console.error('Error checking/requesting microphone permission:', error);
+      let message = '';
+      let speakMsg = '';
+      if (error.message === 'Permissions API unavailable') {
+        message = 'Cannot check permission status. Attempting direct request.';
+        speakMsg = 'Requesting microphone access.';
+        this.callbacks.appendMessage?.('system', message);
+        return new Promise(async (resolve) => {
+          let listenerInstalled = false;
+          const messageListener = (message, sender, sendResponse) => {
+            if (message && message.type === "micPermissionResult") {
+              console.log("Received permission result from iframe (fallback):", message.status);
+              if (listenerInstalled) {
+                chrome.runtime.onMessage.removeListener(messageListener);
+                listenerInstalled = false;
+              }
+              resolve(message.status === "granted");
+            }
+          };
+
+          try {
+            chrome.runtime.onMessage.addListener(messageListener);
+            listenerInstalled = true;
+
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (tab && tab.id) {
+              console.log(`Attempting to inject content script into tab ${tab.id} (fallback)...`);
+              try {
+                await chrome.scripting.executeScript({
+                  target: { tabId: tab.id },
+                  files: ['permission/permissionContent.js']
+                });
+                console.log(`Content script potentially injected into tab ${tab.id} (fallback).`);
+              } catch (injectionError) {
+                if (injectionError.message.includes("Could not establish connection") || injectionError.message.includes("Cannot access contents of url") || injectionError.message.includes("Frame with ID")) {
+                  console.warn(`Could not inject content script into tab ${tab.id} (fallback, maybe restricted): ${injectionError.message}`);
+                } else {
+                  console.error(`Failed to inject content script into tab ${tab.id} (fallback):`, injectionError);
+                  throw new Error(`Failed to prepare page script (fallback): ${injectionError.message}`);
+                }
+              }
+
+              console.log(`Sending requestMicPermission message to tab ${tab.id} (fallback)...`);
+              await chrome.tabs.sendMessage(tab.id, { action: "requestMicPermission" });
+              this.callbacks.appendMessage?.('system', 'Attempting to request microphone access. Please check the browser prompt.');
+              this.speakText(speakMsg).catch(e => console.error("Error speaking fallback prompt instruction:", e));
+            } else {
+              throw new Error("Could not find the active tab (fallback).");
+            }
+          } catch (fallbackError) {
+            console.error('Error initiating microphone permission request (fallback):', fallbackError);
+            if (listenerInstalled) {
+              chrome.runtime.onMessage.removeListener(messageListener);
+              listenerInstalled = false;
+            }
+            message = `Error requesting permission (fallback): ${fallbackError.message || 'Unknown error'}`;
+            speakMsg = 'Error requesting permission.';
+            if (fallbackError.message && fallbackError.message.includes("Could not establish connection")) {
+              message = 'Cannot connect to page script (fallback). Reload the page or check if restricted.';
+              speakMsg = 'Cannot connect to page script.';
+            } else if (fallbackError.message.includes("Failed to prepare page script")) {
+              message = fallbackError.message;
+              speakMsg = 'Failed to prepare page script.';
+            }
+            this.callbacks.appendMessage?.('system', message);
+            this.speakText(speakMsg).catch(e => console.error("Error speaking fallback error message:", e));
+            resolve(false);
+          }
+        });
+
+      } else {
+        message = `Error checking permission: ${error.message || 'Unknown error'}`;
+        speakMsg = 'Error checking permission.';
+        this.callbacks.appendMessage?.('system', message);
+        this.speakText(speakMsg).catch(e => console.error("Error speaking permission check error message:", e));
+        return false;
+      }
     }
   }
 
