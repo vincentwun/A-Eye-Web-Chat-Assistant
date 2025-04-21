@@ -220,6 +220,11 @@ export class ApiService {
 
     const geminiPayload = {
       contents: geminiContents,
+      tools: [
+        {
+          "googleSearch": {}
+        }
+      ],
       ...(systemPrompt && { systemInstruction: { parts: [{ text: systemPrompt }] } })
     };
 
@@ -227,7 +232,7 @@ export class ApiService {
     if (modelToUse === "gemini-2.5-flash-preview-04-17") {
       geminiPayload.generationConfig = {
         thinkingConfig: {
-          thinkingBudget: apiConfig.geminiThinkingBudget || 0
+          thinkingBudget: apiConfig.geminiThinkingBudget || 512
         }
       };
       console.log(`Adding thinkingConfig with budget ${geminiPayload.generationConfig.thinkingConfig.thinkingBudget} under generationConfig for model ${modelToUse}`);
