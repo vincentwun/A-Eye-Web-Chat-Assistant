@@ -151,8 +151,12 @@
 
     <div>
         <label for="cloud-model-name-input">Cloud Model Name:</label>
-        <input type="text" id="cloud-model-name-input" data-storage-key="cloudModelName" data-storage-type="settings"
-            placeholder="e.g., gemini-1.5-flash-latest">
+        <select id="cloud-model-name-input" data-storage-key="cloudModelName" data-storage-type="settings">
+            <option value="gemini-2.5-pro-preview-03-25">gemini-2.5-pro-preview-03-25</option>
+            <option value="gemini-2.5-flash-preview-04-17">gemini-2.5-flash-preview-04-17</option>
+            <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+            <option value="gemini-2.0-flash-lite">gemini-2.0-flash-lite</option>
+        </select>
     </div>
 
     <hr>
