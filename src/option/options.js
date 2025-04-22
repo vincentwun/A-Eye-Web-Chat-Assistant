@@ -234,7 +234,7 @@ function saveSetting(element) {
                 console.error(errorMessage, element); showNotification(errorMessage, true);
             } else {
                 console.log(`${storageKey} saved successfully:`, value);
-                showNotification('Saved successfully!');
+                showNotification('Saved Changes!');
             }
         });
     });
@@ -263,7 +263,7 @@ function resetToDefaults() {
             } else {
                 console.log("API and Prompt settings reset to default, preserving Cloud API Key and Proxy URL. Voice settings remain unchanged.");
                 loadOptions();
-                showNotification('API and Prompt settings reset. API Key and Proxy URL kept.');
+                showNotification('Reset settings.');
             }
         });
     });
