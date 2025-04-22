@@ -9,6 +9,29 @@ let currentVoiceSettings = null;
 const localModelSelect = document.getElementById('local-model-name-select');
 const predefinedLocalModels = ["gemma3:4b", "gemma3:12b", "gemma3:27b"];
 
+function updateCloudUrlVisibility() {
+    const directMethodRadio = document.getElementById('cloud-method-direct');
+    const proxyMethodRadio = document.getElementById('cloud-method-proxy');
+    const directUrlContainer = document.getElementById('direct-url-container');
+    const proxyUrlContainer = document.getElementById('proxy-url-container');
+
+    if (!directMethodRadio || !proxyMethodRadio || !directUrlContainer || !proxyUrlContainer) {
+        console.error('Could not find all necessary elements for cloud URL visibility control.');
+        return;
+    }
+
+    if (directMethodRadio.checked) {
+        directUrlContainer.classList.remove('hidden');
+        proxyUrlContainer.classList.add('hidden');
+    } else if (proxyMethodRadio.checked) {
+        directUrlContainer.classList.add('hidden');
+        proxyUrlContainer.classList.remove('hidden');
+    } else {
+        directUrlContainer.classList.remove('hidden');
+        proxyUrlContainer.classList.add('hidden');
+    }
+}
+
 function showNotification(message, isError = false) {
     if (!notificationBar) return;
     clearTimeout(notificationTimeout);
@@ -111,6 +134,7 @@ function loadOptions() {
     populateSttLanguageDropdown();
 
     const localUrlInput = document.getElementById('local-url-input');
+    const localModelSelect = document.getElementById('local-model-name-select');
     const cloudApiUrlInput = document.getElementById('cloud-api-url-input');
     const cloudProxyUrlInput = document.getElementById('cloud-proxy-url-input');
     const cloudApiKeyInput = document.getElementById('cloud-api-key-input');
@@ -120,9 +144,15 @@ function loadOptions() {
     const scrollingScreenshotPromptTextarea = document.getElementById('scrollingScreenshot_prompt');
     const analyzeContentPromptTextarea = document.getElementById('analyzeContent_prompt');
     const sttSelect = document.getElementById('stt-language-select');
+    const directRadio = document.getElementById('cloud-method-direct');
+    const proxyRadio = document.getElementById('cloud-method-proxy');
 
     chrome.storage.local.get([promptsStorageKey, settingsStorageKey, voiceSettingsStorageKey], (result) => {
-        if (chrome.runtime.lastError) { console.error("Error loading settings:", chrome.runtime.lastError); return; }
+        if (chrome.runtime.lastError) {
+            console.error("Error loading settings:", chrome.runtime.lastError);
+            showNotification("Error loading settings: " + chrome.runtime.lastError.message, true);
+            return;
+        }
 
         const savedPrompts = result[promptsStorageKey] || { ...defaultPrompts };
         const savedApiSettings = result[settingsStorageKey] || { ...defaultApiSettings };
@@ -143,13 +173,16 @@ function loadOptions() {
                     showNotification("Error saving initial voice settings", true);
                 } else {
                     console.log("Initial voice settings ('en-US') saved successfully.");
+                    if (sttSelect) sttSelect.value = currentVoiceSettings.sttLanguage;
+                    populateVoiceList();
                 }
             });
         } else {
             console.log("Loading saved voice settings:", savedVoiceSettings);
             currentVoiceSettings = { ...savedVoiceSettings };
+            if (sttSelect) sttSelect.value = currentVoiceSettings.sttLanguage;
+            populateVoiceList();
         }
-
 
         if (localUrlInput) localUrlInput.value = savedApiSettings.localApiUrl ?? defaultApiSettings.localApiUrl;
 
@@ -160,16 +193,20 @@ function loadOptions() {
             } else {
                 console.warn(`Saved local model "${savedLocalModel}" is not in the predefined list. Setting to default: ${defaultApiSettings.ollamaMultimodalModel}`);
                 localModelSelect.value = defaultApiSettings.ollamaMultimodalModel;
-                saveSetting(localModelSelect);
+                if (localModelSelect.dataset.storageKey && localModelSelect.dataset.storageType) {
+                    saveSetting(localModelSelect);
+                } else {
+                    console.error("Cannot save default local model: Missing data attributes on select element.");
+                }
             }
         }
 
         if (cloudApiUrlInput) cloudApiUrlInput.value = savedApiSettings.cloudApiUrl ?? defaultApiSettings.cloudApiUrl;
         if (cloudProxyUrlInput) cloudProxyUrlInput.value = savedApiSettings.cloudProxyUrl ?? defaultApiSettings.cloudProxyUrl;
+        if (cloudApiKeyInput) cloudApiKeyInput.value = savedApiSettings.cloudApiKey ?? defaultApiSettings.cloudApiKey;
+        if (cloudModelNameInput) cloudModelNameInput.value = savedApiSettings.cloudModelName ?? defaultApiSettings.cloudModelName;
 
         const savedMethod = savedApiSettings.cloudApiMethod ?? defaultApiSettings.cloudApiMethod;
-        const directRadio = document.getElementById('cloud-method-direct');
-        const proxyRadio = document.getElementById('cloud-method-proxy');
         if (directRadio && proxyRadio) {
             if (savedMethod === 'proxy') {
                 proxyRadio.checked = true;
@@ -178,17 +215,12 @@ function loadOptions() {
             }
         }
 
-        if (cloudApiKeyInput) cloudApiKeyInput.value = savedApiSettings.cloudApiKey ?? defaultApiSettings.cloudApiKey;
-        if (cloudModelNameInput) cloudModelNameInput.value = savedApiSettings.cloudModelName ?? defaultApiSettings.cloudModelName;
-
-        if (sttSelect) sttSelect.value = currentVoiceSettings.sttLanguage;
-
         if (systemPromptTextarea) systemPromptTextarea.value = savedPrompts.system_prompt ?? defaultPrompts.system_prompt;
         if (screenshotPromptTextarea) screenshotPromptTextarea.value = savedPrompts.screenshot_prompt ?? defaultPrompts.screenshot_prompt;
         if (scrollingScreenshotPromptTextarea) scrollingScreenshotPromptTextarea.value = savedPrompts.scrollingScreenshot_prompt ?? defaultPrompts.scrollingScreenshot_prompt;
         if (analyzeContentPromptTextarea) analyzeContentPromptTextarea.value = savedPrompts.analyzeContent_prompt ?? defaultPrompts.analyzeContent_prompt;
 
-        populateVoiceList();
+        updateCloudUrlVisibility();
 
     });
 }
@@ -235,6 +267,10 @@ function saveSetting(element) {
             } else {
                 console.log(`${storageKey} saved successfully:`, value);
                 showNotification('Saved Changes!');
+
+                if (element.name === 'cloudApiMethod') {
+                    updateCloudUrlVisibility();
+                }
             }
         });
     });
@@ -280,9 +316,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const inputsToSave = document.querySelectorAll('input[data-storage-key], textarea[data-storage-key]');
     inputsToSave.forEach(input => {
-        input.addEventListener('blur', () => saveSetting(input));
-        if (input.type === 'text' || input.type === 'password') {
-            input.addEventListener('keypress', (e) => { if (e.key === 'Enter') { saveSetting(input); input.blur(); } });
+        if (input.type !== 'radio') {
+            input.addEventListener('blur', () => saveSetting(input));
+            if (input.type === 'text' || input.type === 'password') {
+                input.addEventListener('keypress', (e) => { if (e.key === 'Enter') { saveSetting(input); input.blur(); } });
+            }
         }
     });
 
@@ -301,6 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetButton = document.getElementById('reset-button');
     if (resetButton) { resetButton.addEventListener('click', resetToDefaults); }
     else { console.error("Reset button not found!"); }
+
 });
 
 export { promptsStorageKey, defaultPrompts };
