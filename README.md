@@ -87,7 +87,7 @@ and unzip it.
 
    | GPU VRAM | Recommend Model | Command                 |
    | -------- | --------------- | ----------------------- |
-   | <= 8GB   | Gemma 3 4B      | `ollama run gemma3:4b`  |
+   | >= 6GB   | Gemma 3 4B      | `ollama run gemma3:4b`  |
    | >= 10GB  | Gemma 3 12B     | `ollama run gemma3:12b` |
    | >= 20GB  | Gemma 3 27B     | `ollama run gemma3:27b` |
 
