@@ -44,7 +44,7 @@ export class VoiceController {
       console.log('Speech synthesis initialization finished.');
 
     } catch (error) {
-      console.error('Error during settings load or TTS initialization:', error);
+      console.error('Settings/TTS init error:', error);
       this.state.settings = { ...defaultVoiceSettings };
       this.state.synthesis.selectedVoice = null;
     }
@@ -53,8 +53,8 @@ export class VoiceController {
   initializeSpeechSynthesis() {
     return new Promise((resolve, reject) => {
       if (!this.state.synthesis.instance) {
-        console.error("SpeechSynthesis API not available.");
-        return reject(new Error("SpeechSynthesis API not available."));
+        console.error("TTS API missing.");
+        return reject(new Error("TTS API unavailable."));
       }
 
       let timeoutId = null;
@@ -67,10 +67,7 @@ export class VoiceController {
         console.log('Available TTS voices:', this.state.synthesis.voices.map(v => ({ name: v.name, lang: v.lang })));
 
         if (this.state.synthesis.voices.length === 0) {
-          console.warn('No TTS voices found immediately after event or timeout check.');
-          if (!timeoutId) {
-            return reject(new Error('No TTS voices found.'));
-          }
+          console.warn('No TTS voices found immediately.');
           return reject(new Error('No TTS voices found.'));
         }
 
@@ -79,37 +76,37 @@ export class VoiceController {
         let foundVoice = null;
 
         if (targetVoiceName) {
-          console.log(`Attempting to find TTS voice by name: "${targetVoiceName}"`);
+          console.log(`Attempting to find voice by name: "${targetVoiceName}"`);
           foundVoice = this.state.synthesis.voices.find(voice => voice.name === targetVoiceName);
           if (foundVoice) {
-            console.log(`Found voice by name: ${foundVoice.name} (${foundVoice.lang})`);
+            console.log(`Found voice: ${foundVoice.name} (${foundVoice.lang})`);
           } else {
-            console.warn(`Saved voice name "${targetVoiceName}" not found.`);
+            console.warn(`Voice name "${targetVoiceName}" not found.`);
           }
         }
 
         if (!foundVoice) {
-          console.log(targetVoiceName ? `Falling back to find by language: ${targetLang}` : `Finding voice by language: ${targetLang}`);
+          console.log(targetVoiceName ? `Falling back to language: ${targetLang}` : `Finding voice by language: ${targetLang}`);
           foundVoice = this.state.synthesis.voices.find(voice => voice.lang === targetLang);
 
           if (!foundVoice && targetLang && targetLang.includes('-')) {
             const baseLang = targetLang.split('-')[0];
-            console.log(`No exact match for ${targetLang}, trying base language variants starting with: ${baseLang}-`);
+            console.log(`No exact match for ${targetLang}, trying variant: ${baseLang}-`);
             foundVoice = this.state.synthesis.voices.find(voice => voice.lang.startsWith(baseLang + '-'));
             if (!foundVoice) {
-              console.log(`No regional variant found, trying exact base language: ${baseLang}`);
+              console.log(`Trying base language: ${baseLang}`);
               foundVoice = this.state.synthesis.voices.find(voice => voice.lang === baseLang);
             }
           }
         }
 
         if (!foundVoice) {
-          console.warn(`No specific voice found for language ${targetLang} or its base. Trying system default for this language.`);
+          console.warn(`No specific voice found for ${targetLang}. Trying system default.`);
           foundVoice = this.state.synthesis.voices.find(voice => voice.lang === targetLang && voice.default);
         }
 
         if (!foundVoice) {
-          console.warn(`No suitable voice found for ${targetLang}. Falling back to en-US.`);
+          console.warn(`No suitable voice for ${targetLang}. Falling back to en-US.`);
           foundVoice = this.state.synthesis.voices.find(voice => voice.lang === 'en-US');
           if (!foundVoice) {
             foundVoice = this.state.synthesis.voices.find(voice => voice.lang === 'en-US' && voice.default);
@@ -117,12 +114,12 @@ export class VoiceController {
         }
 
         if (!foundVoice) {
-          console.warn(`Fallback en-US voice not found. Trying overall system default voice.`);
+          console.warn(`Fallback en-US not found. Trying overall system default.`);
           foundVoice = this.state.synthesis.voices.find(voice => voice.default);
         }
 
         if (!foundVoice && this.state.synthesis.voices.length > 0) {
-          console.warn(`No default voice found. Using the first available voice: ${this.state.synthesis.voices[0].name}`);
+          console.warn(`No default voice. Using first available: ${this.state.synthesis.voices[0].name}`);
           foundVoice = this.state.synthesis.voices[0];
         }
 
@@ -131,20 +128,20 @@ export class VoiceController {
           this.state.synthesis.selectedVoice = foundVoice;
           resolve();
         } else {
-          console.error('Could not find ANY suitable TTS voice.');
+          console.error('No suitable TTS voice.');
           this.state.synthesis.selectedVoice = null;
           reject(new Error('No suitable TTS voice found.'));
         }
       };
 
       timeoutId = setTimeout(() => {
-        console.warn(`TTS voice initialization check timed out after ${TIMEOUT_DURATION}ms. Checking available voices now.`);
+        console.warn(`TTS voice init timeout (${TIMEOUT_DURATION}ms). Checking now.`);
         timeoutId = null;
         findAndSetVoice();
       }, TIMEOUT_DURATION);
 
       const onVoicesChanged = () => {
-        console.log("System 'voiceschanged' event fired.");
+        console.log("'voiceschanged' event fired.");
         findAndSetVoice();
       };
 
@@ -153,7 +150,7 @@ export class VoiceController {
         console.log("TTS voices available immediately.");
         findAndSetVoice();
       } else {
-        console.log("TTS voices not immediately available, waiting for 'voiceschanged' event or timeout...");
+        console.log("TTS voices not immediately available, waiting for event or timeout...");
         this.state.synthesis.instance.addEventListener('voiceschanged', onVoicesChanged, { once: true });
       }
     });
@@ -163,27 +160,27 @@ export class VoiceController {
     try {
       await this.state.synthesis.initializationPromise;
     } catch (initError) {
-      console.error("Cannot speak text because TTS initialization failed:", initError);
-      return Promise.reject(new Error("TTS not initialized, cannot speak."));
+      console.error("TTS init failed, cannot speak:", initError);
+      return Promise.reject(new Error("TTS not initialized."));
     }
 
     if (!this.state.synthesis.instance || !this.state.synthesis.selectedVoice) {
-      console.error("Speech synthesis not ready or no voice selected, even after initialization wait.");
-      return Promise.reject(new Error("TTS voice not available. Ensure TTS is enabled in your system/browser."));
+      console.error("TTS not ready or voice missing.");
+      return Promise.reject(new Error("TTS voice unavailable."));
     }
 
     this.state.synthesis.speakingPromise = this.state.synthesis.speakingPromise
       .catch((prevError) => {
-        console.warn("Previous speech ended with error or was cancelled:", prevError?.message);
+        console.warn("Previous speech ended:", prevError?.message);
       })
       .then(() => {
         if (!this.state.synthesis.instance || !this.state.synthesis.selectedVoice) {
-          console.error("TTS Instance or Voice became invalid before speak call.");
-          throw new Error("TTS Instance or Voice became invalid");
+          console.error("TTS state invalid before speak.");
+          throw new Error("TTS state invalid.");
         }
 
         if (this.state.synthesis.isSpeaking) {
-          console.log("Cancelling previous speech before starting new one.");
+          console.log("Cancelling previous speech.");
           this.state.synthesis.instance.cancel();
         }
 
@@ -195,7 +192,7 @@ export class VoiceController {
           utterance.pitch = 1.0;
           utterance.volume = 1.0;
 
-          console.log(`Attempting to speak: "${text.substring(0, 50)}..." with voice: ${utterance.voice.name} (${utterance.lang})`);
+          console.log(`Speaking: "${text.substring(0, 50)}..."`);
 
           let hasStarted = false;
           let utteranceTimeout = null;
@@ -203,10 +200,10 @@ export class VoiceController {
           const startTimeoutDuration = 20000;
           utteranceTimeout = setTimeout(() => {
             if (!hasStarted) {
-              console.error(`Utterance did not start within ${startTimeoutDuration}ms. Cancelling.`);
+              console.error(`Utterance start timeout (${startTimeoutDuration}ms). Cancelling.`);
               this.state.synthesis.instance?.cancel();
               this.state.synthesis.isSpeaking = false;
-              reject(new Error("Speech synthesis timed out starting."));
+              reject(new Error("Speech start timeout."));
             }
           }, startTimeoutDuration);
 
@@ -232,14 +229,14 @@ export class VoiceController {
           utterance.onerror = (event) => {
             if (utteranceTimeout) clearTimeout(utteranceTimeout);
             if (event.error === 'interrupted') {
-              console.log("Speech synthesis was interrupted (likely intentional).");
+              console.log("Speech interrupted.");
             } else {
-              console.error('Speech synthesis error:', event.error);
-              let errorMsg = event.error || 'Unknown speech synthesis error';
+              console.error('TTS error:', event.error);
+              let errorMsg = event.error || 'Unknown TTS error';
               if (event.error === 'synthesis-failed') {
-                errorMsg = "Synthesis failed. The voice might be unavailable or the text too long.";
+                errorMsg = "Synthesis failed.";
               } else if (event.error === 'audio-busy') {
-                errorMsg = "Audio output is busy. Please try again.";
+                errorMsg = "Audio busy.";
               }
               this.state.synthesis.isSpeaking = false;
               reject(new Error(errorMsg));
@@ -251,8 +248,8 @@ export class VoiceController {
 
           if (!this.state.synthesis.instance) {
             if (utteranceTimeout) clearTimeout(utteranceTimeout);
-            console.error("Synthesis instance lost just before speak()");
-            reject(new Error("Synthesis instance lost"));
+            console.error("TTS instance lost.");
+            reject(new Error("TTS instance lost."));
             return;
           }
 
@@ -260,7 +257,7 @@ export class VoiceController {
         });
       })
       .catch(error => {
-        console.error("Error encountered in speakText promise chain:", error);
+        console.error("speakText chain error:", error);
         this.state.synthesis.isSpeaking = false;
       });
 
@@ -268,12 +265,8 @@ export class VoiceController {
   }
 
   stopSpeaking() {
-    if (this.state.synthesis.instance && this.state.synthesis.instance.speaking) {
-      console.log("Explicitly stopping speech synthesis...");
-      this.state.synthesis.instance.cancel();
-      this.state.synthesis.isSpeaking = false;
-    } else if (this.state.synthesis.instance && this.state.synthesis.instance.pending) {
-      console.log("Explicitly clearing pending speech synthesis queue...");
+    if (this.state.synthesis.instance && (this.state.synthesis.instance.speaking || this.state.synthesis.instance.pending)) {
+      console.log("Stopping speech synthesis...");
       this.state.synthesis.instance.cancel();
       this.state.synthesis.isSpeaking = false;
     }
@@ -288,19 +281,19 @@ export class VoiceController {
     try {
       await this.state.synthesis.initializationPromise;
     } catch (error) {
-      console.error("TTS Initialization failed, voice output might not work.", error);
+      console.error("TTS init failed.", error);
     }
 
     this.initializeVoiceInput();
 
     chrome.storage.onChanged.addListener((changes, namespace) => {
       if (namespace === 'local' && changes[voiceSettingsStorageKey]) {
-        console.log('Voice settings changed in storage, reloading...');
+        console.log('Voice settings changed, reloading...');
         this.loadSettingsAndInitTTS().then(() => {
           if (this.state.input.recognition) {
             const newSttLang = this.state.settings.sttLanguage;
             if (this.state.input.recognition.lang !== newSttLang) {
-              console.log(`Updating STT language to: ${newSttLang} after settings change.`);
+              console.log(`Updating STT language to: ${newSttLang}`);
               if (this.state.input.active) {
                 this.stopVoiceInput();
               }
@@ -310,7 +303,7 @@ export class VoiceController {
             this.initializeVoiceInput();
           }
         }).catch(err => {
-          console.error("Error reloading settings after change:", err);
+          console.error("Settings reload error:", err);
         });
       }
     });
@@ -320,7 +313,7 @@ export class VoiceController {
     const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognitionAPI) {
-      console.error('Speech recognition not supported in this browser.');
+      console.error('STT not supported.');
       return;
     }
 
@@ -334,7 +327,7 @@ export class VoiceController {
       if (this.state.input.active) {
         this.stopVoiceInput();
       }
-      console.log(`Updating existing STT instance language to: ${targetSttLang}`);
+      console.log(`Updating STT language to: ${targetSttLang}`);
       this.state.input.recognition.lang = targetSttLang;
     } else {
       console.log(`Initializing STT with language: ${targetSttLang}`);
@@ -379,14 +372,14 @@ export class VoiceController {
             this.callbacks.handleSendMessage?.();
             this.stopVoiceInput();
           } else if (!interimTranscript) {
-            console.log("Silence detected, stopping input.");
+            console.log("Silence detected.");
             this.stopVoiceInput();
           }
         }, 500);
       };
 
       recognition.onerror = (event) => {
-        console.error('Voice input error:', event.error);
+        console.error('STT error:', event.error);
         this.stopVoiceInput();
       };
 
@@ -408,177 +401,128 @@ export class VoiceController {
     }
   }
 
+  reportPermissionError(error, context) {
+    const prefix = `Mic perm ${context} error`;
+    console.error(`${prefix}:`, error);
+
+    let userMessage = 'Microphone error.';
+    let speakMessage = 'Microphone error.';
+
+    const errorMessage = error.message || '';
+
+    if (context === 'initial check') {
+      if (errorMessage.includes('Permission denied by user')) {
+        userMessage = 'Microphone access denied.';
+        speakMessage = 'Access denied.';
+      } else if (errorMessage.includes('No active tab found')) {
+        userMessage = 'Could not find active tab.';
+        speakMessage = 'No active tab.';
+      } else if (errorMessage.includes('Permissions API missing')) {
+        userMessage = 'Cannot check permission status.';
+        speakMessage = 'Checking error.';
+      } else {
+        userMessage = `Error during permission check: ${errorMessage}`;
+        speakMessage = 'Check error.';
+      }
+    } else if (context === 'prompt response') {
+      userMessage = 'Microphone access not granted.';
+      speakMessage = 'Access not granted.';
+    } else if (context === 'prompt request attempt') {
+      if (errorMessage.includes("Could not establish connection") || errorMessage.includes("Cannot access contents of url") || errorMessage.includes("Frame with ID")) {
+        userMessage = 'Please try turning on Voice Input on a valid website.';
+        speakMessage = 'Please try turning on Voice Input on a valid website.';
+      } else if (errorMessage.includes("Script inject failed")) {
+        userMessage = `Please try turning on Voice Input on a valid website.`;
+        speakMessage = 'Please try turning on Voice Input on a valid website.';
+      } else if (errorMessage.includes("Could not find active tab")) {
+        userMessage = 'Could not find active tab.';
+        speakMessage = 'No active tab.';
+      }
+      else {
+        userMessage = `Error requesting permission: ${errorMessage}`;
+        speakMessage = 'Request error.';
+      }
+    } else {
+      userMessage = `Unknown microphone error: ${errorMessage}`;
+      speakMessage = 'Error.';
+    }
+
+    this.callbacks.appendMessage?.('system', userMessage);
+    this.speakText(speakMessage).catch(e => console.error("Speak error after perm fail:", e));
+  }
+
+
   async requestMicrophonePermission() {
     try {
-      if (!navigator.permissions || typeof navigator.permissions.query !== 'function') {
-        console.warn("Navigator Permissions API not available. Attempting direct getUserMedia call trigger.");
-        throw new Error('Permissions API unavailable');
+      if (navigator.permissions && typeof navigator.permissions.query === 'function') {
+        const permissionStatus = await navigator.permissions.query({ name: 'microphone' });
+        console.log(`Mic perm status: ${permissionStatus.state}`);
+        if (permissionStatus.state === 'granted') return true;
+        if (permissionStatus.state === 'denied') {
+          this.reportPermissionError(new Error('Permission denied by user'), 'initial check');
+          return false;
+        }
+        console.log("Mic perm state is 'prompt'. Proceeding to request via iframe.");
+      } else {
+        console.warn("Permissions API missing or query unavailable. Proceeding to request via iframe (fallback).");
       }
 
-      const permissionStatus = await navigator.permissions.query({ name: 'microphone' });
-      console.log(`Microphone permission status: ${permissionStatus.state}`);
-
-      if (permissionStatus.state === 'granted') {
-        console.log("Microphone permission already granted.");
-        return true;
-      } else if (permissionStatus.state === 'denied') {
-        console.log("Microphone permission denied by user.");
-        this.callbacks.appendMessage?.('system', 'Microphone access denied. Please enable it in browser settings and try again.');
-        this.speakText('Microphone access denied.').catch(e => console.error("Error speaking permission denied message:", e));
-        return false;
-      } else {
-        console.log(`Microphone permission state is 'prompt'. Requesting via content script iframe.`);
-
-        return new Promise(async (resolve) => {
-          let listenerInstalled = false;
-          const messageListener = (message, sender, sendResponse) => {
-            if (message && message.type === "micPermissionResult") {
-              console.log("Received permission result from iframe:", message.status);
-              if (listenerInstalled) {
-                chrome.runtime.onMessage.removeListener(messageListener);
-                listenerInstalled = false;
-              }
-              if (message.status === "granted") {
-                this.speakText('Microphone access granted.').catch(e => console.error("Error speaking grant confirmation:", e));
-                resolve(true);
-              } else {
-                this.callbacks.appendMessage?.('system', 'Microphone access was not granted.');
-                this.speakText('Access not granted.').catch(e => console.error("Error speaking denial confirmation:", e));
-                resolve(false);
-              }
-            }
-          };
-
-          try {
-            chrome.runtime.onMessage.addListener(messageListener);
-            listenerInstalled = true;
-
-            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            if (tab && tab.id) {
-              console.log(`Attempting to inject content script into tab ${tab.id}...`);
-              try {
-                await chrome.scripting.executeScript({
-                  target: { tabId: tab.id },
-                  files: ['permission/permissionContent.js']
-                });
-                console.log(`Content script potentially injected into tab ${tab.id}.`);
-              } catch (injectionError) {
-                if (injectionError.message.includes("Could not establish connection") || injectionError.message.includes("Cannot access contents of url") || injectionError.message.includes("Frame with ID")) {
-                  console.warn(`Could not inject content script into tab ${tab.id} (may be restricted page or already injected): ${injectionError.message}`);
-                } else {
-                  console.error(`Failed to inject content script into tab ${tab.id}:`, injectionError);
-                  throw new Error(`Failed to prepare page script: ${injectionError.message}`);
-                }
-              }
-
-              console.log(`Sending requestMicPermission message to tab ${tab.id}...`);
-              await chrome.tabs.sendMessage(tab.id, { action: "requestMicPermission" });
-              console.log("Message sent to content script to request permission.");
-              this.callbacks.appendMessage?.('system', 'Please allow microphone access in the browser prompt.');
-              this.speakText('Please allow microphone access.').catch(e => console.error("Error speaking prompt instruction:", e));
-
-            } else {
-              throw new Error("Could not find the active tab.");
-            }
-          } catch (error) {
-            console.error('Error initiating microphone permission request:', error);
+      return new Promise(async (resolve) => {
+        let listenerInstalled = false;
+        const messageListener = (message, sender, sendResponse) => {
+          if (message && message.type === "micPermissionResult") {
+            console.log("Received perm result from iframe:", message.status);
             if (listenerInstalled) {
               chrome.runtime.onMessage.removeListener(messageListener);
-              listenerInstalled = false;
             }
-            let errorMsg = `Error requesting permission: ${error.message || 'Unknown error'}`;
-            let speakMsg = 'Error requesting permission.';
-            if (error.message && error.message.includes("Could not establish connection")) {
-              errorMsg = 'Cannot connect to page script. Reload the page or check if the page is restricted.';
-              speakMsg = 'Cannot connect to page script.';
-            } else if (error.message.includes("Failed to prepare page script")) {
-              errorMsg = error.message;
-              speakMsg = 'Failed to prepare page script.';
+            if (message.status === "granted") {
+              this.speakText('Access granted.').catch(e => console.error("Speak error:", e));
+              resolve(true);
+            } else {
+              this.reportPermissionError(new Error('Permission not granted via prompt'), 'prompt response');
+              resolve(false);
             }
-            this.callbacks.appendMessage?.('system', errorMsg);
-            this.speakText(speakMsg).catch(e => console.error("Error speaking permission request error message:", e));
-            resolve(false);
           }
-        });
-      }
+        };
+
+        try {
+          chrome.runtime.onMessage.addListener(messageListener);
+          listenerInstalled = true;
+
+          const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+          if (!tab || !tab.id) throw new Error("Could not find active tab.");
+
+          try {
+            await chrome.scripting.executeScript({
+              target: { tabId: tab.id },
+              files: ['permission/permissionContent.js']
+            });
+            console.log(`Script injected into tab ${tab.id}.`);
+          } catch (injectionError) {
+            let consoleMsg = `Script inject failed for tab ${tab.id}.`;
+            if (injectionError.message.includes("Could not establish connection") || injectionError.message.includes("Cannot access contents of url") || injectionError.message.includes("Frame with ID")) {
+              consoleMsg += " (May be restricted page)";
+            }
+            console.error(consoleMsg, injectionError);
+            throw new Error(`Script inject failed: ${injectionError.message}`);
+          }
+
+          console.log(`Sending perm request to tab ${tab.id}...`);
+          await chrome.tabs.sendMessage(tab.id, { action: "requestMicPermission" });
+          console.log("Perm request sent.");
+          this.callbacks.appendMessage?.('system', 'Please allow microphone access.');
+          this.speakText('Please allow microphone access.').catch(e => console.error("Speak error:", e));
+
+        } catch (error) {
+          this.reportPermissionError(error, 'prompt request attempt');
+          if (listenerInstalled) chrome.runtime.onMessage.removeListener(messageListener);
+          resolve(false);
+        }
+      });
+
     } catch (error) {
-      console.error('Error checking/requesting microphone permission:', error);
-      let message = '';
-      let speakMsg = '';
-      if (error.message === 'Permissions API unavailable') {
-        message = 'Cannot check permission status. Attempting direct request.';
-        speakMsg = 'Requesting microphone access.';
-        this.callbacks.appendMessage?.('system', message);
-        return new Promise(async (resolve) => {
-          let listenerInstalled = false;
-          const messageListener = (message, sender, sendResponse) => {
-            if (message && message.type === "micPermissionResult") {
-              console.log("Received permission result from iframe (fallback):", message.status);
-              if (listenerInstalled) {
-                chrome.runtime.onMessage.removeListener(messageListener);
-                listenerInstalled = false;
-              }
-              resolve(message.status === "granted");
-            }
-          };
-
-          try {
-            chrome.runtime.onMessage.addListener(messageListener);
-            listenerInstalled = true;
-
-            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            if (tab && tab.id) {
-              console.log(`Attempting to inject content script into tab ${tab.id} (fallback)...`);
-              try {
-                await chrome.scripting.executeScript({
-                  target: { tabId: tab.id },
-                  files: ['permission/permissionContent.js']
-                });
-                console.log(`Content script potentially injected into tab ${tab.id} (fallback).`);
-              } catch (injectionError) {
-                if (injectionError.message.includes("Could not establish connection") || injectionError.message.includes("Cannot access contents of url") || injectionError.message.includes("Frame with ID")) {
-                  console.warn(`Could not inject content script into tab ${tab.id} (fallback, maybe restricted): ${injectionError.message}`);
-                } else {
-                  console.error(`Failed to inject content script into tab ${tab.id} (fallback):`, injectionError);
-                  throw new Error(`Failed to prepare page script (fallback): ${injectionError.message}`);
-                }
-              }
-
-              console.log(`Sending requestMicPermission message to tab ${tab.id} (fallback)...`);
-              await chrome.tabs.sendMessage(tab.id, { action: "requestMicPermission" });
-              this.callbacks.appendMessage?.('system', 'Attempting to request microphone access. Please check the browser prompt.');
-              this.speakText(speakMsg).catch(e => console.error("Error speaking fallback prompt instruction:", e));
-            } else {
-              throw new Error("Could not find the active tab (fallback).");
-            }
-          } catch (fallbackError) {
-            console.error('Error initiating microphone permission request (fallback):', fallbackError);
-            if (listenerInstalled) {
-              chrome.runtime.onMessage.removeListener(messageListener);
-              listenerInstalled = false;
-            }
-            message = `Error requesting permission (fallback): ${fallbackError.message || 'Unknown error'}`;
-            speakMsg = 'Error requesting permission.';
-            if (fallbackError.message && fallbackError.message.includes("Could not establish connection")) {
-              message = 'Cannot connect to page script (fallback). Reload the page or check if restricted.';
-              speakMsg = 'Cannot connect to page script.';
-            } else if (fallbackError.message.includes("Failed to prepare page script")) {
-              message = fallbackError.message;
-              speakMsg = 'Failed to prepare page script.';
-            }
-            this.callbacks.appendMessage?.('system', message);
-            this.speakText(speakMsg).catch(e => console.error("Error speaking fallback error message:", e));
-            resolve(false);
-          }
-        });
-
-      } else {
-        message = `Error checking permission: ${error.message || 'Unknown error'}`;
-        speakMsg = 'Error checking permission.';
-        this.callbacks.appendMessage?.('system', message);
-        this.speakText(speakMsg).catch(e => console.error("Error speaking permission check error message:", e));
-        return false;
-      }
+      this.reportPermissionError(error, 'initial check');
+      return false;
     }
   }
 
@@ -588,7 +532,7 @@ export class VoiceController {
     if (!this.state.input.recognition) {
       this.initializeVoiceInput();
       if (!this.state.input.recognition) {
-        console.error("Cannot toggle: Speech recognition failed to initialize.");
+        console.error("Toggle failed: STT init failed.");
         return;
       }
     }
@@ -612,33 +556,34 @@ export class VoiceController {
       }
 
       if (!this.state.input.recognition) {
-        console.error("Recognition engine not available.");
+        console.error("STT engine missing.");
         this.initializeVoiceInput();
         if (!this.state.input.recognition) {
-          console.error("Re-initialization of recognition engine failed.");
+          console.error("STT re-init failed.");
           return;
         }
       }
 
       if (this.state.input.recognition.lang !== this.state.settings.sttLanguage) {
-        console.log(`Updating STT language to ${this.state.settings.sttLanguage} before starting.`);
+        console.log(`Updating STT language to ${this.state.settings.sttLanguage}.`);
         this.state.input.recognition.lang = this.state.settings.sttLanguage;
       }
 
-      console.log('Starting recognition with lang:', this.state.input.recognition.lang);
+      console.log('Starting STT with lang:', this.state.input.recognition.lang);
       this.state.input.recognition.start();
 
     } catch (error) {
       if (error.name === 'InvalidStateError') {
-        console.warn("Attempted to start recognition in an invalid state (already started or stopping?).");
+        console.warn("STT start failed: InvalidStateError.");
         if (!this.state.input.active) {
           this.callbacks.updateVoiceInputButtonState?.(false);
         }
       } else if (error.name === 'NotAllowedError') {
-        console.error("Voice input start failed: Permission denied.");
+        console.error("STT start failed: Perm denied.");
+        this.reportPermissionError(new Error('Permission denied during start'), 'start attempt');
       }
       else {
-        console.error('Failed to start voice input:', error);
+        console.error('STT start failed:', error);
         if (this.state.input.active) {
           this.stopVoiceInput();
         }
@@ -656,7 +601,7 @@ export class VoiceController {
 
     if (this.state.input.active) {
       try {
-        console.log("Attempting to stop voice input recognition...");
+        console.log("Stopping STT recognition...");
         this.state.input.recognition.stop();
         this.state.input.active = false;
         this.callbacks.updateVoiceInputButtonState?.(false);
@@ -665,17 +610,17 @@ export class VoiceController {
 
       } catch (error) {
         if (error.name === 'InvalidStateError') {
-          console.warn("Attempted to stop recognition that was not active or already stopping.");
+          console.warn("STT stop failed: InvalidStateError.");
           this.state.input.active = false;
           this.callbacks.updateVoiceInputButtonState?.(false);
           const userInput = document.getElementById('user-input');
           if (userInput) userInput.placeholder = 'Type your message here...';
         } else {
-          console.error('Error stopping voice input:', error);
+          console.error('STT stop failed:', error);
         }
       }
     } else {
-      console.log("StopVoiceInput called but input was not marked as active.");
+      console.log("STT stop called but not active.");
       this.callbacks.updateVoiceInputButtonState?.(false);
       const userInput = document.getElementById('user-input');
       if (userInput) userInput.placeholder = 'Type your message here...';
@@ -683,7 +628,7 @@ export class VoiceController {
   }
 
   cleanup() {
-    console.log("Cleaning up VoiceController resources...");
+    console.log("Cleaning up VoiceController...");
     this.stopSpeaking();
     this.stopVoiceInput();
     if (this.state.input.recognition) {
