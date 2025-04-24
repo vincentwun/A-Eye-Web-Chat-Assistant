@@ -23,8 +23,8 @@ class AIScreenReader {
             cloudApiUrl: defaultApiSettings.cloudApiUrl,
             cloudApiKey: defaultApiSettings.cloudApiKey,
             cloudModelName: defaultApiSettings.cloudModelName,
-            cloudApiMethod: defaultApiSettings.cloudApiMethod, // Added
-            cloudProxyUrl: defaultApiSettings.cloudProxyUrl,   // Added
+            cloudApiMethod: defaultApiSettings.cloudApiMethod,
+            cloudProxyUrl: defaultApiSettings.cloudProxyUrl,
             isProcessing: false,
             messages: [],
             lastCommandTime: 0,
@@ -204,8 +204,8 @@ class AIScreenReader {
                 this.state.cloudApiUrl = newSettings.cloudApiUrl || defaultApiSettings.cloudApiUrl;
                 this.state.cloudApiKey = newSettings.cloudApiKey ?? defaultApiSettings.cloudApiKey;
                 this.state.cloudModelName = newSettings.cloudModelName || defaultApiSettings.cloudModelName;
-                this.state.cloudApiMethod = newSettings.cloudApiMethod || defaultApiSettings.cloudApiMethod; // Added
-                this.state.cloudProxyUrl = newSettings.cloudProxyUrl || defaultApiSettings.cloudProxyUrl;   // Added
+                this.state.cloudApiMethod = newSettings.cloudApiMethod || defaultApiSettings.cloudApiMethod;
+                this.state.cloudProxyUrl = newSettings.cloudProxyUrl || defaultApiSettings.cloudProxyUrl;
                 settingsChanged = true;
             }
             if (changes[this.promptsStorageKey]) {
@@ -238,8 +238,8 @@ class AIScreenReader {
             this.state.cloudApiUrl = this.state.cloudApiUrl ?? defaultApiSettings.cloudApiUrl;
             this.state.cloudApiKey = this.state.cloudApiKey ?? defaultApiSettings.cloudApiKey;
             this.state.cloudModelName = this.state.cloudModelName ?? defaultApiSettings.cloudModelName;
-            this.state.cloudApiMethod = defaultApiSettings.cloudApiMethod; // Ensure default on error
-            this.state.cloudProxyUrl = defaultApiSettings.cloudProxyUrl;   // Ensure default on error
+            this.state.cloudApiMethod = defaultApiSettings.cloudApiMethod;
+            this.state.cloudProxyUrl = defaultApiSettings.cloudProxyUrl;
             this.prompts = this.prompts ?? { ...defaultPrompts };
             this.state.settingsLoaded = false;
         }
@@ -256,8 +256,8 @@ class AIScreenReader {
             this.state.cloudApiUrl = savedSettings.cloudApiUrl || defaultApiSettings.cloudApiUrl;
             this.state.cloudApiKey = savedSettings.cloudApiKey ?? defaultApiSettings.cloudApiKey;
             this.state.cloudModelName = savedSettings.cloudModelName || defaultApiSettings.cloudModelName;
-            this.state.cloudApiMethod = savedSettings.cloudApiMethod || defaultApiSettings.cloudApiMethod; // Added
-            this.state.cloudProxyUrl = savedSettings.cloudProxyUrl || defaultApiSettings.cloudProxyUrl;   // Added
+            this.state.cloudApiMethod = savedSettings.cloudApiMethod || defaultApiSettings.cloudApiMethod;
+            this.state.cloudProxyUrl = savedSettings.cloudProxyUrl || defaultApiSettings.cloudProxyUrl;
             this.prompts = { ...defaultPrompts, ...savedPrompts };
         } catch (error) {
             this.handleError('Error loading settings/prompts. Using default values.');
@@ -267,8 +267,8 @@ class AIScreenReader {
             this.state.cloudApiUrl = defaultApiSettings.cloudApiUrl;
             this.state.cloudApiKey = defaultApiSettings.cloudApiKey;
             this.state.cloudModelName = defaultApiSettings.cloudModelName;
-            this.state.cloudApiMethod = defaultApiSettings.cloudApiMethod; // Ensure default on error
-            this.state.cloudProxyUrl = defaultApiSettings.cloudProxyUrl;   // Ensure default on error
+            this.state.cloudApiMethod = defaultApiSettings.cloudApiMethod;
+            this.state.cloudProxyUrl = defaultApiSettings.cloudProxyUrl;
             this.prompts = { ...defaultPrompts };
             throw error;
         }
@@ -368,8 +368,8 @@ class AIScreenReader {
             cloudApiUrl: this.state.cloudApiUrl,
             cloudApiKey: this.state.cloudApiKey,
             cloudModelName: this.state.cloudModelName,
-            cloudApiMethod: this.state.cloudApiMethod, // Passes the method
-            cloudProxyUrl: this.state.cloudProxyUrl,   // Passes the proxy URL
+            cloudApiMethod: this.state.cloudApiMethod,
+            cloudProxyUrl: this.state.cloudProxyUrl,
             activeApiMode: this.state.activeApiMode
         };
     }

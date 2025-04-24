@@ -11,6 +11,8 @@ function stripBase64Prefix(dataUrl) {
   return dataUrl.substring(commaIndex + 1);
 }
 
+const MAX_HISTORY_MESSAGES = 10;
+
 export class ApiService {
 
   async _sendOllamaRequest(apiConfig, messagesHistory, currentPayload, rawBase64, mimeType, systemPrompt) {
@@ -28,7 +30,6 @@ export class ApiService {
     const headers = { 'Content-Type': 'application/json' };
     let body;
 
-    const MAX_HISTORY_MESSAGES = 10;
     const relevantHistory = messagesHistory.slice(-MAX_HISTORY_MESSAGES);
     const ollamaMessages = [];
 
@@ -157,7 +158,6 @@ export class ApiService {
 
     let body;
 
-    const MAX_HISTORY_MESSAGES = 10;
     const relevantHistory = messagesHistory.slice(-MAX_HISTORY_MESSAGES);
     const geminiContents = [];
 

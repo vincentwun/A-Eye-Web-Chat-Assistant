@@ -200,7 +200,7 @@ export class VoiceController {
           let hasStarted = false;
           let utteranceTimeout = null;
 
-          const startTimeoutDuration = 10000;
+          const startTimeoutDuration = 20000;
           utteranceTimeout = setTimeout(() => {
             if (!hasStarted) {
               console.error(`Utterance did not start within ${startTimeoutDuration}ms. Cancelling.`);
