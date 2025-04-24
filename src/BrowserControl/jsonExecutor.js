@@ -19,8 +19,10 @@ export async function executeJSON(actions, dependencies) {
           result = { status: 'Navigated', url: action.url };
           break;
         case 'click':
-          if (!action.selector) throw new Error("Click action requires 'selector'.");
-          result = await executeScriptOnTab(tab.id, clickElement, [action.selector]);
+          if (!action.selector || typeof action.text !== 'string') {
+            throw new Error("Click action requires 'selector' and 'text'.");
+          }
+          result = await executeScriptOnTab(tab.id, clickElement, [action.selector, action.text]);
           break;
         case 'type':
           if (!action.selector || typeof action.text !== 'string') throw new Error("Type action requires 'selector' and 'text'.");

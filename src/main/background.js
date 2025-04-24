@@ -224,20 +224,64 @@ async function getPageDimensions(tabId) {
   }
 }
 
-function clickElement(selector) {
+function clickElement(selector, expectedText) {
   try {
-    const element = document.querySelector(selector);
-    if (!element) throw new Error(`Element not found: ${selector}`);
-    if (typeof element.click !== 'function') throw new Error(`Element is not clickable: ${selector}`);
-    const style = window.getComputedStyle(element);
-    const rect = element.getBoundingClientRect();
-    if (style.visibility === 'hidden' || style.display === 'none' || rect.width === 0 || rect.height === 0) {
-      if (typeof element.focus === 'function') { element.focus(); console.warn(`Click: Element ${selector} not visible, attempting click after focus.`); }
-      else throw new Error(`Element is not visible: ${selector}`);
+    const elements = document.querySelectorAll(selector);
+    if (elements.length === 0) {
+      throw new Error(`Element not found with selector: ${selector}`);
     }
-    element.click();
-    return { status: 'Clicked', selector };
-  } catch (error) { return { error: `Click failed: ${error.message}` }; }
+
+    let targetElement = null;
+    const expectedTrimmedText = expectedText.trim();
+
+    for (const element of elements) {
+
+      const actualText = (
+        element.getAttribute('aria-label')
+        || element.title
+        || element.innerText
+        || element.textContent
+        || ''
+      ).replace(/\s+/g, ' ').trim();
+
+
+      if (actualText === expectedTrimmedText) {
+        targetElement = element;
+        break;
+      }
+    }
+
+    if (!targetElement) {
+      const foundTexts = Array.from(elements).map(el => (
+        el.getAttribute('aria-label') || el.title || el.innerText || el.textContent || ''
+      ).replace(/\s+/g, ' ').trim().substring(0, 50)
+      );
+      throw new Error(`Element found with selector "${selector}", but none had the matching text "${expectedText}". Found texts snippets: ["${foundTexts.join('", "')}"]`);
+    }
+
+    if (typeof targetElement.click !== 'function') {
+      throw new Error(`Element found (${selector} with text "${expectedText}") is not clickable.`);
+    }
+
+    const style = window.getComputedStyle(targetElement);
+    const rect = targetElement.getBoundingClientRect();
+
+    if (style.visibility === 'hidden' || style.display === 'none' || rect.width === 0 || rect.height === 0) {
+      if (typeof targetElement.focus === 'function') {
+        targetElement.focus();
+        console.warn(`Click: Element (${selector} / "${expectedText}") not visible, attempting click after focus.`);
+      } else {
+        throw new Error(`Element (${selector} / "${expectedText}") is not visible or focusable.`);
+      }
+    }
+
+    targetElement.click();
+
+    return { status: 'Clicked', selector: selector, text: expectedText };
+
+  } catch (error) {
+    return { error: `Click failed for selector "${selector}" and text "${expectedText}": ${error.message}` };
+  }
 }
 
 function typeInElement(selector, text) {
@@ -283,7 +327,7 @@ function simulateKeyPress(selector, keyToPress) {
 
 function findAllInteractableElements() {
 
-  function isVisible(element) { /* ... Keep implementation from previous step ... */
+  function isVisible(element) {
     if (!element || !element.tagName) return false; if (!document.body.contains(element)) return false;
     const style = window.getComputedStyle(element); if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) return false;
     const rect = element.getBoundingClientRect();
@@ -291,7 +335,7 @@ function findAllInteractableElements() {
     let parent = element.parentElement; while (parent && parent !== document.body) { const parentStyle = window.getComputedStyle(parent); if (parentStyle.display === 'none') return false; if (parentStyle.overflow === 'hidden' || parentStyle.overflowX === 'hidden' || parentStyle.overflowY === 'hidden') { const parentRect = parent.getBoundingClientRect(); if (parentRect.width > 0 && parentRect.height > 0) { const elementCenterY = rect.top + rect.height / 2; const elementCenterX = rect.left + rect.width / 2; if (elementCenterY < parentRect.top || elementCenterY > parentRect.bottom || elementCenterX < parentRect.left || elementCenterX > parentRect.right) { /* return false; */ } } } parent = parent.parentElement; } return true;
   }
 
-  function generateSelector(element) { /* ... Keep implementation from previous step ... */
+  function generateSelector(element) {
     if (!element || !element.tagName) return null; try { const testAttrs = ['data-testid', 'data-cy', 'data-test-id']; for (const attr of testAttrs) { const value = element.getAttribute(attr); if (value) { const testSelector = `${element.tagName.toLowerCase()}[${attr}="${CSS.escape(value)}"]`; if (document.querySelectorAll(testSelector).length === 1) return testSelector; } } if (element.id) { const idSelector = `#${CSS.escape(element.id)}`; try { if (document.querySelectorAll(idSelector).length === 1) return idSelector; } catch (idError) { console.warn(`ID selector failed for #${element.id}: ${idError.message}`); } } const nameAttr = element.getAttribute('name'); if (nameAttr) { const nameSelector = `${element.tagName.toLowerCase()}[name="${CSS.escape(nameAttr)}"]`; if (document.querySelectorAll(nameSelector).length === 1) return nameSelector; } const classes = Array.from(element.classList).filter(c => c.trim() !== '').map(c => `.${CSS.escape(c)}`).join(''); if (classes) { const classSelector = element.tagName.toLowerCase() + classes; try { if (document.querySelectorAll(classSelector).length === 1) return classSelector; } catch (classError) { console.warn(`Class selector failed for ${classSelector}: ${classError.message}`); } } if (nameAttr && classes) { const tagNameClassSelector = `${element.tagName.toLowerCase()}[name="${CSS.escape(nameAttr)}"]${classes}`; if (document.querySelectorAll(tagNameClassSelector).length === 1) return tagNameClassSelector; } return classes ? element.tagName.toLowerCase() + classes : element.tagName.toLowerCase(); } catch (e) { console.warn("Error generating selector for element:", element, e); return element.tagName.toLowerCase(); }
   }
 
