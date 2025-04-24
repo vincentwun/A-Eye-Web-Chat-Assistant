@@ -71,7 +71,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'executeActions' && Array.isArray(request.actions)) {
     const jsonDependencies = {
       getCurrentTab, executeScriptOnTab, waitForTabLoad, delay,
-      clickElement, typeInElement, simulateKeyPress, scrollPage
+      clickElement, typeInElement, simulateKeyPress
     };
     executeJSON(request.actions, jsonDependencies)
       .then(results => {
@@ -279,27 +279,6 @@ function simulateKeyPress(selector, keyToPress) {
     if (canceled) console.log(`KeyPress: Default action for "${keyToPress}" on ${selector} was prevented.`);
     return { status: 'Key Pressed', selector, key: keyToPress };
   } catch (error) { return { error: `KeyPress (${keyToPress} on ${selector}) failed: ${error.message}` }; }
-}
-
-function scrollPage(direction, amount) {
-  try {
-    let x = 0, y = 0; const scrollAmount = (typeof amount === 'number' && amount > 0) ? amount : window.innerHeight * 0.8;
-    const scrollOptions = { behavior: 'smooth' };
-    const dirLower = String(direction).toLowerCase();
-    switch (dirLower) {
-      case 'down': y = scrollAmount; window.scrollBy({ top: y, ...scrollOptions }); break;
-      case 'up': y = -scrollAmount; window.scrollBy({ top: y, ...scrollOptions }); break;
-      case 'left': x = -scrollAmount; window.scrollBy({ left: x, ...scrollOptions }); break;
-      case 'right': x = scrollAmount; window.scrollBy({ left: x, ...scrollOptions }); break;
-      case 'top': window.scrollTo({ top: 0, ...scrollOptions }); return { status: 'Scrolled to top' };
-      case 'bottom': window.scrollTo({ top: document.body.scrollHeight, ...scrollOptions }); return { status: 'Scrolled to bottom' };
-      default:
-        const element = document.querySelector(direction);
-        if (element?.scrollIntoView) { element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' }); return { status: 'Scrolled to element', selector: direction }; }
-        throw new Error(`Invalid scroll direction or selector not found: ${direction}`);
-    }
-    return { status: 'Scrolled', direction, amount: scrollAmount };
-  } catch (error) { return { error: `Scroll failed: ${error.message}` }; }
 }
 
 function findAllInteractableElements() {

@@ -1,5 +1,5 @@
 export async function executeJSON(actions, dependencies) {
-  const { getCurrentTab, executeScriptOnTab, waitForTabLoad, delay, clickElement, typeInElement, simulateKeyPress, scrollPage } = dependencies;
+  const { getCurrentTab, executeScriptOnTab, waitForTabLoad, delay, clickElement, typeInElement, simulateKeyPress } = dependencies;
   let tab = await getCurrentTab();
   const results = [];
 
@@ -29,10 +29,6 @@ export async function executeJSON(actions, dependencies) {
         case 'keypress':
           if (!action.selector || !action.key) throw new Error("KeyPress action requires 'selector' and 'key'.");
           result = await executeScriptOnTab(tab.id, simulateKeyPress, [action.selector, action.key]);
-          break;
-        case 'scroll':
-          if (!action.direction) throw new Error("Scroll action requires 'direction'.");
-          result = await executeScriptOnTab(tab.id, scrollPage, [action.direction, action.amount]);
           break;
         default:
           if (actionType !== '') {
