@@ -171,17 +171,12 @@ export class VoiceController {
 
     this.state.synthesis.speakingPromise = this.state.synthesis.speakingPromise
       .catch((prevError) => {
-        console.warn("Previous speech ended:", prevError?.message);
+        console.warn("Previous speech ended with error/cancel:", prevError?.message);
       })
       .then(() => {
         if (!this.state.synthesis.instance || !this.state.synthesis.selectedVoice) {
-          console.error("TTS state invalid before speak.");
-          throw new Error("TTS state invalid.");
-        }
-
-        if (this.state.synthesis.isSpeaking) {
-          console.log("Cancelling previous speech.");
-          this.state.synthesis.instance.cancel();
+          console.error("TTS state invalid before creating speak promise.");
+          throw new Error("TTS state invalid (instance/voice missing).");
         }
 
         return new Promise((resolve, reject) => {
@@ -196,8 +191,8 @@ export class VoiceController {
 
           let hasStarted = false;
           let utteranceTimeout = null;
-
           const startTimeoutDuration = 20000;
+
           utteranceTimeout = setTimeout(() => {
             if (!hasStarted) {
               console.error(`Utterance start timeout (${startTimeoutDuration}ms). Cancelling.`);
@@ -218,9 +213,9 @@ export class VoiceController {
           utterance.onend = () => {
             if (utteranceTimeout) clearTimeout(utteranceTimeout);
             if (hasStarted) {
-              console.log("Speech finished.");
+              console.log("Speech finished normally.");
             } else {
-              console.log("Speech 'onend' fired but 'onstart' did not (likely cancelled).");
+              console.log("Speech 'onend' fired but 'onstart' did not (likely cancelled before starting).");
             }
             this.state.synthesis.isSpeaking = false;
             resolve();
@@ -228,8 +223,11 @@ export class VoiceController {
 
           utterance.onerror = (event) => {
             if (utteranceTimeout) clearTimeout(utteranceTimeout);
-            if (event.error === 'interrupted') {
-              console.log("Speech interrupted.");
+            this.state.synthesis.isSpeaking = false;
+
+            if (event.error === 'interrupted' || event.error === 'canceled') {
+              console.log(`Speech interrupted/cancelled (Error: ${event.error}).`);
+              resolve();
             } else {
               console.error('TTS error:', event.error);
               let errorMsg = event.error || 'Unknown TTS error';
@@ -238,18 +236,14 @@ export class VoiceController {
               } else if (event.error === 'audio-busy') {
                 errorMsg = "Audio busy.";
               }
-              this.state.synthesis.isSpeaking = false;
               reject(new Error(errorMsg));
-              return;
             }
-            this.state.synthesis.isSpeaking = false;
-            resolve();
           };
 
           if (!this.state.synthesis.instance) {
             if (utteranceTimeout) clearTimeout(utteranceTimeout);
-            console.error("TTS instance lost.");
-            reject(new Error("TTS instance lost."));
+            this.state.synthesis.isSpeaking = false;
+            reject(new Error("TTS instance lost before speak."));
             return;
           }
 
@@ -257,7 +251,7 @@ export class VoiceController {
         });
       })
       .catch(error => {
-        console.error("speakText chain error:", error);
+        console.error("speakText promise chain error:", error);
         this.state.synthesis.isSpeaking = false;
       });
 
@@ -268,9 +262,7 @@ export class VoiceController {
     if (this.state.synthesis.instance && (this.state.synthesis.instance.speaking || this.state.synthesis.instance.pending)) {
       console.log("Stopping speech synthesis...");
       this.state.synthesis.instance.cancel();
-      this.state.synthesis.isSpeaking = false;
     }
-    this.state.synthesis.speakingPromise = Promise.resolve();
   }
 
   setCallbacks(callbacks) {

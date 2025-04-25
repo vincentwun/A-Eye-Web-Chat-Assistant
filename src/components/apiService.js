@@ -246,7 +246,7 @@ export class ApiService {
     if (modelToUse === "gemini-2.5-flash-preview-04-17") {
       geminiPayload.generationConfig = {
         thinkingConfig: {
-          thinkingBudget: 800,
+          thinkingBudget: 256,
         }
       };
       console.log(`Adding thinkingConfig with budget ${geminiPayload.generationConfig.thinkingConfig.thinkingBudget} for model ${modelToUse}`);
