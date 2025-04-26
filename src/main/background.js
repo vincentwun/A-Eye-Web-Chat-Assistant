@@ -1,8 +1,8 @@
 import { defaultApiSettings, settingsStorageKey } from '../option/apiRoute.js';
 import { defaultPrompts, promptsStorageKey } from '../option/prompts.js';
 import { defaultVoiceSettings, voiceSettingsStorageKey } from '../option/voiceSettings.js';
-import { executeJSON } from '../BrowserControl/jsonExecutor.js';
-import { findElementsOnPage } from '../BrowserControl/elementFinder.js';
+import { executeJSON } from '../action/jsonExecutor.js';
+import { findElementsOnPage } from '../action/elementFinder.js';
 
 async function initializeDefaultSettings() {
   console.log('Checking and initializing default settings...');
