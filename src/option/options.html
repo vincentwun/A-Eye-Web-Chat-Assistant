@@ -40,11 +40,12 @@
         <div style="margin-top: 5px;">
             <input type="radio" id="cloud-method-direct" name="cloudApiMethod" value="direct"
                 data-storage-key="cloudApiMethod" data-storage-type="settings" checked>
-            <label for="cloud-method-direct" style="display: inline; font-weight: normal; margin-right: 15px;">Use Default Gemini URL</label>
+            <label for="cloud-method-direct" style="display: inline; font-weight: normal; margin-right: 15px;">Use
+                Default Gemini URL</label>
 
             <input type="radio" id="cloud-method-proxy" name="cloudApiMethod" value="proxy"
                 data-storage-key="cloudApiMethod" data-storage-type="settings">
-            <label for="cloud-method-proxy" style="display: inline; font-weight: normal;">Use Cloud Function</label>
+            <label for="cloud-method-proxy" style="display: inline; font-weight: normal;">Use API Gateway</label>
         </div>
     </div>
 
@@ -55,13 +56,13 @@
     </div>
 
     <div id="proxy-url-container">
-        <label for="cloud-proxy-url-input">Cloud Function Endpoint:</label>
+        <label for="cloud-proxy-url-input">API Gateway Endpoint:</label>
         <input type="text" id="cloud-proxy-url-input" data-storage-key="cloudProxyUrl" data-storage-type="settings"
-            placeholder="Enter your Cloud Function Endpoint here">
+            placeholder="Enter your API Gateway Endpoint here">
     </div>
 
     <div>
-        <label for="cloud-api-key-input">Cloud API Key:</label>
+        <label for="cloud-api-key-input">Gemini API Key:</label>
         <input type="password" id="cloud-api-key-input" data-storage-key="cloudApiKey" data-storage-type="settings"
             placeholder="Enter your API Key">
     </div>

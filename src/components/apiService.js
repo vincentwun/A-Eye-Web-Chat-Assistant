@@ -143,11 +143,11 @@ export class ApiService {
     const apiKey = apiConfig.cloudApiKey;
 
     if (connectionMethod === 'proxy') {
-      if (!apiConfig.cloudProxyUrl) throw new Error('Cloud Function Proxy URL not configured for proxy method.');
+      if (!apiConfig.cloudProxyUrl) throw new Error('API Gateway / Cloud Function Proxy URL not configured for proxy method.');
       endpoint = apiConfig.cloudProxyUrl;
-      headers['X-Api-Key'] = apiKey;
+      headers['x-api-key'] = apiKey;
       headers['X-Model-Name'] = modelToUse;
-      console.log(`Using Proxy Endpoint: ${endpoint}`);
+      console.log(`Using API Gateway / Proxy Endpoint: ${endpoint}`);
     } else {
       if (!apiConfig.cloudApiUrl) throw new Error('Cloud API Base URL not configured for direct method.');
       const cloudBaseUrl = apiConfig.cloudApiUrl.endsWith('/') ? apiConfig.cloudApiUrl : apiConfig.cloudApiUrl + '/';
@@ -253,7 +253,8 @@ export class ApiService {
     }
 
     body = JSON.stringify(geminiPayload);
-    console.log(`Sending to ${connectionMethod === 'proxy' ? 'Proxy' : 'Cloud Gemini'} (${modelToUse}) using endpoint ${endpoint} with ${geminiContents.length} history turns` + (systemPrompt ? " and system instruction." : "."));
+    const targetDescription = connectionMethod === 'proxy' ? 'API Gateway / Proxy' : 'Cloud Gemini';
+    console.log(`Sending to ${targetDescription} (${modelToUse}) using endpoint ${endpoint} with ${geminiContents.length} history turns` + (systemPrompt ? " and system instruction." : "."));
 
     try {
       const response = await fetch(endpoint, {
@@ -271,7 +272,7 @@ export class ApiService {
         throw new Error(`API Error (${response.status} ${response.statusText}). Response: ${errorBodyText.substring(0, 200)}`);
       }
 
-      console.log(`${connectionMethod === 'proxy' ? 'Proxy' : 'Gemini'} API Response Data:`, data);
+      console.log(`${targetDescription} API Response Data:`, data);
 
       if (!response.ok) {
         let detailedError = `API Error via ${connectionMethod} (${response.status} ${response.statusText})`;

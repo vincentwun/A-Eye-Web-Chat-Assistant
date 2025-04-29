@@ -1,0 +1,13 @@
+{
+  "name": "gemini-proxy-function",
+  "version": "1.0.0",
+  "description": "Cloud Function to Gemini requests via Vertex AI",
+  "main": "index.js",
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.5.0",
+    "@google-cloud/vertexai": "^1.0.0"
+  },
+  "engines": {
+    "node": "20"
+  }
+}
