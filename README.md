@@ -42,7 +42,7 @@ A-Eye Web Chat Assistant is a free and open-source Chrome extension. It's design
 
 **Chrome Extension and Web APIs:**
 
-**Chrome Storage API** Using `local` storage to save user settings (API Keys, URLs, Prompts, Voice Settings).
+**Chrome Storage API:** Using `local` storage to save user settings (API Keys, URLs, Prompts, Voice Settings).
 
 **Chrome Scripting API:** Executing content scripts with Readability.js.
 
@@ -58,6 +58,13 @@ A-Eye Web Chat Assistant is a free and open-source Chrome extension. It's design
 
 `SpeechSynthesis`: Converting text to speech (TTS).
 
+**Google Cloud Platform (GCP):**
+
+**API Gateway:** Provides a secure URL endpoint for cloud requests. Routes verified requests (via API key) to the Cloud Function.
+
+**Cloud Functions:** Receives requests from API Gateway. Calls Vertex AI (Gemini) to process data and returns the response.
+
+**Vertex AI:** Hosts the Gemini AI model. Analyzes the provided web content (text/images).
 
 ![architecture](/images/architecture_v2.png)
 
