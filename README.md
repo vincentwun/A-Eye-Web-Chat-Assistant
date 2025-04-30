@@ -22,6 +22,7 @@ A-Eye Web Chat Assistant is a free and open-source Chrome extension. It's design
   - [Local Setup: Ollama (Manual)](#local-setup-ollama-manual)
   - [Local Setup: Ollama (Script)](#local-setup-ollama-script)
   - [Cloud Setup: Gemini API](#cloud-setup-gemini-api)
+  - [Cloud Setup: Call Gemini via GCP (Optional)](#cloud-setup-call-gemini-via-gcp-optional)
   - [Basic Interaction](#basic-interaction)
   - [Analyzing Web Content](#analyzing-web-content)
 - [Privacy](#privacy)
@@ -90,6 +91,7 @@ and unzip it.
 
 4.  In the extension's **Settings**, make sure "Local Model Name" is `gemma3:4b` (or the model you chose).
 
+---
 ### Local Setup: Ollama (Script)
 
 *   **Easiest method.** Handles installation¹, CORS setup², and model execution³.
@@ -105,9 +107,39 @@ and unzip it.
 
 2.  In the extension's **Settings**, make sure "Local Model Name" is `gemma3:4b` (or the model you chose).
 
+---
 ### Cloud Setup: Gemini API
 1. Get your Gemini API Key from [Google AI Studio](https://aistudio.google.com/)
 2. Go to the extension's **Settings**, input your API Key under "Cloud API Key".
+
+---
+### Cloud Setup: Call Gemini via GCP (Optional)
+This is an alternative method to use Gemini through Google Cloud Platform.
+
+1. **Requirements:**
+    *   A GCP account with billing set up.
+    *   Terraform installed.
+    *   Google Cloud SDK installed.
+
+2.  **Deploy:**
+    *   Navigate to the `gcp` folder.
+    *   Edit the `variables.tf` file to set your `project_id`
+    *   Run `terraform init`
+    *   Run `terraform apply`
+
+3.  **Get Credentials:**
+    *   After deployment finishes, Terraform will output an `api_gateway_url` and an `api_key`. 
+    *   Copy these values.
+
+4.  **Configure Extension:**
+    *   Go to the extension's **Settings** page.
+    *   Paste the copied `api_gateway_url` into the **API Gateway Endpoint** field.
+    *   Paste the copied `api_key` into the **Gemini API Key** field.
+    *   Ensure **Cloud Mode** is selected in the extension's side panel.
+
+5.  **Clean Up (Optional):**
+    *   To remove the created GCP resources 
+    *   Run `terraform destroy`
 
 ---
 ### Basic Interaction
