@@ -14,7 +14,7 @@ export class ContentAnalysisAction {
         this.setProcessing = dependencies.setProcessing;
         this.appendMessage = dependencies.appendMessage;
 
-        if (!this.uiManager || !this.voiceController || !this.apiService /* || !this.prompts */ || !this.state || !this.getApiConfig || !this.getHistoryToSend || !this.handleResponse || !this.handleError || !this.setProcessing || !this.appendMessage) {
+        if (!this.uiManager || !this.voiceController || !this.apiService || !this.state || !this.getApiConfig || !this.getHistoryToSend || !this.handleResponse || !this.handleError || !this.setProcessing || !this.appendMessage) {
             console.error("ContentAnalysisAction missing dependencies:", dependencies);
             throw new Error("ContentAnalysisAction initialized with missing dependencies.");
         }
@@ -67,7 +67,7 @@ export class ContentAnalysisAction {
                     null,
                     systemPromptForTask
                 );
-                this.handleResponse(responseContent);
+                await this.handleResponse(responseContent);
 
             } else {
                 console.error("Content extraction returned unexpected result:", extractedResult);
@@ -76,8 +76,8 @@ export class ContentAnalysisAction {
 
         } catch (error) {
             this.handleError('Content analysis failed', error);
-            this.setProcessing(false);
         } finally {
+            this.setProcessing(false);
             console.log("ContentAnalysisAction execute finished trigger");
         }
     }

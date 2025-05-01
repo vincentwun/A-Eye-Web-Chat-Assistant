@@ -15,7 +15,7 @@ export class ScrollingScreenshotAction {
         this.appendMessage = dependencies.appendMessage;
         this.updateLastImageData = dependencies.updateLastImageData;
 
-        if (!this.screenshotController || !this.uiManager || !this.voiceController || !this.apiService /* || !this.prompts */ || !this.state || !this.getApiConfig || !this.getHistoryToSend || !this.handleResponse || !this.handleError || !this.setProcessing || !this.appendMessage || !this.updateLastImageData) {
+        if (!this.screenshotController || !this.uiManager || !this.voiceController || !this.apiService || !this.state || !this.getApiConfig || !this.getHistoryToSend || !this.handleResponse || !this.handleError || !this.setProcessing || !this.appendMessage || !this.updateLastImageData) {
             console.error("ScrollingScreenshotAction missing dependencies:", dependencies);
             throw new Error("ScrollingScreenshotAction initialized with missing dependencies.");
         }
@@ -58,15 +58,15 @@ export class ScrollingScreenshotAction {
                     mergedImageDataUrl,
                     systemPromptForTask
                 );
-                this.handleResponse(responseContent);
+                await this.handleResponse(responseContent);
 
             } else {
                 throw new Error('Scrolling screenshot creation failed or returned no image.');
             }
         } catch (error) {
             this.handleError('Scrolling screenshot analysis failed', error);
-            this.setProcessing(false);
         } finally {
+            this.setProcessing(false);
             console.log("ScrollingScreenshotAction execute finished trigger");
         }
     }

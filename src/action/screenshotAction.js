@@ -14,7 +14,7 @@ export class ScreenshotAction {
     this.appendMessage = dependencies.appendMessage;
     this.updateLastImageData = dependencies.updateLastImageData;
 
-    if (!this.screenshotController || !this.uiManager || !this.voiceController || !this.apiService /* || !this.prompts */ || !this.state || !this.getApiConfig || !this.getHistoryToSend || !this.handleResponse || !this.handleError || !this.setProcessing || !this.appendMessage || !this.updateLastImageData) {
+    if (!this.screenshotController || !this.uiManager || !this.voiceController || !this.apiService || !this.state || !this.getApiConfig || !this.getHistoryToSend || !this.handleResponse || !this.handleError || !this.setProcessing || !this.appendMessage || !this.updateLastImageData) {
       console.error("ScreenshotAction missing dependencies:", dependencies);
       throw new Error("ScreenshotAction initialized with missing dependencies.");
     }
@@ -57,16 +57,15 @@ export class ScreenshotAction {
           screenshotDataUrl,
           systemPromptForTask
         );
-        this.handleResponse(responseContent);
+        await this.handleResponse(responseContent);
 
       } else {
         throw new Error('Screenshot capture returned empty data.');
       }
     } catch (error) {
-
       this.handleError('Screenshot analysis failed', error);
-      this.setProcessing(false);
     } finally {
+      this.setProcessing(false);
       console.log("ScreenshotAction execute finished trigger");
     }
   }
