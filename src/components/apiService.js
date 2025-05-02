@@ -246,7 +246,7 @@ export class ApiService {
     if (modelToUse === "gemini-2.5-flash-preview-04-17") {
       geminiPayload.generationConfig = {
         thinkingConfig: {
-          thinkingBudget: 256,
+          thinkingBudget: 1024,
         }
       };
       console.log(`Adding thinkingConfig with budget ${geminiPayload.generationConfig.thinkingConfig.thinkingBudget} for model ${modelToUse}`);
@@ -295,10 +295,15 @@ export class ApiService {
       let responseText = `Error: Could not parse ${connectionMethod === 'proxy' ? 'proxied' : ''} Gemini response.`;
       try {
         if (data.candidates && data.candidates[0]?.content?.parts) {
-          responseText = data.candidates[0].content.parts
-            .filter(part => part.text)
-            .map(part => part.text)
-            .join('');
+          const textParts = data.candidates[0].content.parts.filter(part => part.text);
+          if (textParts.length > 0) {
+            responseText = textParts[textParts.length - 1].text;
+            if (textParts.length > 1) {
+              console.log(`Extracted the last text part out of ${textParts.length} as the final answer.`);
+            }
+          } else {
+            console.warn(`Gemini response via ${connectionMethod} contained parts but no text part.`, data.candidates[0].content.parts);
+          }
         } else if (data.promptFeedback?.blockReason) {
           responseText = `Request blocked by API: ${data.promptFeedback.blockReason}`;
           if (data.promptFeedback.safetyRatings) {

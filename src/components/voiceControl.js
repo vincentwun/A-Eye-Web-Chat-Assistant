@@ -183,7 +183,7 @@ export class VoiceController {
           const utterance = new SpeechSynthesisUtterance(text);
           utterance.voice = this.state.synthesis.selectedVoice;
           utterance.lang = this.state.synthesis.selectedVoice.lang;
-          utterance.rate = 1.1;
+          utterance.rate = 1.0;
           utterance.pitch = 1.0;
           utterance.volume = 1.0;
 
