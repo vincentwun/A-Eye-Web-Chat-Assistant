@@ -177,7 +177,12 @@ class AIScreenReader {
                     this.appendMessage('system', 'Initializing, please wait...'); sendResponse({ success: false, error: 'Initializing' }); return true;
                 }
                 try {
-                    messageHandlers[request.type](); sendResponse({ success: true });
+                    if (request.type === 'toggleRepeat') {
+                        this.handleRepeat();
+                    } else {
+                        messageHandlers[request.type]();
+                    }
+                    sendResponse({ success: true });
                 } catch (error) {
                     this.handleError(`Failed to execute ${request.type}`, error); sendResponse({ success: false, error: error.message });
                 }
@@ -188,6 +193,7 @@ class AIScreenReader {
             return false;
         });
     }
+
 
     setupStorageListener() {
         chrome.storage.onChanged.addListener((changes, areaName) => {
@@ -224,7 +230,7 @@ class AIScreenReader {
             await this.loadSettingsAndPrompts();
             this.uiManager.updateModeUI(this.state.activeApiMode);
             this.setupEventListeners();
-            this.voiceController.initializeAll();
+            await this.voiceController.initializeAll();
             this.appendMessage('system', 'A-Eye Assistant Ready.');
             this.voiceController.speakText('A-Eye Assistant Ready.');
             this.uiManager.updateInputState(this.elements.userInput.value);
@@ -238,8 +244,8 @@ class AIScreenReader {
             this.state.cloudApiUrl = this.state.cloudApiUrl ?? defaultApiSettings.cloudApiUrl;
             this.state.cloudApiKey = this.state.cloudApiKey ?? defaultApiSettings.cloudApiKey;
             this.state.cloudModelName = this.state.cloudModelName ?? defaultApiSettings.cloudModelName;
-            this.state.cloudApiMethod = defaultApiSettings.cloudApiMethod;
-            this.state.cloudProxyUrl = defaultApiSettings.cloudProxyUrl;
+            this.state.cloudApiMethod = this.state.cloudApiMethod ?? defaultApiSettings.cloudApiMethod;
+            this.state.cloudProxyUrl = this.state.cloudProxyUrl ?? defaultApiSettings.cloudProxyUrl;
             this.prompts = this.prompts ?? { ...defaultPrompts };
             this.state.settingsLoaded = false;
         }
@@ -260,19 +266,10 @@ class AIScreenReader {
             this.state.cloudProxyUrl = savedSettings.cloudProxyUrl || defaultApiSettings.cloudProxyUrl;
             this.prompts = { ...defaultPrompts, ...savedPrompts };
         } catch (error) {
-            this.handleError('Error loading settings/prompts. Using default values.');
-            this.state.activeApiMode = defaultApiSettings.activeApiMode;
-            this.state.localApiUrl = defaultApiSettings.localApiUrl;
-            this.state.ollamaMultimodalModel = defaultApiSettings.ollamaMultimodalModel;
-            this.state.cloudApiUrl = defaultApiSettings.cloudApiUrl;
-            this.state.cloudApiKey = defaultApiSettings.cloudApiKey;
-            this.state.cloudModelName = defaultApiSettings.cloudModelName;
-            this.state.cloudApiMethod = defaultApiSettings.cloudApiMethod;
-            this.state.cloudProxyUrl = defaultApiSettings.cloudProxyUrl;
-            this.prompts = { ...defaultPrompts };
             throw error;
         }
     }
+
 
     setupEventListeners() {
         const eventHandlers = {
@@ -290,7 +287,22 @@ class AIScreenReader {
         Object.entries(eventHandlers).forEach(([elementId, handler]) => {
             const element = this.elements[elementId];
             if (element) {
-                element.addEventListener('click', handler.bind(this));
+                element.addEventListener('click', async (event) => {
+                    if (this.state.isProcessing && elementId !== 'clearButton') {
+                        this.appendMessage('system', 'Processing, please wait...');
+                        return;
+                    }
+                    if (!this.state.settingsLoaded && elementId !== 'openOptionsButton') {
+                        this.appendMessage('system', 'Initializing, please wait...');
+                        return;
+                    }
+                    try {
+                        await handler.call(this, event);
+                    } catch (error) {
+                        console.error(`Error in event listener for ${elementId}:`, error);
+                        this.handleError(`Action failed: ${elementId}`, error);
+                    }
+                });
             }
             else { console.warn(`Element with ID '${elementId}' not found for event listener.`); }
         });
@@ -323,43 +335,60 @@ class AIScreenReader {
     }
 
     isLocalModeConfigValid() {
-        if (!this.state.localApiUrl || !this.state.ollamaMultimodalModel) {
-            this.appendMessage('system', 'Local API URL or Model Name is missing. Please configure in Options page.');
+        let isValid = true;
+        if (!this.state.localApiUrl) {
+            const msg = 'Local API URL is missing. Please configure in Options page.';
+            this.appendMessage('system', msg);
             this.voiceController.speakText('Local API settings missing.');
-            return false;
+            isValid = false;
         }
-        return true;
+        if (!this.state.ollamaMultimodalModel) {
+            const msg = 'Local Model Name is missing. Please configure in Options page.';
+            if (isValid) this.appendMessage('system', msg);
+            if (isValid) this.voiceController.speakText('Local API settings missing.');
+            isValid = false;
+        }
+        return isValid;
     }
 
     isCloudModeConfigValid() {
         const method = this.state.cloudApiMethod;
         const isDirect = method === 'direct';
         const isProxy = method === 'proxy';
+        let isValid = true;
+        let speakMsg = null;
 
         if (!this.state.cloudApiKey) {
-            this.appendMessage('system', 'Cloud API Key is missing. Please configure in Options page.');
-            this.voiceController.speakText('Cloud settings missing: API Key.');
-            return false;
+            const msg = 'Cloud API Key is missing. Please configure in Options page.';
+            this.appendMessage('system', msg);
+            speakMsg = 'Cloud settings missing: API Key.';
+            isValid = false;
         }
         if (!this.state.cloudModelName) {
-            this.appendMessage('system', 'Cloud Model Name is missing. Please configure in Options page.');
-            this.voiceController.speakText('Cloud settings missing: Model Name.');
-            return false;
+            const msg = 'Cloud Model Name is missing. Please configure in Options page.';
+            if (isValid) this.appendMessage('system', msg);
+            if (isValid) speakMsg = 'Cloud settings missing: Model Name.';
+            isValid = false;
         }
-
         if (isDirect && !this.state.cloudApiUrl) {
-            this.appendMessage('system', 'Cloud API Base URL is missing for Direct Connection. Please configure in Options page.');
-            this.voiceController.speakText('Cloud settings missing: Base URL for Direct mode.');
-            return false;
+            const msg = 'Cloud API Base URL is missing for Direct Connection. Please configure in Options page.';
+            if (isValid) this.appendMessage('system', msg);
+            if (isValid) speakMsg = 'Cloud settings missing: Base URL for Direct mode.';
+            isValid = false;
         }
         if (isProxy && !this.state.cloudProxyUrl) {
-            this.appendMessage('system', 'Cloud Function URL is missing for Proxy Connection. Please configure in Options page.');
-            this.voiceController.speakText('Cloud settings missing: Function URL for Proxy mode.');
-            return false;
+            const msg = 'Cloud Function URL is missing for Proxy Connection. Please configure in Options page.';
+            if (isValid) this.appendMessage('system', msg);
+            if (isValid) speakMsg = 'Cloud settings missing: Function URL for Proxy mode.';
+            isValid = false;
         }
 
-        return true;
+        if (!isValid && speakMsg) {
+            this.voiceController.speakText(speakMsg);
+        }
+        return isValid;
     }
+
 
     getApiConfig() {
         return {
@@ -427,26 +456,30 @@ class AIScreenReader {
 
         } catch (error) {
             this.handleError('Message sending failed', error);
-            this.setProcessing(false);
+            if (this.state.isProcessing) {
+                this.setProcessing(false);
+            }
         } finally {
-            if (this.elements.userInput) {
+            if (!this.state.isProcessing && this.elements.userInput) {
                 this.elements.userInput.focus();
             }
         }
     }
 
     appendMessage(role, content) {
-        if (!content || !content.trim()) {
+        if (!content || (typeof content === 'string' && !content.trim())) {
             return;
         }
-        const formattedContent = this.uiManager.escapeHTML(content);
+        const formattedContent = this.uiManager.escapeHTML(String(content));
         this.uiManager.appendMessage(role, formattedContent);
         const knownCommands = ['takeScreenshot', 'scrollingScreenshot', 'analyzeContent', 'getElement'];
-        const isCommand = content.startsWith('openUrl:') || knownCommands.includes(content.trim()) || (content.startsWith('[') && content.endsWith(']'));
+        const contentStr = String(content);
+        const isCommand = contentStr.startsWith('openUrl:') || knownCommands.includes(contentStr.trim()) || (contentStr.startsWith('[') && contentStr.endsWith(']'));
+
         if (role !== 'system' && !isCommand) {
             const lastMessage = this.state.messages.length > 0 ? this.state.messages[this.state.messages.length - 1] : null;
-            if (!lastMessage || lastMessage.role !== role || lastMessage.content !== content) {
-                this.state.messages.push({ role, content });
+            if (!lastMessage || lastMessage.role !== role || lastMessage.content !== contentStr) {
+                this.state.messages.push({ role, content: contentStr });
             }
         }
         const MAX_HISTORY = 20;
@@ -457,7 +490,14 @@ class AIScreenReader {
 
     async handleResponse(responseContent) {
         const responseText = (typeof responseContent === 'string') ? responseContent : JSON.stringify(responseContent);
-        const commandResult = this.commandProcessor.processResponse(responseText);
+        let commandResult = null;
+        try {
+            commandResult = this.commandProcessor.processResponse(responseText);
+        } catch (processorError) {
+            this.handleError('Failed to process command from response', processorError);
+            return;
+        }
+
         if (commandResult === true) {
             this.setProcessing(false);
         } else if (commandResult && commandResult.command === 'getElement') {
@@ -467,8 +507,35 @@ class AIScreenReader {
         } else {
             const displayContent = (typeof responseContent === 'string') ? responseContent : 'Received non-text response.';
             this.appendMessage('assistant', displayContent);
-            this.voiceController.speakText(displayContent);
-            this.setProcessing(false);
+
+            const sentences = displayContent
+                .split(/[。？！.!?]/)
+                .map(s => s.trim())
+                .filter(s => s.length > 0);
+
+            if (sentences.length > 1) {
+                try {
+                    for (const sentence of sentences) {
+                        await this.voiceController.speakText(sentence);
+                    }
+                } catch (error) {
+                    console.error("Error during sequential speaking of API response in handleResponse:", error);
+                    this.appendMessage('system', `Error speaking response sequence: ${error.message}`);
+                } finally {
+                    this.setProcessing(false);
+                }
+            } else if (sentences.length === 1) {
+                try {
+                    await this.voiceController.speakText(sentences[0]);
+                } catch (error) {
+                    console.error("Error speaking single sentence response in handleResponse:", error);
+                    this.appendMessage('system', `Error speaking response: ${error.message}`);
+                } finally {
+                    this.setProcessing(false);
+                }
+            } else {
+                this.setProcessing(false);
+            }
         }
     }
 
@@ -504,12 +571,54 @@ class AIScreenReader {
         this.setProcessing(false);
     }
 
-    handleRepeat() {
+    async handleRepeat() {
         this.voiceController.stopSpeaking();
-        if (!this.state.settingsLoaded) { this.appendMessage('system', 'Initializing, please wait...'); return; }
+
+        if (!this.state.settingsLoaded) {
+            this.appendMessage('system', 'Initializing, please wait...');
+            return;
+        }
+        if (this.state.isProcessing) {
+            this.appendMessage('system', 'Currently processing, cannot repeat now.');
+            return;
+        }
+
         const lastAIMessage = [...this.state.messages].reverse().find(m => m.role === 'assistant');
+
         if (lastAIMessage && lastAIMessage.content) {
-            this.voiceController.speakText(lastAIMessage.content);
+            const fullContent = String(lastAIMessage.content);
+
+            const sentences = fullContent
+                .split(/[。？！.!?]/)
+                .map(s => s.trim())
+                .filter(s => s.length > 0);
+
+            if (sentences.length > 1) {
+                this.setProcessing(true);
+                try {
+                    for (const sentence of sentences) {
+                        await this.voiceController.speakText(sentence);
+                    }
+                } catch (error) {
+                    console.error("Error during sequential speaking in handleRepeat:", error);
+                    this.appendMessage('system', `Error repeating message sequence: ${error.message}`);
+                } finally {
+                    this.setProcessing(false);
+                }
+
+            } else if (sentences.length === 1) {
+                try {
+                    await this.voiceController.speakText(sentences[0]);
+                } catch (error) {
+                    console.error("Error speaking single sentence in handleRepeat:", error);
+                    this.appendMessage('system', `Error repeating message: ${error.message}`);
+                }
+            } else {
+                const msg = 'Could not process the previous message for repeating.';
+                this.appendMessage('system', msg);
+                this.voiceController.speakText(msg);
+            }
+
         } else {
             const msg = 'No previous AI response to repeat.';
             this.appendMessage('system', msg);
