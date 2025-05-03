@@ -1,6 +1,6 @@
 import { VoiceController } from '../components/voiceControl.js';
 import { ScreenshotController } from '../components/screenShot.js';
-import { ApiService } from '../components/apiService.js';
+import { ApiService } from '../api/apiService.js';
 import { UIManager } from '../components/uiManager.js';
 import { CommandProcessor } from '../action/commandMap.js';
 import { ScreenshotAction } from '../action/screenshotAction.js';
