@@ -25,7 +25,7 @@
   },
   "options_page": "option/options.html",
   "background": {
-    "service_worker": "main/background.js",
+    "service_worker": "background/background.js",
     "type": "module"
   },
   "action": {
