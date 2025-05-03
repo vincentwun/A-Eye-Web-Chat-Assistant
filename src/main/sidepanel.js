@@ -177,11 +177,7 @@ class AIScreenReader {
                     this.appendMessage('system', 'Initializing, please wait...'); sendResponse({ success: false, error: 'Initializing' }); return true;
                 }
                 try {
-                    if (request.type === 'toggleRepeat') {
-                        this.handleRepeat();
-                    } else {
-                        messageHandlers[request.type]();
-                    }
+                    messageHandlers[request.type]();
                     sendResponse({ success: true });
                 } catch (error) {
                     this.handleError(`Failed to execute ${request.type}`, error); sendResponse({ success: false, error: error.message });
@@ -488,6 +484,29 @@ class AIScreenReader {
         }
     }
 
+    async _speakResponse(text) {
+        if (!text || typeof text !== 'string' || !text.trim()) {
+            return;
+        }
+        const sentences = text
+            .split(/[。？！.!?]/)
+            .map(s => s.trim())
+            .filter(s => s.length > 0);
+
+        try {
+            if (sentences.length > 4) {
+                for (const sentence of sentences) {
+                    await this.voiceController.speakText(sentence);
+                }
+            } else {
+                await this.voiceController.speakText(text);
+            }
+        } catch (error) {
+            console.error("Error during speech synthesis:", error);
+            this.appendMessage('system', `Error speaking: ${error.message}`);
+        }
+    }
+
     async handleResponse(responseContent) {
         const responseText = (typeof responseContent === 'string') ? responseContent : JSON.stringify(responseContent);
         let commandResult = null;
@@ -495,6 +514,7 @@ class AIScreenReader {
             commandResult = this.commandProcessor.processResponse(responseText);
         } catch (processorError) {
             this.handleError('Failed to process command from response', processorError);
+            this.setProcessing(false);
             return;
         }
 
@@ -513,31 +533,24 @@ class AIScreenReader {
                 .map(s => s.trim())
                 .filter(s => s.length > 0);
 
-            if (sentences.length > 1) {
-                try {
-                    for (const sentence of sentences) {
-                        await this.voiceController.speakText(sentence);
-                    }
-                } catch (error) {
-                    console.error("Error during sequential speaking of API response in handleResponse:", error);
-                    this.appendMessage('system', `Error speaking response sequence: ${error.message}`);
-                } finally {
+            let shouldSetProcessing = sentences.length > 4;
+
+            try {
+                if (!shouldSetProcessing) {
                     this.setProcessing(false);
                 }
-            } else if (sentences.length === 1) {
-                try {
-                    await this.voiceController.speakText(sentences[0]);
-                } catch (error) {
-                    console.error("Error speaking single sentence response in handleResponse:", error);
-                    this.appendMessage('system', `Error speaking response: ${error.message}`);
-                } finally {
+                await this._speakResponse(displayContent);
+            } catch (error) {
+                console.error("Error speaking API response in handleResponse:", error);
+                this.handleError("Error speaking response", error);
+            } finally {
+                if (shouldSetProcessing) {
                     this.setProcessing(false);
                 }
-            } else {
-                this.setProcessing(false);
             }
         }
     }
+
 
     handleError(message, error) {
         console.error(message, error);
@@ -593,30 +606,21 @@ class AIScreenReader {
                 .map(s => s.trim())
                 .filter(s => s.length > 0);
 
-            if (sentences.length > 1) {
+            let shouldSetProcessing = sentences.length > 4;
+
+            if (shouldSetProcessing) {
                 this.setProcessing(true);
-                try {
-                    for (const sentence of sentences) {
-                        await this.voiceController.speakText(sentence);
-                    }
-                } catch (error) {
-                    console.error("Error during sequential speaking in handleRepeat:", error);
-                    this.appendMessage('system', `Error repeating message sequence: ${error.message}`);
-                } finally {
+            }
+
+            try {
+                await this._speakResponse(fullContent);
+            } catch (error) {
+                console.error("Error during repeat speaking:", error);
+                this.appendMessage('system', `Error repeating message: ${error.message}`);
+            } finally {
+                if (shouldSetProcessing) {
                     this.setProcessing(false);
                 }
-
-            } else if (sentences.length === 1) {
-                try {
-                    await this.voiceController.speakText(sentences[0]);
-                } catch (error) {
-                    console.error("Error speaking single sentence in handleRepeat:", error);
-                    this.appendMessage('system', `Error repeating message: ${error.message}`);
-                }
-            } else {
-                const msg = 'Could not process the previous message for repeating.';
-                this.appendMessage('system', msg);
-                this.voiceController.speakText(msg);
             }
 
         } else {
