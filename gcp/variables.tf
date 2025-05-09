@@ -1,7 +1,6 @@
 variable "project_id" {
   description = "The GCP Project ID"
   type        = string
-  default     = "your-gcp-project-id" # Replace with your GCP project ID
 }
 
 variable "region" {
@@ -25,7 +24,7 @@ variable "node_runtime" {
 variable "function_entry_point" {
   description = "The entry point function in your Node.js code"
   type        = string
-  default     = "gemini-entrypoint"
+  default     = "geminiProxyFunction"
 }
 
 variable "function_memory" {

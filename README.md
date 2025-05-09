@@ -133,12 +133,13 @@ This is an alternative method to use Gemini through Google Cloud Platform.
 
 1. **Requirements:**
     *   A GCP account with billing set up.
-    *   Terraform installed.
-    *   Google Cloud SDK installed.
+    *   [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli) installed.
+    *   [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) installed.
 
 2.  **Deploy:**
     *   Navigate to the `gcp` folder.
-    *   Edit the `variables.tf` file to set your `project_id`
+    *   Rename the `terraform.tfvars.example` file to `terraform.tfvars`
+    *   Replace the placeholder with your actual `project_id`
     *   Run `terraform init`
     *   Run `terraform apply`
 

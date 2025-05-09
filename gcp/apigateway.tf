@@ -51,5 +51,6 @@ resource "google_api_gateway_gateway" "gateway" {
   depends_on = [
     google_project_service.apigateway,
     google_api_gateway_api_config.api_config,
+    google_project_iam_member.apigw_sa_serviceusage_admin
   ]
 }
