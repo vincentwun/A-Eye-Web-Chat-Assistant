@@ -8,6 +8,14 @@ terraform {
       source  = "hashicorp/archive"
       version = ">= 2.7.0"
     }
+    null = {
+      source  = "hashicorp/null"
+      version = ">= 3.0.0"
+    }
+    time = {
+      source  = "hashicorp/time"
+      version = ">= 0.7.0"
+    }
   }
 }
 
@@ -91,4 +99,25 @@ resource "google_project_service" "apikeys" {
   project            = var.project_id
   service            = "apikeys.googleapis.com"
   disable_on_destroy = false
+}
+
+# Trigger creation of the API Gateway service account and wait
+resource "null_resource" "trigger_api_gateway_sa_creation" {
+  triggers = {
+    api_enabled = google_project_service.apigateway.id
+  }
+
+  provisioner "local-exec" {
+    command = "gcloud beta services identity create --service=apigateway.googleapis.com --project=${var.project_id}"
+  }
+
+  depends_on = [
+    google_project_service.apigateway
+  ]
+}
+
+# Wait 30 seconds after triggering API Gateway SA creation
+resource "time_sleep" "wait_for_api_gateway_sa" {
+  create_duration = "30s"
+  depends_on = [null_resource.trigger_api_gateway_sa_creation]
 }

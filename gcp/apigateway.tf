@@ -4,7 +4,10 @@ resource "google_api_gateway_api" "api" {
   project = var.project_id
   api_id  = var.api_id
 
-  depends_on = [google_project_service.apigateway]
+  depends_on = [
+    google_project_service.apigateway,
+    time_sleep.wait_for_api_gateway_sa
+  ]
 }
 
 data "template_file" "api_config_rendered" {
@@ -37,6 +40,7 @@ resource "google_api_gateway_api_config" "api_config" {
     google_project_service.apigateway,
     google_project_service.servicecontrol,
     google_project_service.servicemanagement,
+    time_sleep.wait_for_api_gateway_sa,
     data.template_file.api_config_rendered
   ]
 }

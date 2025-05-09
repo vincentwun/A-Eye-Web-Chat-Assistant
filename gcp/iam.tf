@@ -37,7 +37,8 @@ resource "google_project_iam_member" "apigw_sa_run_invoker" {
     google_project_service.apigateway,
     google_project_service.run,
     google_project_service.iam,
-    google_cloudfunctions2_function.gemini_proxy
+    google_cloudfunctions2_function.gemini_proxy,
+    time_sleep.wait_for_api_gateway_sa
   ]
 }
 
@@ -47,7 +48,12 @@ resource "google_project_iam_member" "apigw_sa_serviceusage_consumer" {
   role    = "roles/serviceusage.serviceUsageConsumer"
   member  = "serviceAccount:service-${data.google_project.project.number}@gcp-sa-apigateway.iam.gserviceaccount.com"
 
-  depends_on = [google_project_service.apigateway, google_project_service.serviceusage, google_project_service.iam]
+  depends_on = [
+    google_project_service.apigateway,
+    google_project_service.serviceusage,
+    google_project_service.iam,
+    time_sleep.wait_for_api_gateway_sa
+  ]
 }
 
 # API Gateway SA: Permission to enable the managed service it creates
@@ -60,6 +66,6 @@ resource "google_project_iam_member" "apigw_sa_serviceusage_admin" {
     google_project_service.apigateway,
     google_project_service.serviceusage,
     google_project_service.iam,
-    data.google_project.project
+    time_sleep.wait_for_api_gateway_sa
   ]
 }
