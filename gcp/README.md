@@ -26,3 +26,10 @@ sudo apt-get update && sudo apt-get install -y google-cloud-cli
 
 # Login to gcloud
 gcloud auth application-default login
+
+# api_key_string = <sensitive>
+terraform output api_key_string
+
+# URL & key
+https://gemini-gateway-id-1ghv2mvu.uc.gateway.dev/gemini-proxy
+AIzaSyC4DeMDJv6ZLz51_A5bpuOtHpnkjpKpf6Y

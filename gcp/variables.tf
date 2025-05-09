@@ -13,7 +13,7 @@ variable "region" {
 variable "function_name" {
   description = "The name of the Cloud Function"
   type        = string
-  default     = "gemini-cloud-function"
+  default     = "gemini-proxy"
 }
 
 variable "node_runtime" {
