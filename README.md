@@ -140,7 +140,7 @@ The script will help you to download Ollama, CORS setup, and model execution.
 ---
 ### Cloud Setup: Option 2 - GCP Vertex AI
 
-For more details on GCP settings, see [GCP README.md](gcp/README.md)
+For more details on GCP settings, see [GCP README.md](gcp/gcloud/README.md)
 
 ---
 ### Basic Interaction
