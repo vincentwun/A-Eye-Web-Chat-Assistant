@@ -26,3 +26,5 @@ sudo apt-get update && sudo apt-get install -y google-cloud-cli
 
 # Login to gcloud
 gcloud auth application-default login
+
+#

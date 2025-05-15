@@ -80,13 +80,12 @@ and unzip it.
 ---
 ## How to Use
 
-### Local Setup: Ollama (Manual)
+### Local Ollama Setup: Option 1 - Manual
 
 1. **Install [Ollama](https://ollama.com/).**
-2. **Set Ollama CORS Permissions** (For Windows users with admin CMD)
-    Allow Ollama CORS with all Chrome extensions
+2. **Set Ollama CORS Permissions** (For Windows users)
+    Open CMD with admin right and run:
     ```
-    set OLLAMA_ORIGINS="chrome-extension://*"
     setx OLLAMA_ORIGINS "chrome-extension://*" /M
     ```
     Then run
@@ -95,24 +94,24 @@ and unzip it.
     ```
     to verify, the output should be **'chrome-extension://*'**
 
-3. **Download and Run Gemma 3** 
+3. **Restart Ollama**
+
+4. **Download and Run Gemma 3**
    You can refer to the table below to get Gemma 3:
 
-   | GPU VRAM | Recommend Model | Command                 |
+   | GPU VRAM | Recommend Model | Open CMD and run        |
    | -------- | --------------- | ----------------------- |
    | >= 6GB   | Gemma 3 4B      | `ollama run gemma3:4b`  |
    | >= 10GB  | Gemma 3 12B     | `ollama run gemma3:12b` |
    | >= 20GB  | Gemma 3 27B     | `ollama run gemma3:27b` |
 
-4.  In the extension's **Settings**, make sure "Local Model Name" is `gemma3:4b` (or the model you chose).
+5.  In the extension's **Settings**, make sure "Local Model Name" is `gemma3:4b` (or the model you chose).
 
 ---
-### Local Setup: Ollama (Script)
+### Local Ollama Setup: Option 2 - Script
 
-*   **Easiest method.** Handles installation¹, CORS setup², and model execution³.
-*   *(Requires Admin permission)*
-
-1. **Choose your model and run the matching script:**
+1. Open Powershell
+* **Determine to use which script:**
 
    | Model       | PowerShell                  |
    | ----------- | --------------------------- |
@@ -120,42 +119,28 @@ and unzip it.
    | Gemma 3 12B | setup_ollama_gemma3_12b.ps1 |
    | Gemma 3 27B | setup_ollama_gemma3_27b.ps1 |
 
-2.  In the extension's **Settings**, make sure "Local Model Name" is `gemma3:4b` (or the model you chose).
+2. run
+```
+powershell.exe -ExecutionPolicy Bypass -File "C:\Path\To\Your\Script\setup_ollama_gemma3_4b.ps1"
+```
+Example:
+```
+powershell.exe -ExecutionPolicy Bypass -File "C:\Users\test\Downloads\A-Eye-Web-Chat-Assistant-main\A-Eye-Web-Chat-Assistant-main\powershell_script\setup_ollama_gemma3_4b.ps1"
+```
+
+The script will help you to download Ollama, CORS setup, and model execution.
+
+3.  In the extension's **Settings**, make sure "Local Model Name" is `gemma3:4b` (or the model you chose).
 
 ---
-### Cloud Setup: Gemini API
+### Cloud Setup: Option 1 - Gemini API
 1. Get your Gemini API Key from [Google AI Studio](https://aistudio.google.com/)
 2. Go to the extension's **Settings**, input your API Key under "Cloud API Key".
 
 ---
-### Cloud Setup: Call Gemini via GCP (Optional)
-This is an alternative method to use Gemini through Google Cloud Platform.
+### Cloud Setup: Option 2 - GCP Vertex AI
 
-1. **Requirements:**
-    *   A GCP account with billing set up.
-    *   [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli) installed.
-    *   [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) installed.
-
-2.  **Deploy:**
-    *   Navigate to the `gcp` folder.
-    *   Rename the `terraform.tfvars.example` file to `terraform.tfvars`
-    *   Replace the placeholder with your actual `project_id`
-    *   Run `terraform init`
-    *   Run `terraform apply`
-
-3.  **Get Credentials:**
-    *   After deployment finishes, Terraform will output an `api_gateway_url` and an `api_key`. 
-    *   Copy these values.
-
-4.  **Configure Extension:**
-    *   Go to the extension's **Settings** page.
-    *   Paste the copied `api_gateway_url` into the **API Gateway Endpoint** field.
-    *   Paste the copied `api_key` into the **Gemini API Key** field.
-    *   Ensure **Cloud Mode** is selected in the extension's side panel.
-
-5.  **Clean Up (Optional):**
-    *   To remove the created GCP resources 
-    *   Run `terraform destroy`
+For more details on GCP settings, see [GCP README.md](gcp/README.md)
 
 ---
 ### Basic Interaction

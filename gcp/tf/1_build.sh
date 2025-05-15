@@ -19,11 +19,4 @@ terraform apply -auto-approve -var="project_id=${PROJECT_ID}"
 # Get the API key
 terraform output api_key_string
 
-gcloud services enable gemini-api-id-1diqs680eq9np.apigateway.tf-20250504b.cloud.goog --project=tf-20250504b
-
-gcloud services enable \
-  $(gcloud api-gateway api-configs describe \
-      $(gcloud api-gateway api-configs list --api=gemini-api-id --project=$PROJECT_ID --sort-by=~createTime --limit=1 --format='value(name)') \
-      --project=$PROJECT_ID \
-      --format='value(managedService)') \
-  --project=$PROJECT_ID
+gcloud services enable gemini-api-id-1diqs680eq9np.apigateway.tf-20250504b.cloud.goog --project=$PROJECT_ID
