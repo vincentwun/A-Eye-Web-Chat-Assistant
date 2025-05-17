@@ -1,7 +1,10 @@
 ## Prerequisites
 
-1.  **Install Google Cloud SDK (gcloud CLI)**: https://cloud.google.com/sdk/docs/install#deb
-2.  **Login to gcloud**: gcloud auth application-default login
+1.  **Install Google Cloud SDK (gcloud CLI)**: [Install the gcloud CLI](https://cloud.google.com/sdk/docs/install#deb)
+2.  **Login to gcloud**: 
+```
+gcloud auth application-default login
+```
 
 ## Deployment Steps
 
@@ -14,6 +17,7 @@ cd gcp/gcloud
 
 a.  Edit `1_setup_env.sh`:
     *   **Update `BILLING_ACCOUNT_ID`** with your actual Google Cloud Billing Account ID.
+
 b.  Source the script to load variables:
     ```
     source ./1_setup_env.sh
@@ -24,6 +28,7 @@ a.  Run the script:
     ```
     ./2_deploy_infra.sh
     ```
+
 b.  **ACTION REQUIRED**:
     *   The script will output a **Function Invoke URL**.
     *   **Copy this URL.**
@@ -40,11 +45,12 @@ a.  Run the script:
     ```
     ./3_create_gateway_and_key.sh
     ```
+    
 b.  The script will output:
     *   **API Gateway Endpoint URL** (e.g., `https://your-gateway-id.uc.gateway.dev/gemini-proxy`)
     *   **API Key String**
 
 ### 5. Use in Chrome Extension
 
-*   **Endpoint**: Entry to **Setting** > **API Gateway Endpoint**
-*   **API Key**: Entry to **Setting** > **Gemini API Key** 
+*   **API Gateway Endpoint URL**: Entry to **Setting** > **API Gateway Endpoint**
+*    **API Key String**: Entry to **Setting** > **Gemini API Key** 
