@@ -31,9 +31,13 @@ a.  Run the script:
 
 b.  **ACTION REQUIRED**:
     *   The script will output a **Function Invoke URL**.
+
     *   **Copy this URL.**
+
     *   Open `api-config.yaml`.
+
     *   Replace the placeholder in `address:` (line 18) with the copied Function URL.
+    
     *   Save `api-config.yaml`.
 
 
