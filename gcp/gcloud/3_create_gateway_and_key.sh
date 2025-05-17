@@ -42,6 +42,18 @@ gcloud api-gateway gateways create ${GATEWAY_ID} \
 echo "API Gateway creation initiated. Waiting 90 seconds for deployment..."
 sleep 90 # Crucial delay for gateway deployment
 
+# Enable the specific managed service
+echo "Enabling managed service for API Gateway..."
+MANAGED_SERVICE=$(gcloud api-gateway apis describe ${API_ID} --project=${PROJECT_ID} --format='value(managedService)')
+if [ -z "${MANAGED_SERVICE}" ]; then
+    echo "Error: Could not retrieve managed service name for API ${API_ID}. Exiting."
+    exit 1
+fi
+gcloud services enable ${MANAGED_SERVICE} \
+  --project=${PROJECT_ID} || { echo "Failed to enable managed service ${MANAGED_SERVICE}. Exiting."; exit 1; }
+
+echo "Managed service enabled."
+
 # Get the API Gateway URL
 echo ""
 echo "---------------------------------------------------------------------"

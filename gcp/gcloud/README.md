@@ -11,6 +11,7 @@ gcloud auth application-default login
 ### 1. Go to gcloud dir
 ```
 cd gcp/gcloud
+chmod +x ./*.sh
 ```
 
 ### 2. Configure & Source Environment Variables

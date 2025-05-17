@@ -61,20 +61,6 @@ gcloud functions deploy ${FUNCTION_NAME} \
 echo "Creating API Gateway API definition ${API_ID}..."
 gcloud api-gateway apis create ${API_ID} --project=${PROJECT_ID} || { echo "Failed to create API Gateway API definition. Exiting."; exit 1; }
 
-echo "API definition created. Waiting 60 seconds for managed service registration..."
-sleep 60 # Crucial delay
-
-# Enable the specific managed service
-echo "Enabling managed service for API Gateway..."
-MANAGED_SERVICE=$(gcloud api-gateway apis describe ${API_ID} --project=${PROJECT_ID} --format='value(managedService)')
-if [ -z "${MANAGED_SERVICE}" ]; then
-    echo "Error: Could not retrieve managed service name for API ${API_ID}. Exiting."
-    exit 1
-fi
-gcloud services enable ${MANAGED_SERVICE} \
-  --project=${PROJECT_ID} || { echo "Failed to enable managed service ${MANAGED_SERVICE}. Exiting."; exit 1; }
-
-echo "Managed service enabled."
 echo ""
 echo "---------------------------------------------------------------------"
 echo "ACTION REQUIRED: Cloud Function Deployed!"
