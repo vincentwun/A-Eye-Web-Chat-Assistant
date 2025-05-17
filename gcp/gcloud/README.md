@@ -1,13 +1,50 @@
-# Install gcloud
-sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates gnupg curl
+## Prerequisites
 
-curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+1.  **Install Google Cloud SDK (gcloud CLI)**: https://cloud.google.com/sdk/docs/install#deb
+2.  **Login to gcloud**: gcloud auth application-default login
 
-echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+## Deployment Steps
 
-sudo apt-get update && sudo apt-get install -y google-cloud-cli
+### 1. Go to gcloud dir
+```
+cd gcp/gcloud
+```
 
-# Login to gcloud
-gcloud auth application-default login
+### 2. Configure & Source Environment Variables
 
-#
+a.  Edit `1_setup_env.sh`:
+    *   **Update `BILLING_ACCOUNT_ID`** with your actual Google Cloud Billing Account ID.
+b.  Source the script to load variables:
+    ```bash
+    source ./1_setup_env.sh
+    ```
+
+### 3. Deploy Infrastructure & Get Function URL
+a.  Run the script:
+    ```bash
+    ./2_deploy_infra.sh
+    ```
+b.  **ACTION REQUIRED**:
+    *   The script will output a **Function Invoke URL**.
+    *   **Copy this URL.**
+    *   Open `api-config.yaml`.
+    *   Replace the placeholder in `address:` (line 18) with the copied Function URL.
+    *   Save `api-config.yaml`.
+
+
+### 4. Create Gateway & API Key
+
+This script finalizes the API Gateway setup and generates your API key.
+
+a.  Run the script:
+    ```bash
+    ./3_create_gateway_and_key.sh
+    ```
+b.  The script will output:
+    *   **API Gateway Endpoint URL** (e.g., `https://your-gateway-id.uc.gateway.dev/gemini-proxy`)
+    *   **API Key String**
+
+### 5. Use in Chrome Extension
+
+*   **Endpoint**: Entry to **Setting** > **API Gateway Endpoint**
+*   **API Key**: Entry to **Setting** > **Gemini API Key** 
