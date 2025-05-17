@@ -15,13 +15,13 @@ cd gcp/gcloud
 a.  Edit `1_setup_env.sh`:
     *   **Update `BILLING_ACCOUNT_ID`** with your actual Google Cloud Billing Account ID.
 b.  Source the script to load variables:
-    ```bash
+    ```
     source ./1_setup_env.sh
     ```
 
 ### 3. Deploy Infrastructure & Get Function URL
 a.  Run the script:
-    ```bash
+    ```
     ./2_deploy_infra.sh
     ```
 b.  **ACTION REQUIRED**:
@@ -37,7 +37,7 @@ b.  **ACTION REQUIRED**:
 This script finalizes the API Gateway setup and generates your API key.
 
 a.  Run the script:
-    ```bash
+    ```
     ./3_create_gateway_and_key.sh
     ```
 b.  The script will output:
