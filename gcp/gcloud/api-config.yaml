@@ -15,7 +15,7 @@ paths:
       summary: Proxy Gemini Request
       operationId: proxyGeminiRequest
       x-google-backend:
-        address: ${function_url}
+        address: https://<YOUR_CLOUD_FUNCTION_URL> # Replace with your Cloud Function URL
         protocol: h2
         deadline: 60
       security:
