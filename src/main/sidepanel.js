@@ -539,7 +539,7 @@ class AIScreenReader {
                 if (!shouldSetProcessing) {
                     this.setProcessing(false);
                 }
-                await this._speakResponse(displayContent);
+                this._speakResponse(displayContent);
             } catch (error) {
                 console.error("Error speaking API response in handleResponse:", error);
                 this.handleError("Error speaking response", error);

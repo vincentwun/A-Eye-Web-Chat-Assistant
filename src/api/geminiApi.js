@@ -113,7 +113,7 @@ export async function sendGeminiRequest(
   if (modelToUse === "gemini-2.5-flash-preview-04-17") {
     geminiPayload.generationConfig = {
       thinkingConfig: {
-        thinkingBudget: 1024,
+        thinkingBudget: 128,
       }
     };
   }
