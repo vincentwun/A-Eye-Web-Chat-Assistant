@@ -110,12 +110,12 @@ export async function sendGeminiRequest(
     ...(systemPrompt && { systemInstruction: { parts: [{ text: systemPrompt }] } })
   };
 
-  const modelsWithThinkingConfig = ['gemini-2.5-flash'];
+  const modelsWithThinkingConfig = ['gemini-2.5-flash', 'gemini-2.5-flash-lite-preview-06-17'];
 
   if (modelsWithThinkingConfig.includes(modelToUse)) {
     geminiPayload.generationConfig = {
       thinkingConfig: {
-        thinkingBudget: -1,
+        thinkingBudget: 0,
       }
     };
   }

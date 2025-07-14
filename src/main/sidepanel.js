@@ -421,6 +421,7 @@ class AIScreenReader {
         this.setProcessing(true);
         this.appendMessage('user', userInput);
         this.uiManager.clearUserInput();
+        this.elements.userInput.focus();
 
         let imageDataToSend = null;
         let mimeTypeToSend = null;
@@ -448,7 +449,7 @@ class AIScreenReader {
                 imageDataToSend,
                 systemPrompt
             );
-            await this.handleResponse(responseContent);
+            this.handleResponse(responseContent);
 
         } catch (error) {
             this.handleError('Message sending failed', error);
@@ -496,10 +497,10 @@ class AIScreenReader {
         try {
             if (sentences.length > 4) {
                 for (const sentence of sentences) {
-                    await this.voiceController.speakText(sentence);
+                    this.voiceController.speakText(sentence);
                 }
             } else {
-                await this.voiceController.speakText(text);
+                this.voiceController.speakText(text);
             }
         } catch (error) {
             console.error("Error during speech synthesis:", error);
