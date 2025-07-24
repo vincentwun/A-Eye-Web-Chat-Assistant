@@ -325,6 +325,7 @@ class AIScreenReader {
         this.setProcessing(true);
         this.appendMessage('user', userInput);
         this.uiManager.clearUserInput();
+        this.uiManager.showThinkingIndicator();
 
         let imageDataToSend = null;
         let mimeTypeToSend = null;
@@ -402,6 +403,7 @@ class AIScreenReader {
     }
 
     async handleResponse(responseContent) {
+        this.uiManager.hideThinkingIndicator();
         const responseText = (typeof responseContent === 'string') ? responseContent : JSON.stringify(responseContent);
         let commandResult = null;
         try {
@@ -429,6 +431,7 @@ class AIScreenReader {
     }
 
     handleError(message, error) {
+        this.uiManager.hideThinkingIndicator();
         console.error(message, error);
         const userFriendlyMessage = message || "An unexpected error occurred";
         let detail = '';
@@ -450,6 +453,7 @@ class AIScreenReader {
     handleClear() {
         if (this.stateManager.isProcessing()) { this.appendMessage('system', 'Processing, please wait...'); return; }
         this.voiceController.stopSpeaking();
+        this.uiManager.hideThinkingIndicator();
         this.uiManager.clearConversation();
         this.uiManager.clearUserInput();
         this.uiManager.hidePreview();

@@ -24,6 +24,27 @@ export class UIManager {
         this.elements.conversation.scrollTop = this.elements.conversation.scrollHeight;
     }
 
+    showThinkingIndicator() {
+        if (!this.elements.conversation || document.getElementById('thinking-indicator')) return;
+
+        const indicatorDiv = document.createElement('div');
+        indicatorDiv.id = 'thinking-indicator';
+        indicatorDiv.classList.add('message', 'message-assistant');
+
+        const rolePrefix = 'A-Eye';
+        indicatorDiv.innerHTML = `<strong>${rolePrefix}:</strong> <div class="dot-flashing"></div>`;
+
+        this.elements.conversation.appendChild(indicatorDiv);
+        this.elements.conversation.scrollTop = this.elements.conversation.scrollHeight;
+    }
+
+    hideThinkingIndicator() {
+        const indicator = document.getElementById('thinking-indicator');
+        if (indicator) {
+            indicator.remove();
+        }
+    }
+
     showPreview(type, content) {
         if (!this.elements.previewContainer || !this.elements.previewImage || !this.elements.previewText) return;
         this.elements.previewContainer.style.display = 'block';

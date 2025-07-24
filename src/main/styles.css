@@ -329,3 +329,67 @@ body {
 #clear-button {
   background-color: #dc3545;
 }
+
+#thinking-indicator {
+  align-self: flex-start;
+  margin-right: auto;
+  background: var(--gray-50);
+  color: var(--gray-700);
+  margin: var(--space) auto var(--space) 0;
+  display: flex;
+  align-items: center;
+  padding: 13px;
+}
+
+#thinking-indicator .dot-flashing {
+  position: relative;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: var(--blue);
+  color: var(--blue);
+  animation: dot-flashing 1s infinite linear alternate;
+  animation-delay: .5s;
+  margin: 0 4px 0 15px;
+}
+
+#thinking-indicator .dot-flashing::before,
+#thinking-indicator .dot-flashing::after {
+  content: '';
+  display: inline-block;
+  position: absolute;
+  top: 0;
+}
+
+#thinking-indicator .dot-flashing::before {
+  left: -10px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: var(--blue);
+  color: var(--blue);
+  animation: dot-flashing 1s infinite alternate;
+  animation-delay: 0s;
+}
+
+#thinking-indicator .dot-flashing::after {
+  left: 10px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: var(--blue);
+  color: var(--blue);
+  animation: dot-flashing 1s infinite alternate;
+  animation-delay: 1s;
+}
+
+@keyframes dot-flashing {
+  0% {
+    background-color: var(--blue);
+  }
+
+  50%,
+  100% {
+    background-color: rgba(26, 115, 232, 0.4);
+  }
+}
