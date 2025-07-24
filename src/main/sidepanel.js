@@ -416,7 +416,6 @@ class AIScreenReader {
         this.setProcessing(true);
         this.appendMessage('user', userInput);
         this.uiManager.clearUserInput();
-        this.elements.userInput.focus();
 
         let imageDataToSend = null;
         let mimeTypeToSend = null;
@@ -554,6 +553,9 @@ class AIScreenReader {
         this.appendMessage('system', 'Conversation cleared.');
         this.voiceController.speakText('Conversation cleared.');
         this.setProcessing(false);
+        if (this.elements.userInput) {
+            this.elements.userInput.focus();
+        }
     }
 
     async handleRepeat() {
