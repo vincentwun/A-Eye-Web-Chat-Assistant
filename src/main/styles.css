@@ -234,6 +234,15 @@ body {
   background-color: var(--gray-300);
 }
 
+#input-section #voiceInput-button.active-recording {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+#input-section #voiceInput-button.active-recording:hover {
+  background-color: #c82333;
+}
+
 .footer {
   padding: 3px var(--common-padding);
   background: var(--gray-50);
