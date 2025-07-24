@@ -507,7 +507,7 @@ class AIScreenReader {
             }
 
         } else {
-            const msg = 'No previous AI response to repeat.';
+            const msg = 'No previous response to repeat.';
             this.appendMessage('system', msg);
             this.voiceController.speakText(msg);
         }
