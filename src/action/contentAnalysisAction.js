@@ -45,7 +45,7 @@ export class ContentAnalysisAction {
                 const previewSnippet = this.uiManager.escapeHTML(extractedText.substring(0, 500));
                 this.uiManager.showPreview('text', `${previewSnippet}...`);
 
-                this.appendMessage('user', `[Page Content Attached]\nSnippet: ${extractedText.substring(0, 100)}...`);
+                this.appendMessage('user', `[Page Content Attached]`);
                 this.appendMessage('system', 'Content extracted. Sending for analysis...');
                 await this.voiceController.speakText("Analyzing content.");
 

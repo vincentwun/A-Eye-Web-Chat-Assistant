@@ -6,32 +6,13 @@ import { CommandProcessor } from '../action/commandMap.js';
 import { ScreenshotAction } from '../action/screenshotAction.js';
 import { ScrollingScreenshotAction } from '../action/scrollingScreenshotAction.js';
 import { ContentAnalysisAction } from '../action/contentAnalysisAction.js';
-import { defaultPrompts, promptsStorageKey } from '../option/prompts.js';
-import { settingsStorageKey, defaultApiSettings } from '../option/apiRoute.js';
 import { ActionFlowController } from '../components/actionFlowController.js';
+import { StateManager } from '../components/stateManager.js';
+import { defaultApiSettings } from '../option/apiRoute.js';
 
 class AIScreenReader {
     constructor() {
-        this.prompts = { ...defaultPrompts };
-        this.promptsStorageKey = promptsStorageKey;
-        this.settingsStorageKey = settingsStorageKey;
-
-        this.state = {
-            activeApiMode: defaultApiSettings.activeApiMode,
-            localApiUrl: defaultApiSettings.localApiUrl,
-            ollamaMultimodalModel: defaultApiSettings.ollamaMultimodalModel,
-            cloudApiUrl: defaultApiSettings.cloudApiUrl,
-            cloudApiKey: defaultApiSettings.cloudApiKey,
-            cloudModelName: defaultApiSettings.cloudModelName,
-            cloudApiMethod: defaultApiSettings.cloudApiMethod,
-            cloudProxyUrl: defaultApiSettings.cloudProxyUrl,
-            isProcessing: false,
-            messages: [],
-            lastCommandTime: 0,
-            commandCooldown: 1000,
-            settingsLoaded: false,
-            lastImageData: { dataUrl: null, mimeType: null }
-        };
+        this.stateManager = new StateManager(this.onStateChange.bind(this));
 
         this.elements = {
             screenshotButton: document.getElementById('screenshot-button'),
@@ -75,9 +56,9 @@ class AIScreenReader {
             uiManager: this.uiManager,
             voiceController: this.voiceController,
             apiService: this.apiService,
-            state: this.state,
-            getApiConfig: this.getApiConfig.bind(this),
-            getHistoryToSend: this.getHistoryToSend.bind(this),
+            state: this.stateManager.getState(),
+            getApiConfig: this.stateManager.getApiConfig.bind(this.stateManager),
+            getHistoryToSend: this.stateManager.getHistoryToSend.bind(this.stateManager),
             handleResponse: this.handleResponse.bind(this),
             handleError: this.handleError.bind(this),
             setProcessing: this.setProcessing.bind(this),
@@ -99,10 +80,10 @@ class AIScreenReader {
 
         const flowControllerDependencies = {
             apiService: this.apiService,
-            prompts: this.prompts,
-            state: this.state,
-            getApiConfig: this.getApiConfig.bind(this),
-            getHistoryToSend: this.getHistoryToSend.bind(this),
+            prompts: this.stateManager.getPrompts(),
+            state: this.stateManager.getState(),
+            getApiConfig: this.stateManager.getApiConfig.bind(this.stateManager),
+            getHistoryToSend: this.stateManager.getHistoryToSend.bind(this.stateManager),
             handleResponse: this.handleResponse.bind(this),
             handleError: this.handleError.bind(this),
             setProcessing: this.setProcessing.bind(this),
@@ -113,11 +94,16 @@ class AIScreenReader {
 
         this.setupMessageListener();
         this.initializeAll();
-        this.setupStorageListener();
+    }
+
+    onStateChange(changes) {
+        if (changes.settingsChanged) {
+            this.uiManager.updateModeUI(this.stateManager.getState().activeApiMode);
+        }
     }
 
     updateLastImageData(dataUrl, mimeType) {
-        this.state.lastImageData = { dataUrl, mimeType };
+        this.stateManager.updateLastImageData(dataUrl, mimeType);
         if (this.uiManager && typeof this.uiManager.showPreview === 'function') {
             this.uiManager.showPreview('image', dataUrl);
         } else {
@@ -126,9 +112,9 @@ class AIScreenReader {
     }
 
     async handleScreenshot() {
-        if (!this.state.settingsLoaded || this.state.isProcessing) return;
-        if (this.state.activeApiMode === 'local' && !this.isLocalModeConfigValid()) return;
-        if (this.state.activeApiMode === 'cloud' && !this.isCloudModeConfigValid()) return;
+        if (!this.stateManager.isSettingsLoaded() || this.stateManager.isProcessing()) return;
+        if (this.stateManager.getState().activeApiMode === 'local' && !this.isLocalModeConfigValid()) return;
+        if (this.stateManager.getState().activeApiMode === 'cloud' && !this.isCloudModeConfigValid()) return;
         try {
             await this.screenshotAction.execute();
         } catch (error) {
@@ -137,9 +123,9 @@ class AIScreenReader {
     }
 
     async handleScrollingScreenshot() {
-        if (!this.state.settingsLoaded || this.state.isProcessing) return;
-        if (this.state.activeApiMode === 'local' && !this.isLocalModeConfigValid()) return;
-        if (this.state.activeApiMode === 'cloud' && !this.isCloudModeConfigValid()) return;
+        if (!this.stateManager.isSettingsLoaded() || this.stateManager.isProcessing()) return;
+        if (this.stateManager.getState().activeApiMode === 'local' && !this.isLocalModeConfigValid()) return;
+        if (this.stateManager.getState().activeApiMode === 'cloud' && !this.isCloudModeConfigValid()) return;
         try {
             await this.scrollingScreenshotAction.execute();
         } catch (error) {
@@ -148,9 +134,9 @@ class AIScreenReader {
     }
 
     async handleContentAnalysis() {
-        if (!this.state.settingsLoaded || this.state.isProcessing) return;
-        if (this.state.activeApiMode === 'local' && !this.isLocalModeConfigValid()) return;
-        if (this.state.activeApiMode === 'cloud' && !this.isCloudModeConfigValid()) return;
+        if (!this.stateManager.isSettingsLoaded() || this.stateManager.isProcessing()) return;
+        if (this.stateManager.getState().activeApiMode === 'local' && !this.isLocalModeConfigValid()) return;
+        if (this.stateManager.getState().activeApiMode === 'cloud' && !this.isCloudModeConfigValid()) return;
         try {
             await this.contentAnalysisAction.execute();
         } catch (error) {
@@ -161,7 +147,7 @@ class AIScreenReader {
     setupMessageListener() {
         chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             const messageHandlers = {
-                toggleApiMode: () => this.handleModeChange(this.state.activeApiMode === 'local' ? 'cloud' : 'local'),
+                toggleApiMode: () => this.handleModeChange(this.stateManager.getState().activeApiMode === 'local' ? 'cloud' : 'local'),
                 toggleVoiceInput: () => this.voiceController.toggleVoiceInput(),
                 toggleRepeat: () => this.handleRepeat(),
                 executeScreenshot: () => this.handleScreenshot(),
@@ -170,10 +156,10 @@ class AIScreenReader {
             };
 
             if (messageHandlers[request.type]) {
-                if (this.state.isProcessing) {
+                if (this.stateManager.isProcessing()) {
                     this.appendMessage('system', 'Processing, please wait...'); sendResponse({ success: false, error: 'Busy processing' }); return true;
                 }
-                if (!this.state.settingsLoaded) {
+                if (!this.stateManager.isSettingsLoaded()) {
                     this.appendMessage('system', 'Initializing, please wait...'); sendResponse({ success: false, error: 'Initializing' }); return true;
                 }
                 try {
@@ -190,78 +176,19 @@ class AIScreenReader {
         });
     }
 
-    setupStorageListener() {
-        chrome.storage.onChanged.addListener((changes, areaName) => {
-            if (areaName !== 'local') return;
-            let settingsChanged = false;
-            let promptsChanged = false;
-            const activeModeBeforeChange = this.state.activeApiMode;
-
-            if (changes[this.settingsStorageKey]) {
-                const newSettings = changes[this.settingsStorageKey].newValue || {};
-                this.state.activeApiMode = newSettings.activeApiMode ?? defaultApiSettings.activeApiMode;
-                this.state.localApiUrl = newSettings.localApiUrl || defaultApiSettings.localApiUrl;
-                this.state.ollamaMultimodalModel = newSettings.ollamaMultimodalModel || defaultApiSettings.ollamaMultimodalModel;
-                this.state.cloudApiUrl = newSettings.cloudApiUrl || defaultApiSettings.cloudApiUrl;
-                this.state.cloudApiKey = newSettings.cloudApiKey ?? defaultApiSettings.cloudApiKey;
-                this.state.cloudModelName = newSettings.cloudModelName || defaultApiSettings.cloudModelName;
-                this.state.cloudApiMethod = newSettings.cloudApiMethod || defaultApiSettings.cloudApiMethod;
-                this.state.cloudProxyUrl = newSettings.cloudProxyUrl || defaultApiSettings.cloudProxyUrl;
-                settingsChanged = true;
-            }
-            if (changes[this.promptsStorageKey]) {
-                const newPromptsData = changes[this.promptsStorageKey].newValue || {};
-                this.prompts = { ...defaultPrompts, ...newPromptsData };
-                promptsChanged = true;
-            }
-            if (settingsChanged) {
-                this.uiManager.updateModeUI(this.state.activeApiMode);
-            }
-        });
-    }
-
     async initializeAll() {
         try {
-            await this.loadSettingsAndPrompts();
-            this.uiManager.updateModeUI(this.state.activeApiMode);
+            await this.stateManager.initialize();
+            this.uiManager.updateModeUI(this.stateManager.getState().activeApiMode);
             this.setupEventListeners();
             await this.voiceController.initializeAll();
             this.appendMessage('system', 'A-Eye Assistant Ready.');
             this.voiceController.speakText('A-Eye Assistant Ready.');
             this.uiManager.updateInputState(this.elements.userInput.value);
-            this.state.settingsLoaded = true;
         } catch (error) {
             this.handleError('Initialization failed', error);
-            this.uiManager.updateModeUI(this.state.activeApiMode);
-            this.state.activeApiMode = this.state.activeApiMode ?? defaultApiSettings.activeApiMode;
-            this.state.localApiUrl = this.state.localApiUrl ?? defaultApiSettings.localApiUrl;
-            this.state.ollamaMultimodalModel = this.state.ollamaMultimodalModel ?? defaultApiSettings.ollamaMultimodalModel;
-            this.state.cloudApiUrl = this.state.cloudApiUrl ?? defaultApiSettings.cloudApiUrl;
-            this.state.cloudApiKey = this.state.cloudApiKey ?? defaultApiSettings.cloudApiKey;
-            this.state.cloudModelName = this.state.cloudModelName ?? defaultApiSettings.cloudModelName;
-            this.state.cloudApiMethod = this.state.cloudApiMethod ?? defaultApiSettings.cloudApiMethod;
-            this.state.cloudProxyUrl = this.state.cloudProxyUrl ?? defaultApiSettings.cloudProxyUrl;
-            this.prompts = this.prompts ?? { ...defaultPrompts };
-            this.state.settingsLoaded = false;
-        }
-    }
-
-    async loadSettingsAndPrompts() {
-        try {
-            const result = await chrome.storage.local.get([this.settingsStorageKey, this.promptsStorageKey]);
-            const savedSettings = result[this.settingsStorageKey] || {};
-            const savedPrompts = result[this.promptsStorageKey] || {};
-            this.state.activeApiMode = savedSettings.activeApiMode ?? defaultApiSettings.activeApiMode;
-            this.state.localApiUrl = savedSettings.localApiUrl || defaultApiSettings.localApiUrl;
-            this.state.ollamaMultimodalModel = savedSettings.ollamaMultimodalModel || defaultApiSettings.ollamaMultimodalModel;
-            this.state.cloudApiUrl = savedSettings.cloudApiUrl || defaultApiSettings.cloudApiUrl;
-            this.state.cloudApiKey = savedSettings.cloudApiKey ?? defaultApiSettings.cloudApiKey;
-            this.state.cloudModelName = savedSettings.cloudModelName || defaultApiSettings.cloudModelName;
-            this.state.cloudApiMethod = savedSettings.cloudApiMethod || defaultApiSettings.cloudApiMethod;
-            this.state.cloudProxyUrl = savedSettings.cloudProxyUrl || defaultApiSettings.cloudProxyUrl;
-            this.prompts = { ...defaultPrompts, ...savedPrompts };
-        } catch (error) {
-            throw error;
+            const currentState = this.stateManager.getState();
+            this.uiManager.updateModeUI(currentState.activeApiMode ?? defaultApiSettings.activeApiMode);
         }
     }
 
@@ -282,11 +209,11 @@ class AIScreenReader {
             const element = this.elements[elementId];
             if (element) {
                 element.addEventListener('click', async (event) => {
-                    if (this.state.isProcessing && elementId !== 'clearButton') {
+                    if (this.stateManager.isProcessing() && elementId !== 'clearButton') {
                         this.appendMessage('system', 'Processing, please wait...');
                         return;
                     }
-                    if (!this.state.settingsLoaded && elementId !== 'openOptionsButton') {
+                    if (!this.stateManager.isSettingsLoaded() && elementId !== 'openOptionsButton') {
                         this.appendMessage('system', 'Initializing, please wait...');
                         return;
                     }
@@ -306,37 +233,27 @@ class AIScreenReader {
         } else { console.error("User input element not found!"); }
     }
 
-    handleModeChange(newMode) {
-        if (!this.state.settingsLoaded || this.state.isProcessing || newMode === this.state.activeApiMode) return;
+    async handleModeChange(newMode) {
+        if (!this.stateManager.isSettingsLoaded() || this.stateManager.isProcessing() || newMode === this.stateManager.getState().activeApiMode) return;
         if (newMode === 'local' && !this.isLocalModeConfigValid()) return;
         if (newMode === 'cloud' && !this.isCloudModeConfigValid()) return;
-        this.state.activeApiMode = newMode;
-        this.uiManager.updateModeUI(this.state.activeApiMode);
-        this.saveActiveModePreference(newMode);
+        await this.stateManager.setActiveApiMode(newMode);
+        this.uiManager.updateModeUI(newMode);
         const modeName = newMode === 'local' ? 'Local' : 'Cloud';
         this.appendMessage('system', `Switched to ${modeName} Mode.`);
         this.voiceController.speakText(`Switched to ${modeName} Mode.`);
     }
 
-    async saveActiveModePreference(mode) {
-        if (!this.state.settingsLoaded) return;
-        try {
-            const result = await chrome.storage.local.get(this.settingsStorageKey);
-            const currentSettings = result[this.settingsStorageKey] || { ...defaultApiSettings };
-            currentSettings.activeApiMode = mode;
-            await chrome.storage.local.set({ [this.settingsStorageKey]: currentSettings });
-        } catch (error) { console.error('Error saving active mode preference:', error); }
-    }
-
     isLocalModeConfigValid() {
+        const state = this.stateManager.getState();
         let isValid = true;
-        if (!this.state.localApiUrl) {
+        if (!state.localApiUrl) {
             const msg = 'Local API URL is missing. Please configure in Options page.';
             this.appendMessage('system', msg);
             this.voiceController.speakText('Local API settings missing.');
             isValid = false;
         }
-        if (!this.state.ollamaMultimodalModel) {
+        if (!state.ollamaMultimodalModel) {
             const msg = 'Local Model Name is missing. Please configure in Options page.';
             if (isValid) this.appendMessage('system', msg);
             if (isValid) this.voiceController.speakText('Local API settings missing.');
@@ -346,31 +263,32 @@ class AIScreenReader {
     }
 
     isCloudModeConfigValid() {
-        const method = this.state.cloudApiMethod;
+        const state = this.stateManager.getState();
+        const method = state.cloudApiMethod;
         const isDirect = method === 'direct';
         const isProxy = method === 'proxy';
         let isValid = true;
         let speakMsg = null;
 
-        if (!this.state.cloudApiKey) {
+        if (!state.cloudApiKey) {
             const msg = 'Cloud API Key is missing. Please configure in Options page.';
             this.appendMessage('system', msg);
             speakMsg = 'Cloud settings missing: API Key.';
             isValid = false;
         }
-        if (!this.state.cloudModelName) {
+        if (!state.cloudModelName) {
             const msg = 'Cloud Model Name is missing. Please configure in Options page.';
             if (isValid) this.appendMessage('system', msg);
             if (isValid) speakMsg = 'Cloud settings missing: Model Name.';
             isValid = false;
         }
-        if (isDirect && !this.state.cloudApiUrl) {
+        if (isDirect && !state.cloudApiUrl) {
             const msg = 'Cloud API Base URL is missing for Direct Connection. Please configure in Options page.';
             if (isValid) this.appendMessage('system', msg);
             if (isValid) speakMsg = 'Cloud settings missing: Base URL for Direct mode.';
             isValid = false;
         }
-        if (isProxy && !this.state.cloudProxyUrl) {
+        if (isProxy && !state.cloudProxyUrl) {
             const msg = 'Cloud Function URL is missing for Proxy Connection. Please configure in Options page.';
             if (isValid) this.appendMessage('system', msg);
             if (isValid) speakMsg = 'Cloud settings missing: Function URL for Proxy mode.';
@@ -384,34 +302,25 @@ class AIScreenReader {
     }
 
     getApiConfig() {
-        return {
-            localApiUrl: this.state.localApiUrl,
-            ollamaMultimodalModel: this.state.ollamaMultimodalModel,
-            cloudApiUrl: this.state.cloudApiUrl,
-            cloudApiKey: this.state.cloudApiKey,
-            cloudModelName: this.state.cloudModelName,
-            cloudApiMethod: this.state.cloudApiMethod,
-            cloudProxyUrl: this.state.cloudProxyUrl,
-            activeApiMode: this.state.activeApiMode
-        };
+        return this.stateManager.getApiConfig();
     }
 
     getHistoryToSend(commandToExclude = null) {
-        const baseHistory = this.state.messages.filter(m =>
-            (m.role === 'user' || m.role === 'assistant') &&
-            (!commandToExclude || m.content !== commandToExclude)
-        );
-        const MAX_HISTORY_FOR_API = 10;
-        return baseHistory.slice(-MAX_HISTORY_FOR_API);
+        return this.stateManager.getHistoryToSend(commandToExclude);
     }
 
     async handleSendMessage() {
         const userInput = this.elements.userInput.value.trim();
+        if (userInput.toLowerCase() === 'clear') {
+            this.handleClear();
+            return;
+        }
         if (!userInput) { return; }
-        if (!this.state.settingsLoaded) { this.appendMessage('system', 'Initializing, please wait...'); return; }
-        if (this.state.isProcessing) { this.appendMessage('system', 'Processing, please wait...'); return; }
-        if (this.state.activeApiMode === 'local' && !this.isLocalModeConfigValid()) return;
-        if (this.state.activeApiMode === 'cloud' && !this.isCloudModeConfigValid()) return;
+        if (!this.stateManager.isSettingsLoaded()) { this.appendMessage('system', 'Initializing, please wait...'); return; }
+        if (this.stateManager.isProcessing()) { this.appendMessage('system', 'Processing, please wait...'); return; }
+        const state = this.stateManager.getState();
+        if (state.activeApiMode === 'local' && !this.isLocalModeConfigValid()) return;
+        if (state.activeApiMode === 'cloud' && !this.isCloudModeConfigValid()) return;
 
         this.setProcessing(true);
         this.appendMessage('user', userInput);
@@ -419,14 +328,15 @@ class AIScreenReader {
 
         let imageDataToSend = null;
         let mimeTypeToSend = null;
-        let systemPrompt = this.prompts.system_prompt;
+        let systemPrompt = this.stateManager.getPrompts().system_prompt;
 
         const isPreviewVisible = this.elements.previewContainer && this.elements.previewContainer.style.display !== 'none';
         const previewHasImage = this.elements.previewImage && this.elements.previewImage.src && this.elements.previewImage.src !== location.href;
+        const lastImageData = state.lastImageData;
 
-        if (isPreviewVisible && previewHasImage && this.state.lastImageData.dataUrl) {
-            imageDataToSend = this.state.lastImageData.dataUrl;
-            mimeTypeToSend = this.state.lastImageData.mimeType;
+        if (isPreviewVisible && previewHasImage && lastImageData.dataUrl) {
+            imageDataToSend = lastImageData.dataUrl;
+            mimeTypeToSend = lastImageData.mimeType;
         } else {
             this.uiManager.hidePreview();
         }
@@ -447,7 +357,7 @@ class AIScreenReader {
 
         } catch (error) {
             this.handleError('Message sending failed', error);
-            if (this.state.isProcessing) {
+            if (this.stateManager.isProcessing()) {
                 this.setProcessing(false);
             }
         }
@@ -464,12 +374,7 @@ class AIScreenReader {
         }
 
         if (role !== 'system') {
-            this.state.messages.push({ role, content: String(content) });
-        }
-
-        const MAX_HISTORY = 20;
-        if (this.state.messages.length > MAX_HISTORY) {
-            this.state.messages = this.state.messages.slice(this.state.messages.length - MAX_HISTORY);
+            this.stateManager.addMessage({ role, content: String(content) });
         }
     }
 
@@ -543,13 +448,13 @@ class AIScreenReader {
     }
 
     handleClear() {
-        if (this.state.isProcessing) { this.appendMessage('system', 'Processing, please wait...'); return; }
+        if (this.stateManager.isProcessing()) { this.appendMessage('system', 'Processing, please wait...'); return; }
         this.voiceController.stopSpeaking();
         this.uiManager.clearConversation();
         this.uiManager.clearUserInput();
         this.uiManager.hidePreview();
-        this.state.messages = [];
-        this.state.lastImageData = { dataUrl: null, mimeType: null };
+        this.stateManager.clearMessages();
+        this.stateManager.clearLastImageData();
         this.appendMessage('system', 'Conversation cleared.');
         this.voiceController.speakText('Conversation cleared.');
         this.setProcessing(false);
@@ -561,16 +466,16 @@ class AIScreenReader {
     async handleRepeat() {
         this.voiceController.stopSpeaking();
 
-        if (!this.state.settingsLoaded) {
+        if (!this.stateManager.isSettingsLoaded()) {
             this.appendMessage('system', 'Initializing, please wait...');
             return;
         }
-        if (this.state.isProcessing) {
+        if (this.stateManager.isProcessing()) {
             this.appendMessage('system', 'Currently processing, cannot repeat now.');
             return;
         }
 
-        const lastAIMessage = [...this.state.messages].reverse().find(m => m.role === 'assistant');
+        const lastAIMessage = [...this.stateManager.getState().messages].reverse().find(m => m.role === 'assistant');
 
         if (lastAIMessage && lastAIMessage.content) {
             const fullContent = String(lastAIMessage.content);
@@ -620,8 +525,8 @@ class AIScreenReader {
     }
 
     setProcessing(isProcessing) {
-        if (this.state.isProcessing === isProcessing) return;
-        this.state.isProcessing = isProcessing;
+        if (this.stateManager.isProcessing() === isProcessing) return;
+        this.stateManager.setProcessing(isProcessing);
         this.uiManager.setProcessingState(isProcessing);
 
         if (!isProcessing && this.elements.userInput) {
