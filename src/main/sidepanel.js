@@ -190,7 +190,6 @@ class AIScreenReader {
         });
     }
 
-
     setupStorageListener() {
         chrome.storage.onChanged.addListener((changes, areaName) => {
             if (areaName !== 'local') return;
@@ -265,7 +264,6 @@ class AIScreenReader {
             throw error;
         }
     }
-
 
     setupEventListeners() {
         const eventHandlers = {
@@ -385,7 +383,6 @@ class AIScreenReader {
         return isValid;
     }
 
-
     getApiConfig() {
         return {
             localApiUrl: this.state.localApiUrl,
@@ -402,9 +399,7 @@ class AIScreenReader {
     getHistoryToSend(commandToExclude = null) {
         const baseHistory = this.state.messages.filter(m =>
             (m.role === 'user' || m.role === 'assistant') &&
-            (!commandToExclude || m.content !== commandToExclude) &&
-            (!m.content?.startsWith || !m.content.startsWith('openUrl:')) &&
-            !['takeScreenshot', 'scrollingScreenshot', 'analyzeContent', 'getElement'].includes(m.content?.trim())
+            (!commandToExclude || m.content !== commandToExclude)
         );
         const MAX_HISTORY_FOR_API = 10;
         return baseHistory.slice(-MAX_HISTORY_FOR_API);
@@ -449,36 +444,30 @@ class AIScreenReader {
                 imageDataToSend,
                 systemPrompt
             );
-            this.handleResponse(responseContent);
+            await this.handleResponse(responseContent);
 
         } catch (error) {
             this.handleError('Message sending failed', error);
             if (this.state.isProcessing) {
                 this.setProcessing(false);
             }
-        } finally {
-            if (!this.state.isProcessing && this.elements.userInput) {
-                this.elements.userInput.focus();
-            }
         }
     }
 
-    appendMessage(role, content) {
+    appendMessage(role, content, isSilent = false) {
         if (!content || (typeof content === 'string' && !content.trim())) {
             return;
         }
-        const formattedContent = this.uiManager.escapeHTML(String(content));
-        this.uiManager.appendMessage(role, formattedContent);
-        const knownCommands = ['takeScreenshot', 'scrollingScreenshot', 'analyzeContent', 'getElement'];
-        const contentStr = String(content);
-        const isCommand = contentStr.startsWith('openUrl:') || knownCommands.includes(contentStr.trim()) || (contentStr.startsWith('[') && contentStr.endsWith(']'));
 
-        if (role !== 'system' && !isCommand) {
-            const lastMessage = this.state.messages.length > 0 ? this.state.messages[this.state.messages.length - 1] : null;
-            if (!lastMessage || lastMessage.role !== role || lastMessage.content !== contentStr) {
-                this.state.messages.push({ role, content: contentStr });
-            }
+        if (!isSilent) {
+            const formattedContent = this.uiManager.escapeHTML(String(content));
+            this.uiManager.appendMessage(role, formattedContent);
         }
+
+        if (role !== 'system') {
+            this.state.messages.push({ role, content: String(content) });
+        }
+
         const MAX_HISTORY = 20;
         if (this.state.messages.length > MAX_HISTORY) {
             this.state.messages = this.state.messages.slice(this.state.messages.length - MAX_HISTORY);
@@ -519,39 +508,21 @@ class AIScreenReader {
             return;
         }
 
-        if (commandResult === true) {
-            this.setProcessing(false);
-        } else if (commandResult && commandResult.command === 'getElement') {
-            await this.actionFlowController.handleGetElementRequest();
-        } else if (commandResult && commandResult.command === 'executeActions') {
-            await this.actionFlowController.handleExecuteActionsRequest(commandResult.actions);
-        } else {
-            const displayContent = (typeof responseContent === 'string') ? responseContent : 'Received non-text response.';
-            this.appendMessage('assistant', displayContent);
-
-            const sentences = displayContent
-                .split(/[。？！.!?]/)
-                .map(s => s.trim())
-                .filter(s => s.length > 0);
-
-            let shouldSetProcessing = sentences.length > 4;
-
-            try {
-                if (!shouldSetProcessing) {
-                    this.setProcessing(false);
-                }
-                await this._speakResponse(displayContent);
-            } catch (error) {
-                console.error("Error speaking API response in handleResponse:", error);
-                this.handleError("Error speaking response", error);
-            } finally {
-                if (shouldSetProcessing) {
-                    this.setProcessing(false);
-                }
+        if (commandResult) {
+            if (commandResult.command === 'executeActions') {
+                await this.actionFlowController.handleExecuteActionsRequest(commandResult.actions);
+            } else if (commandResult.command === 'getElement') {
+                await this.actionFlowController.handleGetElementRequest();
+            } else if (commandResult === true) {
+                this.appendMessage('assistant', '[{"action": "Done"}]', true);
+                this.setProcessing(false);
             }
+        } else {
+            this.appendMessage('assistant', responseText, false);
+            await this._speakResponse(responseText);
+            this.setProcessing(false);
         }
     }
-
 
     handleError(message, error) {
         console.error(message, error);
@@ -607,7 +578,7 @@ class AIScreenReader {
                 .map(s => s.trim())
                 .filter(s => s.length > 0);
 
-            let shouldSetProcessing = sentences.length > 4;
+            let shouldSetProcessing = sentences.length > 20;
 
             if (shouldSetProcessing) {
                 this.setProcessing(true);
@@ -650,6 +621,10 @@ class AIScreenReader {
         if (this.state.isProcessing === isProcessing) return;
         this.state.isProcessing = isProcessing;
         this.uiManager.setProcessingState(isProcessing);
+
+        if (!isProcessing && this.elements.userInput) {
+            this.elements.userInput.focus();
+        }
     }
 }
 
@@ -657,4 +632,5 @@ function initializeApp() {
     if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', () => { if (!window.aiScreenReader) { window.aiScreenReader = new AIScreenReader(); } }); }
     else { if (!window.aiScreenReader) { window.aiScreenReader = new AIScreenReader(); } }
 }
+
 initializeApp();

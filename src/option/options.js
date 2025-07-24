@@ -9,6 +9,58 @@ let currentVoiceSettings = null;
 const localModelSelect = document.getElementById('local-model-name-select');
 const predefinedLocalModels = ["gemma3:4b", "gemma3:12b", "gemma3:27b"];
 
+function saveOptions() {
+    const elementsToSave = document.querySelectorAll('[data-storage-key]');
+    const keysToUpdate = {
+        [settingsStorageKey]: {},
+        [promptsStorageKey]: {},
+        [voiceSettingsStorageKey]: {}
+    };
+
+    elementsToSave.forEach(el => {
+        const storageKey = el.dataset.storageKey;
+        const storageType = el.dataset.storageType;
+        let storageAreaKey;
+        let value;
+
+        if (storageType === 'settings') storageAreaKey = settingsStorageKey;
+        else if (storageType === 'prompts') storageAreaKey = promptsStorageKey;
+        else if (storageType === 'voice') storageAreaKey = voiceSettingsStorageKey;
+        else return;
+
+        if (el.type === 'radio') {
+            if (!el.checked) return;
+            value = el.value;
+        } else {
+            value = el.type === 'checkbox' ? el.checked : el.value;
+        }
+
+        keysToUpdate[storageAreaKey][storageKey] = value;
+    });
+
+    chrome.storage.local.get(Object.keys(keysToUpdate), (result) => {
+        if (chrome.runtime.lastError) {
+            return showNotification("Error preparing to save.", true);
+        }
+
+        const finalData = {
+            [settingsStorageKey]: { ...result[settingsStorageKey], ...keysToUpdate[settingsStorageKey] },
+            [promptsStorageKey]: { ...result[promptsStorageKey], ...keysToUpdate[promptsStorageKey] },
+            [voiceSettingsStorageKey]: { ...result[voiceSettingsStorageKey], ...keysToUpdate[voiceSettingsStorageKey] }
+        };
+
+        chrome.storage.local.set(finalData, () => {
+            if (chrome.runtime.lastError) {
+                showNotification(`Error: ${chrome.runtime.lastError.message}`, true);
+            } else {
+                showNotification('Settings Saved!');
+                currentVoiceSettings = finalData[voiceSettingsStorageKey];
+                updateCloudUrlVisibility();
+            }
+        });
+    });
+}
+
 function updateCloudUrlVisibility() {
     const directMethodRadio = document.getElementById('cloud-method-direct');
     const proxyMethodRadio = document.getElementById('cloud-method-proxy');
@@ -16,7 +68,6 @@ function updateCloudUrlVisibility() {
     const proxyUrlContainer = document.getElementById('proxy-url-container');
 
     if (!directMethodRadio || !proxyMethodRadio || !directUrlContainer || !proxyUrlContainer) {
-        console.error('Could not find all necessary elements for cloud URL visibility control.');
         return;
     }
 
@@ -70,20 +121,23 @@ function populateVoiceList() {
 
         if (voices.length === 0) {
             const defaultOption = document.createElement('option');
-            defaultOption.value = ""; defaultOption.textContent = "No voices available";
-            ttsVoiceSelect.appendChild(defaultOption); ttsVoiceSelect.disabled = true;
-            console.warn("No TTS voices found yet in populateVoiceList.");
+            defaultOption.value = "";
+            defaultOption.textContent = "No voices available";
+            ttsVoiceSelect.appendChild(defaultOption);
+            ttsVoiceSelect.disabled = true;
             return;
         }
 
         ttsVoiceSelect.disabled = false;
         const placeholderOption = document.createElement('option');
-        placeholderOption.value = ""; placeholderOption.textContent = "-- Select a Voice --";
+        placeholderOption.value = "";
+        placeholderOption.textContent = "-- Select a Voice --";
         ttsVoiceSelect.appendChild(placeholderOption);
 
         voices.forEach(voice => {
             const option = document.createElement('option');
-            option.value = voice.name; option.textContent = `${voice.name} (${voice.lang})`;
+            option.value = voice.name;
+            option.textContent = `${voice.name} (${voice.lang})`;
             if (voice.default) option.textContent += ' [Default]';
             ttsVoiceSelect.appendChild(option);
         });
@@ -92,30 +146,19 @@ function populateVoiceList() {
 
         if (targetVoiceName && ttsVoiceSelect.querySelector(`option[value="${CSS.escape(targetVoiceName)}"]`)) {
             ttsVoiceSelect.value = targetVoiceName;
-            console.log(`populateVoiceList: Set selected voice to "${targetVoiceName}"`);
         } else if (previousValue && ttsVoiceSelect.querySelector(`option[value="${CSS.escape(previousValue)}"]`)) {
             ttsVoiceSelect.value = previousValue;
-            console.log(`populateVoiceList: Saved voice "${targetVoiceName}" not found, kept previous value "${previousValue}"`);
         } else {
             let defaultEnUsVoice = voices.find(voice => voice.lang === 'en-US' && voice.default) || voices.find(voice => voice.lang === 'en-US');
             if (defaultEnUsVoice) {
                 ttsVoiceSelect.value = defaultEnUsVoice.name;
-                console.log(`populateVoiceList: No saved/previous value found, defaulting to en-US: ${defaultEnUsVoice.name}`);
                 if (!targetVoiceName) {
                     currentVoiceSettings.ttsVoiceName = defaultEnUsVoice.name;
-                    const dataToStore = {};
-                    dataToStore[voiceSettingsStorageKey] = currentVoiceSettings;
-                    chrome.storage.local.set(dataToStore, () => {
-                        if (chrome.runtime.lastError) {
-                            console.error("Error saving initial default TTS voice:", chrome.runtime.lastError.message);
-                        } else {
-                            console.log("Initial default TTS voice saved:", defaultEnUsVoice.name);
-                        }
-                    });
+                    const dataToStore = { [voiceSettingsStorageKey]: currentVoiceSettings };
+                    chrome.storage.local.set(dataToStore);
                 }
             } else {
                 ttsVoiceSelect.value = "";
-                console.warn("populateVoiceList: No saved/previous or en-US voice found.");
             }
         }
     };
@@ -125,7 +168,6 @@ function populateVoiceList() {
     } else if (typeof synth.onvoiceschanged !== 'undefined') {
         synth.onvoiceschanged = setVoices;
     } else {
-        console.warn("Browser does not support onvoiceschanged event. Retrying voice population.");
         setTimeout(populateVoiceList, 500);
     }
 }
@@ -140,18 +182,13 @@ function loadOptions() {
     const cloudApiKeyInput = document.getElementById('cloud-api-key-input');
     const cloudModelNameInput = document.getElementById('cloud-model-name-input');
     const systemPromptTextarea = document.getElementById('system_prompt');
-    const screenshotPromptTextarea = document.getElementById('screenshot_prompt');
-    const scrollingScreenshotPromptTextarea = document.getElementById('scrollingScreenshot_prompt');
-    const analyzeContentPromptTextarea = document.getElementById('analyzeContent_prompt');
     const sttSelect = document.getElementById('stt-language-select');
     const directRadio = document.getElementById('cloud-method-direct');
     const proxyRadio = document.getElementById('cloud-method-proxy');
 
     chrome.storage.local.get([promptsStorageKey, settingsStorageKey, voiceSettingsStorageKey], (result) => {
         if (chrome.runtime.lastError) {
-            console.error("Error loading settings:", chrome.runtime.lastError);
-            showNotification("Error loading settings: " + chrome.runtime.lastError.message, true);
-            return;
+            return showNotification("Error loading settings: " + chrome.runtime.lastError.message, true);
         }
 
         const savedPrompts = result[promptsStorageKey] || { ...defaultPrompts };
@@ -159,26 +196,14 @@ function loadOptions() {
         let savedVoiceSettings = result[voiceSettingsStorageKey];
 
         if (!savedVoiceSettings || typeof savedVoiceSettings.sttLanguage === 'undefined' || typeof savedVoiceSettings.ttsVoiceName === 'undefined') {
-            console.log("No valid voice settings found, applying initial 'en-US' defaults.");
-            currentVoiceSettings = {
-                sttLanguage: 'en-US',
-                ttsVoiceName: '',
-                ttsLanguage: 'en-US'
-            };
-            const initialVoiceSettingsToSave = {};
-            initialVoiceSettingsToSave[voiceSettingsStorageKey] = currentVoiceSettings;
-            chrome.storage.local.set(initialVoiceSettingsToSave, () => {
-                if (chrome.runtime.lastError) {
-                    console.error("Error saving initial voice settings:", chrome.runtime.lastError.message);
-                    showNotification("Error saving initial voice settings", true);
-                } else {
-                    console.log("Initial voice settings ('en-US') saved successfully.");
+            currentVoiceSettings = { sttLanguage: 'en-US', ttsVoiceName: '', ttsLanguage: 'en-US' };
+            chrome.storage.local.set({ [voiceSettingsStorageKey]: currentVoiceSettings }, () => {
+                if (!chrome.runtime.lastError) {
                     if (sttSelect) sttSelect.value = currentVoiceSettings.sttLanguage;
                     populateVoiceList();
                 }
             });
         } else {
-            console.log("Loading saved voice settings:", savedVoiceSettings);
             currentVoiceSettings = { ...savedVoiceSettings };
             if (sttSelect) sttSelect.value = currentVoiceSettings.sttLanguage;
             populateVoiceList();
@@ -191,13 +216,8 @@ function loadOptions() {
             if (predefinedLocalModels.includes(savedLocalModel)) {
                 localModelSelect.value = savedLocalModel;
             } else {
-                console.warn(`Saved local model "${savedLocalModel}" is not in the predefined list. Setting to default: ${defaultApiSettings.ollamaMultimodalModel}`);
                 localModelSelect.value = defaultApiSettings.ollamaMultimodalModel;
-                if (localModelSelect.dataset.storageKey && localModelSelect.dataset.storageType) {
-                    saveSetting(localModelSelect);
-                } else {
-                    console.error("Cannot save default local model: Missing data attributes on select element.");
-                }
+                saveOptions();
             }
         }
 
@@ -216,90 +236,36 @@ function loadOptions() {
         }
 
         if (systemPromptTextarea) systemPromptTextarea.value = savedPrompts.system_prompt ?? defaultPrompts.system_prompt;
-        if (screenshotPromptTextarea) screenshotPromptTextarea.value = savedPrompts.screenshot_prompt ?? defaultPrompts.screenshot_prompt;
-        if (scrollingScreenshotPromptTextarea) scrollingScreenshotPromptTextarea.value = savedPrompts.scrollingScreenshot_prompt ?? defaultPrompts.scrollingScreenshot_prompt;
-        if (analyzeContentPromptTextarea) analyzeContentPromptTextarea.value = savedPrompts.analyzeContent_prompt ?? defaultPrompts.analyzeContent_prompt;
 
         updateCloudUrlVisibility();
-
-    });
-}
-
-
-function saveSetting(element) {
-    const storageKey = element.dataset.storageKey;
-    const storageType = element.dataset.storageType;
-    let value = element.type === 'checkbox' ? element.checked : element.value;
-
-    if (!storageKey || !storageType) { console.error("Missing data attributes on element:", element); return; }
-
-    let storageAreaKey; let defaultValues;
-
-    switch (storageType) {
-        case 'settings': storageAreaKey = settingsStorageKey; defaultValues = defaultApiSettings; break;
-        case 'prompts': storageAreaKey = promptsStorageKey; defaultValues = defaultPrompts; break;
-        case 'voice': storageAreaKey = voiceSettingsStorageKey; defaultValues = defaultVoiceSettings; break;
-        default: console.error(`Unknown storage type: ${storageType}`); return;
-    }
-
-    chrome.storage.local.get(storageAreaKey, (result) => {
-        if (chrome.runtime.lastError) { console.error("Error getting storage before save:", chrome.runtime.lastError); showNotification("Error saving: could not read current settings", true); return; }
-
-        let currentData;
-        if (storageType === 'voice') {
-            currentData = currentVoiceSettings || { ...defaultValues };
-        } else {
-            currentData = result[storageAreaKey] || { ...defaultValues };
-        }
-
-        const updatedData = { ...currentData };
-        updatedData[storageKey] = value;
-        if (storageType === 'voice') {
-            currentVoiceSettings = updatedData;
-        }
-
-        const dataToStore = {}; dataToStore[storageAreaKey] = updatedData;
-
-        chrome.storage.local.set(dataToStore, () => {
-            if (chrome.runtime.lastError) {
-                const errorMessage = `Error saving ${storageKey}: ${chrome.runtime.lastError.message}`;
-                console.error(errorMessage, element); showNotification(errorMessage, true);
-            } else {
-                console.log(`${storageKey} saved successfully:`, value);
-                showNotification('Saved Changes!');
-
-                if (element.name === 'cloudApiMethod') {
-                    updateCloudUrlVisibility();
-                }
-            }
-        });
     });
 }
 
 function resetToDefaults() {
     chrome.storage.local.get(settingsStorageKey, (result) => {
-        if (chrome.runtime.lastError) { console.error("Error getting settings before reset:", chrome.runtime.lastError); showNotification("Error resetting: could not read current settings", true); return; }
+        if (chrome.runtime.lastError) {
+            return showNotification("Error resetting: could not read current settings", true);
+        }
         const currentSettings = result[settingsStorageKey] || {};
         const preservedApiKey = currentSettings.cloudApiKey || defaultApiSettings.cloudApiKey;
         const preservedProxyUrl = currentSettings.cloudProxyUrl || defaultApiSettings.cloudProxyUrl;
 
-        const settingsToReset = {};
-        settingsToReset[settingsStorageKey] = {
-            ...defaultApiSettings,
-            cloudApiKey: preservedApiKey,
-            cloudApiMethod: 'direct',
-            cloudProxyUrl: preservedProxyUrl
+        const settingsToReset = {
+            [settingsStorageKey]: {
+                ...defaultApiSettings,
+                cloudApiKey: preservedApiKey,
+                cloudApiMethod: 'direct',
+                cloudProxyUrl: preservedProxyUrl
+            },
+            [promptsStorageKey]: { ...defaultPrompts }
         };
-        settingsToReset[promptsStorageKey] = { ...defaultPrompts };
 
         chrome.storage.local.set(settingsToReset, () => {
             if (chrome.runtime.lastError) {
-                const errorMessage = `Error resetting settings: ${chrome.runtime.lastError.message}`;
-                console.error(errorMessage); showNotification(errorMessage, true);
+                showNotification(`Error resetting settings: ${chrome.runtime.lastError.message}`, true);
             } else {
-                console.log("API and Prompt settings reset to default, preserving Cloud API Key and Proxy URL. Voice settings remain unchanged.");
                 loadOptions();
-                showNotification('Reset settings.');
+                showNotification('Settings have been reset.');
             }
         });
     });
@@ -308,38 +274,28 @@ function resetToDefaults() {
 document.addEventListener('DOMContentLoaded', () => {
     loadOptions();
 
-    if (localModelSelect) {
-        localModelSelect.addEventListener('change', () => {
-            saveSetting(localModelSelect);
-        });
-    }
+    const elementsToSave = document.querySelectorAll('input[data-storage-key], select[data-storage-key], textarea[data-storage-key]');
 
-    const inputsToSave = document.querySelectorAll('input[data-storage-key], textarea[data-storage-key]');
-    inputsToSave.forEach(input => {
-        if (input.type !== 'radio') {
-            input.addEventListener('blur', () => saveSetting(input));
-            if (input.type === 'text' || input.type === 'password') {
-                input.addEventListener('keypress', (e) => { if (e.key === 'Enter') { saveSetting(input); input.blur(); } });
-            }
+    elementsToSave.forEach(el => {
+        const eventType = (el.tagName === 'SELECT' || el.type === 'radio' || el.type === 'checkbox') ? 'change' : 'blur';
+        el.addEventListener(eventType, saveOptions);
+
+        if (el.type === 'text' || el.type === 'password' || el.tagName === 'TEXTAREA') {
+            el.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    saveOptions();
+                    el.blur();
+                }
+            });
         }
     });
 
-    const selectsToSave = document.querySelectorAll('select[data-storage-key]');
-    selectsToSave.forEach(select => { select.addEventListener('change', () => saveSetting(select)); });
-
-    const radioButtons = document.querySelectorAll('input[type="radio"][name="cloudApiMethod"]');
-    radioButtons.forEach(radio => {
-        radio.addEventListener('change', () => {
-            if (radio.checked) {
-                saveSetting(radio);
-            }
-        });
-    });
+    const saveButton = document.getElementById('save-button');
+    if (saveButton) saveButton.addEventListener('click', saveOptions);
 
     const resetButton = document.getElementById('reset-button');
-    if (resetButton) { resetButton.addEventListener('click', resetToDefaults); }
-    else { console.error("Reset button not found!"); }
-
+    if (resetButton) resetButton.addEventListener('click', resetToDefaults);
 });
 
 export { promptsStorageKey, defaultPrompts };

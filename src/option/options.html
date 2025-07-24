@@ -72,7 +72,7 @@
         <select id="cloud-model-name-input" data-storage-key="cloudModelName" data-storage-type="settings">
             <option value="gemini-2.5-pro">gemini-2.5-pro</option>
             <option value="gemini-2.5-flash">gemini-2.5-flash</option>
-            <option value="gemini-2.5-flash-lite-preview-06-17">gemini-2.5-flash-lite-preview-06-17</option>
+            <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
         </select>
     </div>
 
@@ -105,28 +105,12 @@
     <h1>Prompt Settings</h1>
 
     <div>
-        <label for="system_prompt">Default System Prompt:</label>
+        <label for="system_prompt">System Prompt:</label>
         <textarea id="system_prompt" data-storage-key="system_prompt" data-storage-type="prompts"></textarea>
     </div>
 
-    <div>
-        <label for="screenshot_prompt">Screenshot Description Prompt:</label>
-        <textarea id="screenshot_prompt" data-storage-key="screenshot_prompt" data-storage-type="prompts"></textarea>
-    </div>
-
-    <div>
-        <label for="scrollingScreenshot_prompt">Scrolling Screenshot Prompt:</label>
-        <textarea id="scrollingScreenshot_prompt" data-storage-key="scrollingScreenshot_prompt"
-            data-storage-type="prompts"></textarea>
-    </div>
-
-    <div>
-        <label for="analyzeContent_prompt">Content Analysis Prompt:</label>
-        <textarea id="analyzeContent_prompt" data-storage-key="analyzeContent_prompt"
-            data-storage-type="prompts"></textarea>
-    </div>
-
     <div class="button-container">
+        <button id="save-button">Save</button>
         <button id="reset-button">Reset</button>
     </div>
 
