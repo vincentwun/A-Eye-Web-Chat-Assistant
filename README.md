@@ -10,18 +10,18 @@
 
 </div>
 
-A-Eye Web Chat Assistant is a free and open-source Chrome extension. It's designed to make web Browse easier for visually impaired users through AI chat, screen analysis, and voice controls. You can choose between privacy-focused local AI (via Ollama with Gemma 3) or powerful cloud-based AI (like Google Gemini 2.5).
+A-Eye Web Chat Assistant is a free and open-source Chrome extension. It's designed to make web Browse easier for visually impaired users through AI chat, screen analysis, and voice controls. You can choose between privacy-focused local AI (via Ollama with Gemma 3) or powerful cloud-based AI (Google Gemini 2.5).
 
 ---
 ## Table of Contents
 - [Table of Contents](#table-of-contents)
 - [Features](#features)
 - [Architecture and Technologies](#architecture-and-technologies)
-- [Installation Guide](#installation-guide)
+- [How to install](#how-to-install)
 - [How to Use](#how-to-use)
   - [Local Ollama Setup: Option 1 - Manual](#local-ollama-setup-option-1---manual)
   - [Local Ollama Setup: Option 2 - Script](#local-ollama-setup-option-2---script)
-  - [Cloud Setup: Option 1 - Gemini API](#cloud-setup-option-1---gemini-api)
+  - [Cloud Setup: Option 1 - Google AI Studio](#cloud-setup-option-1---google-ai-studio)
   - [Cloud Setup: Option 2 - GCP Vertex AI](#cloud-setup-option-2---gcp-vertex-ai)
   - [Basic Interaction](#basic-interaction)
   - [Analyzing Web Content](#analyzing-web-content)
@@ -69,13 +69,19 @@ A-Eye Web Chat Assistant is a free and open-source Chrome extension. It's design
 ![architecture](/images/architecture_v2.png)
 
 ---
-## Installation Guide
+## How to install
+
+### Chrome Web Store
+
+https://chromewebstore.google.com/detail/a-eye-web-chat-assistant/cdjignhknhdkldbjijipaaamodpfjflp
+
+### Manual download
 
 1. Download the ZIP file from this link: 
 [https://github.com/vincentwun/A-Eye-Web-Chat-Assistant/archive/refs/heads/main.zip](https://github.com/vincentwun/A-Eye-Web-Chat-Assistant/archive/refs/heads/main.zip) 
 and unzip it.
-1. Open Chrome, go to `chrome://extensions`, and turn on "Developer mode" in the top right.
-2. Click "Load unpacked" at the top left and select the **src** folder from where you unzipped the file.
+2. Open Chrome, go to `chrome://extensions`, and turn on "Developer mode" in the top right.
+3. Click "Load unpacked" at the top left and select the **src** folder from where you unzipped the file.
 
 ---
 ## How to Use
@@ -149,7 +155,7 @@ For more details on GCP settings, see [GCP README.md](gcp/gcloud/README.md)
 2.  **Select AI Mode**: Use shortcut `Alt+Shift+1` or click the Desktop icon (Local) / Cloud icon (Cloud) in the header.
 3.  **Voice Input**: Use shortcut `Alt+Shift+2` or Click the Microphone icon .
 4. **Repeat Last Response**: Use shortcut `Alt+Shift+3` or click the Redo icon.
-5. **Clear Conversation**: Click the Trash icon in the header to clear the chat.
+5. **Clear Conversation**: Click the `Trash` icon in the header or input `clear` to clear the chat.
 
 ### Analyzing Web Content
 
@@ -172,8 +178,6 @@ A-Eye Web Chat Assistant is designed with privacy in mind:
 This extension incorporates the following third-party components:
 -   **Readability.js**: Used for extracting article text content.
     -   Source: [https://github.com/mozilla/readability](https://github.com/mozilla/readability)
--   **Font Awesome**: Provides icons for the user interface.
-    -   Source: [https://fontawesome.com/](https://fontawesome.com/)
 
 ---
 ## License

@@ -20,7 +20,7 @@ export async function sendOllamaRequest(
   const headers = { 'Content-Type': 'application/json' };
   let body;
 
-  const relevantHistory = messagesHistory.slice(-maxHistory); // Use parameter
+  const relevantHistory = messagesHistory.slice(-maxHistory);
   const ollamaMessages = [];
 
   if (systemPrompt) {

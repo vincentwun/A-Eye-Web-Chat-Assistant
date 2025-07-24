@@ -1,10 +1,9 @@
-// src/background/background.js
 import { defaultApiSettings, settingsStorageKey } from '../option/apiRoute.js';
 import { defaultPrompts, promptsStorageKey } from '../option/prompts.js';
 import { defaultVoiceSettings, voiceSettingsStorageKey } from '../option/voiceSettings.js';
-import { executeJSON } from './jsonExecutor.js'; // <-- 路徑已更新
-import { findElementsOnPage } from './elementFinder.js'; // <-- 路徑已更新
-import { getCurrentTab, executeScriptOnTab, delay, waitForTabLoad, getPageDimensions } from './backgroundUtils.js'; // <-- 新增導入
+import { executeJSON } from './jsonExecutor.js';
+import { findElementsOnPage } from './elementFinder.js';
+import { getCurrentTab, executeScriptOnTab, delay, waitForTabLoad, getPageDimensions } from './backgroundUtils.js';
 
 async function initializeDefaultSettings() {
   console.log('Checking and initializing default settings...');
@@ -122,8 +121,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log(`Background received unhandled message type: ${request.type}`);
   return false;
 });
-
-// --- Content Script Functions (Kept here for now, consider moving later) ---
 
 function clickElement(selector, expectedText) {
   try {

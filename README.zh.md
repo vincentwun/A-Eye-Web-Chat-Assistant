@@ -10,7 +10,7 @@
 
 </div>
 
-A-Eye 網頁聊天助理是一款免費且開源的 Chrome 擴充功能。它旨在透過 AI 聊天、螢幕分析與語音控制，協助視障使用者更輕鬆地瀏覽網頁。您可以選擇注重隱私的本機 AI（透過 Ollama 搭配 Gemma 3），或功能強大的雲端 AI（如 Google Gemini 2.5）。
+A-Eye 網頁聊天助理是一款免費且開源的 Chrome 擴充功能。它旨在透過 AI 聊天、螢幕分析與語音控制，協助視障使用者更輕鬆地瀏覽網頁。讓用家可以選擇注重隱私的本機 AI（透過 Ollama 搭配 Gemma 3），或功能強大的雲端 AI（Google Gemini 2.5）。
 
 ---
 ## 目錄
@@ -20,13 +20,13 @@ A-Eye 網頁聊天助理是一款免費且開源的 Chrome 擴充功能。它旨
 - [安裝指南](#安裝指南)
 - [使用說明](#使用說明)
   - [本機 Ollama 設定：選項 1 - 手動](#本機-ollama-設定選項-1---手動)
-  - [本機 Ollama 設定：選項 2 - 指令碼](#本機-ollama-設定選項-2---指令碼)
-  - [雲端設定：選項 1 - Gemini API](#雲端設定選項-1---gemini-api)
+  - [本機 Ollama 設定：選項 2 - PowerShell腳本](#本機-ollama-設定選項-2---PowerShell腳本)
+  - [雲端設定：選項 1 - Google AI Studio](#雲端設定選項-1---google-ai-studio)
   - [雲端設定：選項 2 - GCP Vertex AI](#雲端設定選項-2---gcp-vertex-ai)
   - [基本互動](#基本互動)
   - [分析網頁內容](#分析網頁內容)
 - [隱私權政策](#隱私權政策)
-- [致謝](#致謝)
+- [第三方函式庫](#第三方函式庫)
 - [授權](#授權)
 
 ---
@@ -70,6 +70,12 @@ A-Eye 網頁聊天助理是一款免費且開源的 Chrome 擴充功能。它旨
 
 ---
 ## 安裝指南
+
+### 在Chrome Web Store取得
+
+https://chromewebstore.google.com/detail/a-eye-web-chat-assistant/cdjignhknhdkldbjijipaaamodpfjflp
+
+### 手動安裝
 
 1.  從此連結下載 ZIP 檔案：
     [https://github.com/vincentwun/A-Eye-Web-Chat-Assistant/archive/refs/heads/main.zip](https://github.com/vincentwun/A-Eye-Web-Chat-Assistant/archive/refs/heads/main.zip)
@@ -129,12 +135,12 @@ A-Eye 網頁聊天助理是一款免費且開源的 Chrome 擴充功能。它旨
 
     此指令碼將協助您下載 Ollama、設定 CORS 及執行模型。
 
-3.  在擴充功能的**設定**中，確保「本機模型名稱」為 `gemma3:4b`（或您選擇的模型）。
+3.  在擴充功能的**設定**中，確保「Local Model Name」為 `gemma3:4b`（或您選擇的模型）。
 
 ---
-### 雲端設定：選項 1 - Gemini API
+### 雲端設定：選項 1 - Google AI Studio
 1.  從 [Google AI Studio](https://aistudio.google.com/) 取得您的 Gemini API 金鑰。
-2.  前往擴充功能的**設定**，在「雲端 API 金鑰」欄位中輸入您的 API 金鑰。
+2.  前往擴充功能的**設定**，在「Gemini API Key」欄位中輸入您的 API 金鑰。
 
 ---
 ### 雲端設定：選項 2 - GCP Vertex AI
@@ -148,7 +154,7 @@ A-Eye 網頁聊天助理是一款免費且開源的 Chrome 擴充功能。它旨
 2.  **選擇 AI 模式**: 使用快捷鍵 `Alt+Shift+1` 或點擊標題中的桌面圖示（本機）/ 雲端圖示（雲端）。
 3.  **語音輸入**: 使用快捷鍵 `Alt+Shift+2` 或點擊麥克風圖示。
 4.  **重複上次回應**: 使用快捷鍵 `Alt+Shift+3` 或點擊重做圖示。
-5.  **清除對話**: 點擊標題中的垃圾桶圖示以清除聊天記錄。
+5.  **清除對話**: 點擊標題中的`垃圾桶`圖示或在輸入`clear`以清除聊天記錄。
 
 ### 分析網頁內容
 
@@ -166,13 +172,11 @@ A-Eye 網頁聊天助理在設計時充分考量使用者隱私：
 -   **本機 AI：** 當您使用本機模式（Ollama）時，所有 AI 處理程序均在您的電腦上完成，為您的資料提供最高程度的隱私保障。
 
 ---
-## 致謝
+## 第三方函式庫
 
 本擴充功能整合了以下第三方元件：
 -   **Readability.js**: 用於擷取文章的文字內容。
     -   來源: [https://github.com/mozilla/readability](https://github.com/mozilla/readability)
--   **Font Awesome**: 為使用者介面提供圖示。
-    -   來源: [https://fontawesome.com/](https://fontawesome.com/)
 
 ---
 ## 授權
