@@ -323,6 +323,7 @@ class AIScreenReader {
         if (state.activeApiMode === 'cloud' && !this.isCloudModeConfigValid()) return;
 
         this.setProcessing(true);
+        this.voiceController.playSendSound();
         this.appendMessage('user', userInput);
         this.uiManager.clearUserInput();
         this.uiManager.showThinkingIndicator();
