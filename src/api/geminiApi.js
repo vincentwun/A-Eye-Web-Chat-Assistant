@@ -103,6 +103,7 @@ export async function sendGeminiRequest(
   const geminiPayload = {
     contents: geminiContents,
     tools: [
+      { urlContext: {} },
       {
         "googleSearch": {}
       }
