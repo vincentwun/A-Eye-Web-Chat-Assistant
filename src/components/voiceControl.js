@@ -332,7 +332,7 @@ export class VoiceController {
         console.log('Voice input started');
         this.state.input.active = true;
         this.callbacks.updateVoiceInputButtonState?.(true);
-        this.speakText('Voice Input Activated');
+        this._playStartSound();
         const userInput = document.getElementById('user-input');
         if (userInput) userInput.placeholder = 'Listening...';
         this.state.input.finalTranscript = '';
@@ -616,6 +616,29 @@ export class VoiceController {
       this.callbacks.updateVoiceInputButtonState?.(false);
       const userInput = document.getElementById('user-input');
       if (userInput) userInput.placeholder = 'Type your message here...';
+    }
+  }
+
+  _playStartSound() {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.7, audioContext.currentTime + 0.02);
+      gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.2);
+
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(660, audioContext.currentTime);
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.2);
+    } catch (error) {
+      console.error("Failed to play start sound:", error);
     }
   }
 
