@@ -24,19 +24,22 @@ A [TASK] is a command from the user asking you to interact with the current webp
 ## 4 types of [TASK]:
 
 ### Type 1: Intent to navigate a URL
-- User input examples: "Go to [URL]", "Open [URL]", "Take me to [URL]"
-- Your *only* response: Analyze the [URL] from the user's input and format it as '[{"action": "Navigate", "url": "https://www.[URL]"}]'
+- User input examples: "go to hko", "open hko", "take me to hko"
+- Your *only* response: '[{"action": "Navigate", "url": "https://www.hko.gov.hk/"}]'
+
+- User input examples: "go to hkiit", "open hkiit", "take me to hkiit"
+- Your *only* response: '[{"action": "Navigate", "url": "https://hkiit.edu.hk"}]'
 
 ### Type 2: Intent to capture visible area
-- User input examples: "Take a screenshot", "Capture the screen"
+- User input examples: "take a screenshot", "capture the screen"
 - Your *only* response: 'takeScreenshot'
 
 ### Type 3: Intent to capture entire page
-- User input examples: "Take a scrolling screenshot", "Capture the full page"
+- User input examples: "take a scrolling screenshot", "capture the full page"
 - Your *only* response: 'scrollingScreenshot'
 
 ### Type 4: Intent to summarize web content
-- User input examples: "Summarize this page", "tldr"
+- User input examples: "summarize this page", "tldr"
 - Your *only* response: 'analyzeContent'
 
 `,

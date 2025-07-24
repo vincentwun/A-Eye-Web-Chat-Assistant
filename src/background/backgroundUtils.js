@@ -42,44 +42,80 @@ export function delay(ms) {
 }
 
 export function waitForTabLoad(tabId) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
+    let listenersAttached = false;
     let resolved = false;
-    let timeoutHandle = null;
-    const listener = (updatedTabId, changeInfo, tab) => {
-      if (!resolved && updatedTabId === tabId && changeInfo.status === 'complete') {
-        resolved = true;
-        chrome.tabs.onUpdated.removeListener(listener);
-        chrome.tabs.onRemoved.removeListener(removedListener);
-        clearTimeout(timeoutHandle);
-        resolve();
+    let intervalId = null;
+    let timeoutId = null;
+
+    const cleanup = () => {
+      if (intervalId) clearInterval(intervalId);
+      if (timeoutId) clearTimeout(timeoutId);
+      if (listenersAttached) {
+        chrome.tabs.onUpdated.removeListener(onUpdated);
+        chrome.tabs.onRemoved.removeListener(onRemoved);
       }
     };
-    const removedListener = (closedTabId) => {
-      if (!resolved && closedTabId === tabId) {
-        resolved = true;
-        chrome.tabs.onUpdated.removeListener(listener);
-        chrome.tabs.onRemoved.removeListener(removedListener);
-        clearTimeout(timeoutHandle);
-        console.warn(`Tab ${tabId} was closed while waiting for load.`);
-        resolve();
+
+    const done = (result) => {
+      if (resolved) return;
+      resolved = true;
+      cleanup();
+      resolve(result);
+    };
+
+    const fail = (error) => {
+      if (resolved) return;
+      resolved = true;
+      cleanup();
+      reject(error);
+    };
+
+    const onUpdated = (updatedTabId, changeInfo) => {
+      if (updatedTabId === tabId && changeInfo.status === 'complete') {
+        done();
       }
     };
-    chrome.tabs.onUpdated.addListener(listener);
-    chrome.tabs.onRemoved.addListener(removedListener);
-    timeoutHandle = setTimeout(() => {
+
+    const onRemoved = (closedTabId) => {
+      if (closedTabId === tabId) {
+        fail(new Error(`Tab ${tabId} was closed while waiting for it to load.`));
+      }
+    };
+
+    const checkReadyState = async () => {
+      if (resolved) return;
+      try {
+        const results = await chrome.scripting.executeScript({
+          target: { tabId: tabId },
+          func: () => document.readyState,
+        });
+        const readyState = results[0]?.result;
+        if (readyState === 'interactive' || readyState === 'complete') {
+          done();
+        }
+      } catch (error) {
+        const message = error.message.toLowerCase();
+        if (message.includes('no tab with id') || message.includes('the tab was closed')) {
+          fail(new Error(`Tab ${tabId} closed during readyState check.`));
+        }
+      }
+    };
+
+    chrome.tabs.onUpdated.addListener(onUpdated);
+    chrome.tabs.onRemoved.addListener(onRemoved);
+    listenersAttached = true;
+
+    intervalId = setInterval(checkReadyState, 200);
+
+    timeoutId = setTimeout(() => {
       if (!resolved) {
-        resolved = true;
-        chrome.tabs.onUpdated.removeListener(listener);
-        chrome.tabs.onRemoved.removeListener(removedListener);
-        console.warn(`Tab ${tabId} load didn't reach 'complete' status within 15s, proceeding anyway.`);
-        resolve();
+        console.warn(`waitForTabLoad timed out after 15 seconds for tab ${tabId}. Proceeding anyway.`);
+        done();
       }
     }, 15000);
-    const originalResolve = resolve;
-    resolve = () => {
-      chrome.tabs.onRemoved.removeListener(removedListener);
-      originalResolve();
-    }
+
+    checkReadyState();
   });
 }
 
