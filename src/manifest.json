@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "A-Eye Web Chat Assistant",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "AI Screen Reader analyzes Screenshots or Text using either local AI (Ollama) or Cloud AI (Gemini).",
   "icons": {
     "16": "icons/icon-16.png",

@@ -185,6 +185,9 @@ class AIScreenReader {
             this.appendMessage('system', 'A-Eye Assistant Ready.');
             this.voiceController.speakText('A-Eye Assistant Ready.');
             this.uiManager.updateInputState(this.elements.userInput.value);
+            if (this.elements.userInput) {
+                this.elements.userInput.focus();
+            }
         } catch (error) {
             this.handleError('Initialization failed', error);
             const currentState = this.stateManager.getState();
@@ -231,6 +234,12 @@ class AIScreenReader {
             this.elements.userInput.addEventListener('input', () => this.uiManager.updateInputState(this.elements.userInput.value));
             this.elements.userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.voiceController.stopSpeaking(); this.handleSendMessage(); } });
         } else { console.error("User input element not found!"); }
+
+        window.addEventListener('focus', () => {
+            if (this.elements.userInput && !this.stateManager.isProcessing()) {
+                this.elements.userInput.focus();
+            }
+        });
     }
 
     async handleModeChange(newMode) {
@@ -463,9 +472,6 @@ class AIScreenReader {
         this.appendMessage('system', 'Conversation cleared.');
         this.voiceController.speakText('Conversation cleared.');
         this.setProcessing(false);
-        if (this.elements.userInput) {
-            this.elements.userInput.focus();
-        }
     }
 
     async handleRepeat() {

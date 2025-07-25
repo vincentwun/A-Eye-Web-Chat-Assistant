@@ -598,15 +598,20 @@ export class VoiceController {
         this.state.input.active = false;
         this.callbacks.updateVoiceInputButtonState?.(false);
         const userInput = document.getElementById('user-input');
-        if (userInput) userInput.placeholder = 'Type your message here...';
-
+        if (userInput) {
+          userInput.placeholder = 'Type your message here...';
+          userInput.focus();
+        }
       } catch (error) {
         if (error.name === 'InvalidStateError') {
           console.warn("STT stop failed: InvalidStateError.");
           this.state.input.active = false;
           this.callbacks.updateVoiceInputButtonState?.(false);
           const userInput = document.getElementById('user-input');
-          if (userInput) userInput.placeholder = 'Type your message here...';
+          if (userInput) {
+            userInput.placeholder = 'Type your message here...';
+            userInput.focus();
+          }
         } else {
           console.error('STT stop failed:', error);
         }
@@ -615,7 +620,10 @@ export class VoiceController {
       console.log("STT stop called but not active.");
       this.callbacks.updateVoiceInputButtonState?.(false);
       const userInput = document.getElementById('user-input');
-      if (userInput) userInput.placeholder = 'Type your message here...';
+      if (userInput) {
+        userInput.placeholder = 'Type your message here...';
+        userInput.focus();
+      }
     }
   }
 
