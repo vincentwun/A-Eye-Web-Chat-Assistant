@@ -23,7 +23,6 @@ export class GetElementAction {
   async execute() {
     console.log("GetElementAction execute called");
     this.setProcessing(true);
-    this.uiManager.hidePreview();
 
     try {
       const response = await chrome.runtime.sendMessage({ type: 'findElements' });
@@ -42,7 +41,7 @@ export class GetElementAction {
 
       const elementsJsonString = JSON.stringify(elements);
       const previewSnippet = this.uiManager.escapeHTML(elementsJsonString.substring(0, 500));
-      this.uiManager.showPreview('text', `${previewSnippet}...`);
+      this.uiManager.appendPreviewMessage('text', `${previewSnippet}...`);
 
       this.appendMessage('user', `[Page Elements Attached]`);
       this.appendMessage('system', 'Analyzing...');

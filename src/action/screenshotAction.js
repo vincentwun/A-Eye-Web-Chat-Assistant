@@ -24,7 +24,6 @@ export class ScreenshotAction {
   async execute() {
     console.log("ScreenshotAction execute called");
     this.setProcessing(true);
-    this.uiManager.hidePreview();
 
     try {
       const screenshotDataUrl = await this.screenshotController.captureVisibleTab();

@@ -25,7 +25,6 @@ export class ScrollingScreenshotAction {
     async execute() {
         console.log("ScrollingScreenshotAction execute called");
         this.setProcessing(true);
-        this.uiManager.hidePreview();
 
         try {
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });

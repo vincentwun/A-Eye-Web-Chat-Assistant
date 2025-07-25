@@ -24,7 +24,6 @@ export class ContentAnalysisAction {
     async execute() {
         console.log("ContentAnalysisAction execute called");
         this.setProcessing(true);
-        this.uiManager.hidePreview();
 
         try {
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -40,7 +39,7 @@ export class ContentAnalysisAction {
                     this.appendMessage('system', 'Used basic text extraction (Readability failed or not applicable).');
                 }
                 const previewSnippet = this.uiManager.escapeHTML(extractedText.substring(0, 500));
-                this.uiManager.showPreview('text', `${previewSnippet}...`);
+                this.uiManager.appendPreviewMessage('text', `${previewSnippet}...`);
 
                 this.appendMessage('user', `[Page Content Attached]`);
                 this.appendMessage('system', 'Analyzing...');

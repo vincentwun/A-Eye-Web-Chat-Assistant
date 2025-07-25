@@ -20,6 +20,27 @@ export class UIManager {
         this.elements.conversation.scrollTop = this.elements.conversation.scrollHeight;
     }
 
+    appendPreviewMessage(type, content) {
+        if (!this.elements.conversation) return;
+
+        const previewContainerDiv = document.createElement('div');
+        previewContainerDiv.classList.add('message', 'message-user', 'message-preview');
+
+        if (type === 'image') {
+            const img = document.createElement('img');
+            img.src = content;
+            previewContainerDiv.appendChild(img);
+        } else {
+            const pre = document.createElement('pre');
+            pre.innerHTML = content;
+            previewContainerDiv.appendChild(pre);
+        }
+
+        this.elements.conversation.appendChild(previewContainerDiv);
+        this.elements.conversation.scrollTop = this.elements.conversation.scrollHeight;
+    }
+
+
     showThinkingIndicator() {
         if (!this.elements.conversation || document.getElementById('thinking-indicator')) return;
 
@@ -38,29 +59,6 @@ export class UIManager {
         if (indicator) {
             indicator.remove();
         }
-    }
-
-    showPreview(type, content) {
-        if (!this.elements.previewContainer || !this.elements.previewImage || !this.elements.previewText) return;
-        this.elements.previewContainer.style.display = 'block';
-        const isImage = type === 'image';
-        this.elements.previewImage.style.display = isImage ? 'block' : 'none';
-        this.elements.previewText.style.display = !isImage ? 'block' : 'none';
-
-        if (isImage) {
-            this.elements.previewImage.src = content || '';
-        } else {
-            this.elements.previewText.innerHTML = content || '';
-        }
-    }
-
-    hidePreview() {
-        if (!this.elements.previewContainer || !this.elements.previewImage || !this.elements.previewText) return;
-        this.elements.previewContainer.style.display = 'none';
-        this.elements.previewImage.style.display = 'none';
-        this.elements.previewText.style.display = 'none';
-        this.elements.previewImage.src = '';
-        this.elements.previewText.innerHTML = '';
     }
 
     updateModeUI(activeMode) {

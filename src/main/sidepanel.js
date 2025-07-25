@@ -22,9 +22,6 @@ class AIScreenReader {
             analyzeContentButton: document.getElementById('analyze-content-button'),
             getElementButton: document.getElementById('get-element-button'),
             openOptionsButton: document.getElementById('options-button'),
-            previewContainer: document.getElementById('preview-container'),
-            previewImage: document.getElementById('preview-image'),
-            previewText: document.getElementById('preview-text'),
             conversation: document.getElementById('conversation'),
             userInput: document.getElementById('user-input'),
             sendButton: document.getElementById('send-button'),
@@ -112,10 +109,10 @@ class AIScreenReader {
 
     updateLastImageData(dataUrl, mimeType) {
         this.stateManager.updateLastImageData(dataUrl, mimeType);
-        if (this.uiManager && typeof this.uiManager.showPreview === 'function') {
-            this.uiManager.showPreview('image', dataUrl);
+        if (this.uiManager && typeof this.uiManager.appendPreviewMessage === 'function') {
+            this.uiManager.appendPreviewMessage('image', dataUrl);
         } else {
-            console.error("UIManager or showPreview method not found!");
+            console.error("UIManager or appendPreviewMessage method not found!");
         }
     }
 
@@ -300,15 +297,11 @@ class AIScreenReader {
         let mimeTypeToSend = null;
         let systemPrompt = this.stateManager.getPrompts().system_prompt;
 
-        const isPreviewVisible = this.elements.previewContainer && this.elements.previewContainer.style.display !== 'none';
-        const previewHasImage = this.elements.previewImage && this.elements.previewImage.src && this.elements.previewImage.src !== location.href;
         const lastImageData = state.lastImageData;
 
-        if (isPreviewVisible && previewHasImage && lastImageData.dataUrl) {
+        if (lastImageData.dataUrl) {
             imageDataToSend = lastImageData.dataUrl;
             mimeTypeToSend = lastImageData.mimeType;
-        } else {
-            this.uiManager.hidePreview();
         }
 
         try {
@@ -425,7 +418,6 @@ class AIScreenReader {
         this.uiManager.hideThinkingIndicator();
         this.uiManager.clearConversation();
         this.uiManager.clearUserInput();
-        this.uiManager.hidePreview();
         this.stateManager.clearMessages();
         this.stateManager.clearLastImageData();
         this.voiceController.speakText('Conversation cleared.');
