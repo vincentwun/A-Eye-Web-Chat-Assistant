@@ -38,11 +38,10 @@ export class ContentAnalysisAction {
                 if (extractionMethod === 'Fallback') {
                     this.appendMessage('system', 'Used basic text extraction (Readability failed or not applicable).');
                 }
-                const previewSnippet = this.uiManager.escapeHTML(extractedText.substring(0, 500));
-                this.uiManager.appendPreviewMessage('text', `${previewSnippet}...`);
+                const formattedText = this.uiManager.escapeHTML(extractedText);
+                await this.uiManager.appendPreviewMessage('text', formattedText);
 
-                this.appendMessage('user', `[Page Content Attached]`);
-                this.appendMessage('system', 'Analyzing...');
+                this.uiManager.showThinkingIndicator();
                 await this.voiceController.speakText("Analyzing content.");
 
                 const result = await chrome.storage.local.get(promptsStorageKey);

@@ -107,10 +107,10 @@ class AIScreenReader {
         }
     }
 
-    updateLastImageData(dataUrl, mimeType) {
+    async updateLastImageData(dataUrl, mimeType) {
         this.stateManager.updateLastImageData(dataUrl, mimeType);
         if (this.uiManager && typeof this.uiManager.appendPreviewMessage === 'function') {
-            this.uiManager.appendPreviewMessage('image', dataUrl);
+            await this.uiManager.appendPreviewMessage('image', dataUrl);
         } else {
             console.error("UIManager or appendPreviewMessage method not found!");
         }

@@ -39,12 +39,11 @@ export class GetElementAction {
         return;
       }
 
-      const elementsJsonString = JSON.stringify(elements);
-      const previewSnippet = this.uiManager.escapeHTML(elementsJsonString.substring(0, 500));
-      this.uiManager.appendPreviewMessage('text', `${previewSnippet}...`);
+      const elementsJsonString = JSON.stringify(elements, null, 2);
+      const formattedJson = this.uiManager.escapeHTML(elementsJsonString);
+      await this.uiManager.appendPreviewMessage('text', formattedJson);
 
-      this.appendMessage('user', `[Page Elements Attached]`);
-      this.appendMessage('system', 'Analyzing...');
+      this.uiManager.showThinkingIndicator();
       await this.voiceController.speakText("Analyzing elements.");
 
       const result = await chrome.storage.local.get(promptsStorageKey);

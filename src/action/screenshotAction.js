@@ -31,10 +31,9 @@ export class ScreenshotAction {
       if (screenshotDataUrl) {
         const mimeTypeMatch = screenshotDataUrl.match(/^data:(image\/(?:jpeg|png|webp));base64,/);
         const mimeType = mimeTypeMatch ? mimeTypeMatch[1] : 'image/png';
-        this.updateLastImageData(screenshotDataUrl, mimeType);
+        await this.updateLastImageData(screenshotDataUrl, mimeType);
 
-        this.appendMessage('user', '[Screenshot Attached]');
-        this.appendMessage('system', 'Analyzing...');
+        this.uiManager.showThinkingIndicator();
         await this.voiceController.speakText("Analyzing screenshot.");
 
         const result = await chrome.storage.local.get(promptsStorageKey);

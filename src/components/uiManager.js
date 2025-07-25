@@ -20,15 +20,16 @@ export class UIManager {
         this.elements.conversation.scrollTop = this.elements.conversation.scrollHeight;
     }
 
-    appendPreviewMessage(type, content) {
+    async appendPreviewMessage(type, content) {
         if (!this.elements.conversation) return;
 
         const previewContainerDiv = document.createElement('div');
         previewContainerDiv.classList.add('message', 'message-user', 'message-preview');
 
         if (type === 'image') {
+            const thumbnailUrl = await this._createThumbnail(content);
             const img = document.createElement('img');
-            img.src = content;
+            img.src = thumbnailUrl;
             previewContainerDiv.appendChild(img);
         } else {
             const pre = document.createElement('pre');
@@ -40,6 +41,35 @@ export class UIManager {
         this.elements.conversation.scrollTop = this.elements.conversation.scrollHeight;
     }
 
+
+    _createThumbnail(dataUrl, maxHeight = 300) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+
+                let width = img.width;
+                let height = img.height;
+
+                if (height > maxHeight) {
+                    width = (maxHeight / height) * width;
+                    height = maxHeight;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                ctx.drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL('image/jpeg', 0.9));
+            };
+            img.onerror = (err) => {
+                console.error("Failed to load image for thumbnail creation", err);
+                reject(new Error("Failed to load image for thumbnail creation."));
+            };
+            img.src = dataUrl;
+        });
+    }
 
     showThinkingIndicator() {
         if (!this.elements.conversation || document.getElementById('thinking-indicator')) return;
