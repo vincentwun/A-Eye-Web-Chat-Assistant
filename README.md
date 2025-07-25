@@ -14,7 +14,7 @@ A-Eye Web Chat Assistant is a free and open-source Chrome extension. It's design
 
 ---
 ## Table of Contents
-- [Table of Contents](#table-of-contents)
+- [Read in Chinese](./README.zh.md)
 - [Features](#features)
 - [Architecture and Technologies](#architecture-and-technologies)
 - [How to install](#how-to-install)
