@@ -26,8 +26,6 @@ export class GetElementAction {
     this.uiManager.hidePreview();
 
     try {
-      this.voiceController.speakText("Getting page elements.");
-
       const response = await chrome.runtime.sendMessage({ type: 'findElements' });
 
       if (!response || !response.success || !Array.isArray(response.elements)) {

@@ -27,8 +27,6 @@ export class ContentAnalysisAction {
         this.uiManager.hidePreview();
 
         try {
-            this.voiceController.speakText("Extracting page content.");
-
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             if (!tab || !tab.id) throw new Error('No active tab found or tab ID missing for content analysis.');
 

@@ -27,7 +27,6 @@ export class ScreenshotAction {
     this.uiManager.hidePreview();
 
     try {
-      await this.voiceController.speakText("Taking screenshot.");
       const screenshotDataUrl = await this.screenshotController.captureVisibleTab();
 
       if (screenshotDataUrl) {
