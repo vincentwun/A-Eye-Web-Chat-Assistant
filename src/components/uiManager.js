@@ -15,11 +15,7 @@ export class UIManager {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', `message-${role}`);
 
-        let rolePrefix = 'A-Eye';
-        if (role === 'user') rolePrefix = 'You';
-        else if (role === 'system') rolePrefix = 'System';
-
-        messageDiv.innerHTML = `<strong>${rolePrefix}:</strong> ${formattedContent}`;
+        messageDiv.innerHTML = formattedContent;
         this.elements.conversation.appendChild(messageDiv);
         this.elements.conversation.scrollTop = this.elements.conversation.scrollHeight;
     }
@@ -31,8 +27,7 @@ export class UIManager {
         indicatorDiv.id = 'thinking-indicator';
         indicatorDiv.classList.add('message', 'message-assistant');
 
-        const rolePrefix = 'A-Eye';
-        indicatorDiv.innerHTML = `<strong>${rolePrefix}:</strong> <div class="dot-flashing"></div>`;
+        indicatorDiv.innerHTML = `<div class="dot-flashing"></div>`;
 
         this.elements.conversation.appendChild(indicatorDiv);
         this.elements.conversation.scrollTop = this.elements.conversation.scrollHeight;

@@ -130,12 +130,12 @@ body {
 
 .message {
   max-width: 85%;
-  padding: 9px;
-  border-radius: var(--radius);
-  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 14px;
   word-wrap: break-word;
   box-sizing: border-box;
-  line-height: 1.4;
+  line-height: 1.5;
   margin: var(--space) 0;
   font-weight: 550;
 }
@@ -156,15 +156,17 @@ body {
   margin: var(--space) auto var(--space) 0;
 }
 
+
 .message-system {
   align-self: center;
   max-width: 95%;
   width: auto;
   text-align: center;
-  color: var(--gray-700);
+  color: var(--gray-500);
   font-style: italic;
+  font-size: 12px;
   background-color: transparent;
-  padding: 5px 9px;
+  padding: 4px 8px;
   border: none;
   margin: var(--space) auto;
 }
@@ -359,7 +361,7 @@ body {
   color: var(--blue);
   animation: dot-flashing 1s infinite linear alternate;
   animation-delay: .5s;
-  margin: 0 4px 0 15px;
+  margin: 0 4px;
 }
 
 #thinking-indicator .dot-flashing::before,
