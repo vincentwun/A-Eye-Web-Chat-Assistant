@@ -57,25 +57,8 @@ body {
   gap: var(--space);
 }
 
-.header-section .button-group button {
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  font-size: 14px;
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  flex-shrink: 0;
-  background: var(--blue);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius);
-  cursor: pointer;
-}
-
 .header-section .button-group button.mode-button.active-mode {
-  background-color: var(--green-active);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
+  color: var(--blue);
 }
 
 .content-wrapper {
@@ -216,7 +199,7 @@ body {
   align-items: center;
 }
 
-#input-section button {
+.action-button {
   width: 28px;
   height: 28px;
   padding: 0;
@@ -232,7 +215,7 @@ body {
   transition: background-color 0.2s ease;
 }
 
-#input-section button:hover {
+.action-button:hover {
   background-color: var(--gray-300);
 }
 
@@ -331,14 +314,6 @@ body {
 #local-mode-button[data-tooltip]:before {
   left: 0;
   transform: translateX(0);
-}
-
-#options-button {
-  background-color: var(--gray-500);
-}
-
-#clear-button {
-  background-color: #dc3545;
 }
 
 #thinking-indicator {

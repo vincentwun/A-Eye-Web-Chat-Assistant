@@ -58,7 +58,7 @@ export class CommandProcessor {
         catch (error) { this.actions.handleError('Failed internal scrolling screenshot command', error); return true; }
       } else { console.warn('scrollingScreenshot handler missing.'); return false; }
     }
-    else if (normalizedText === 'analyzeContent') {
+    else if (normalizedText === 'analyzeContent' || normalizedText === 'analyseContent') {
       if (typeof this.actions._executeContentAnalysis === 'function') {
         console.log('Executing internal command: analyzeContent');
         try { this.actions._executeContentAnalysis(); return true; }

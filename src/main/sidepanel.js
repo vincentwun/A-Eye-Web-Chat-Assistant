@@ -182,8 +182,7 @@ class AIScreenReader {
             this.uiManager.updateModeUI(this.stateManager.getState().activeApiMode);
             this.setupEventListeners();
             await this.voiceController.initializeAll();
-            this.appendMessage('system', 'A-Eye Assistant Ready.');
-            this.voiceController.speakText('A-Eye Assistant Ready.');
+            this.voiceController.speakText('Ready');
             this.uiManager.updateInputState(this.elements.userInput.value);
             if (this.elements.userInput) {
                 this.elements.userInput.focus();
