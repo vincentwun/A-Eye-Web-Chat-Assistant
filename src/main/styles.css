@@ -117,7 +117,7 @@ body {
 
 .message-preview img {
   max-width: 100%;
-  max-height: 300px;
+  max-height: 100px;
   border-radius: var(--radius);
   display: block;
   object-fit: contain;
@@ -126,7 +126,7 @@ body {
 
 .message-preview pre {
   width: 300px;
-  height: 200px;
+  height: 100px;
   padding: var(--space);
   border-radius: var(--radius);
   border: 1px solid var(--input-border-color);

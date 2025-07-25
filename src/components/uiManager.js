@@ -41,8 +41,7 @@ export class UIManager {
         this.elements.conversation.scrollTop = this.elements.conversation.scrollHeight;
     }
 
-
-    _createThumbnail(dataUrl, maxHeight = 300) {
+    _createThumbnail(dataUrl, maxHeight = 100) {
         return new Promise((resolve, reject) => {
             const img = new Image();
             img.onload = () => {
