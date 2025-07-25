@@ -38,7 +38,7 @@ export class ScrollingScreenshotAction {
                 this.updateLastImageData(mergedImageDataUrl, mimeType);
 
                 this.appendMessage('user', '[Scrolling Screenshot Attached]');
-                this.appendMessage('system', 'Scrolling screenshot captured. Sending for analysis...');
+                this.appendMessage('system', 'Analyzing...');
                 await this.voiceController.speakText("Analyzing scrolling screenshot.");
 
                 const result = await chrome.storage.local.get(promptsStorageKey);

@@ -27,7 +27,6 @@ export class ScreenshotAction {
     this.uiManager.hidePreview();
 
     try {
-      this.appendMessage('system', 'Taking screenshot...');
       await this.voiceController.speakText("Taking screenshot.");
       const screenshotDataUrl = await this.screenshotController.captureVisibleTab();
 
@@ -37,7 +36,7 @@ export class ScreenshotAction {
         this.updateLastImageData(screenshotDataUrl, mimeType);
 
         this.appendMessage('user', '[Screenshot Attached]');
-        this.appendMessage('system', 'Screenshot captured. Sending for analysis...');
+        this.appendMessage('system', 'Analyzing...');
         await this.voiceController.speakText("Analyzing screenshot.");
 
         const result = await chrome.storage.local.get(promptsStorageKey);

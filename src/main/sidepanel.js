@@ -45,9 +45,7 @@ class AIScreenReader {
         });
         this.screenshotController.setCallbacks({
             onStart: () => {
-                const message = "Taking scrolling screenshot...";
-                this.voiceController.speakText(message);
-                this.appendMessage('system', message);
+                this.voiceController.speakText("Taking scrolling screenshot.");
             }
         });
 
@@ -468,7 +466,6 @@ class AIScreenReader {
         this.uiManager.hidePreview();
         this.stateManager.clearMessages();
         this.stateManager.clearLastImageData();
-        this.appendMessage('system', 'Conversation cleared.');
         this.voiceController.speakText('Conversation cleared.');
         this.setProcessing(false);
     }

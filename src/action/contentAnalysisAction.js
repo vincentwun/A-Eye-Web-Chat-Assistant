@@ -27,8 +27,7 @@ export class ContentAnalysisAction {
         this.uiManager.hidePreview();
 
         try {
-            this.appendMessage('system', 'Extracting page content...');
-            await this.voiceController.speakText("Extracting page content.");
+            this.voiceController.speakText("Extracting page content.");
 
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             if (!tab || !tab.id) throw new Error('No active tab found or tab ID missing for content analysis.');
@@ -46,7 +45,7 @@ export class ContentAnalysisAction {
                 this.uiManager.showPreview('text', `${previewSnippet}...`);
 
                 this.appendMessage('user', `[Page Content Attached]`);
-                this.appendMessage('system', 'Content extracted. Sending for analysis...');
+                this.appendMessage('system', 'Analyzing...');
                 await this.voiceController.speakText("Analyzing content.");
 
                 const result = await chrome.storage.local.get(promptsStorageKey);
