@@ -300,12 +300,14 @@ body {
   transform: translateX(0);
 }
 
-.header-section button[data-tooltip]:before {
+.header-section button[data-tooltip]:before,
+.header-section a[data-tooltip]:before {
   bottom: auto;
   top: calc(100% + 5px);
 }
 
-.header-section button[data-tooltip]:after {
+.header-section button[data-tooltip]:after,
+.header-section a[data-tooltip]:after {
   bottom: auto;
   top: calc(100% - 1px);
   border-top-color: transparent;

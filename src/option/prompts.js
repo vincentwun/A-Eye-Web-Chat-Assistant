@@ -52,27 +52,23 @@ A [TASK] is a command from the user asking you to interact with the current webp
 
     screenshot_prompt: `
 Describe the screenshot of the webpage.
-Your response language MUST match the user mentioned language.
 All your responses MUST be no more than 50 words.
 You MUST NOT use any Markdown formatting. As your responses will be read aloud via Text-to-Speech, they must be complete, natural-sounding sentences.
 `,
 
     scrollingScreenshot_prompt: `
 Describe the scrolling screenshot of the webpage.
-Your response language MUST match the user mentioned language.
 All your responses MUST be no more than 50 words.
 You MUST NOT use any Markdown formatting. As your responses will be read aloud via Text-to-Speech, they must be complete, natural-sounding sentences.
 `,
 
     analyzeContent_prompt: `
 Summarize the content of the webpage.
-Your response language MUST match the user mentioned language.
 All your responses MUST be no more than 50 words.
 You MUST NOT use any Markdown formatting. As your responses will be read aloud via Text-to-Speech, they must be complete, natural-sounding sentences.
 `,
     getElement_prompt: `
 Analyze the following JSON array of web page elements. 
-Your response language MUST match the user mentioned language.
 All your responses MUST be no more than 50 words.
 You MUST NOT use any Markdown formatting. As your responses will be read aloud via Text-to-Speech, they must be complete, natural-sounding sentences.
 `,
