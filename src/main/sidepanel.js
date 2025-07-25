@@ -480,6 +480,9 @@ class AIScreenReader {
         this.stateManager.clearLastImageData();
         this.voiceController.speakText('Conversation cleared.');
         this.setProcessing(false);
+        if (this.elements.userInput) {
+            this.elements.userInput.focus();
+        }
     }
 
     async handleRepeat() {
