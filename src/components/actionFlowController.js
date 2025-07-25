@@ -60,14 +60,12 @@ export class ActionFlowController {
   }
 
   async handleExecuteActionsRequest(actions) {
-    this.appendMessage('system', 'Executing actions...');
     if (this.voiceController) this.voiceController.speakText('Executing actions.');
     
     try {
       const response = await chrome.runtime.sendMessage({ type: 'executeActions', actions: actions });
 
       if (response && response.success) {
-        this.appendMessage('system', 'Actions completed.');
         if (this.voiceController) this.voiceController.speakText("Actions completed.");
         this.appendMessage('assistant', '[{"action": "Done"}]', true);
       } else {

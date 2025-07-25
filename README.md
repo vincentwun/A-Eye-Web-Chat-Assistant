@@ -135,9 +135,10 @@ The script will help you to download Ollama, CORS setup, and model execution.
 3.  In the extension's **Settings**, make sure "Local Model Name" is `gemma3:4b` (or the model you chose).
 
 ---
-### Cloud Setup: Option 1 - Gemini API
+### Cloud Setup: Option 1 - Google AI Studio
 1. Get your Gemini API Key from [Google AI Studio](https://aistudio.google.com/)
-2. Go to the extension's **Settings**, input your API Key under "Cloud API Key".
+2. `Get API KEY` > `Create API Key` > `Copy`
+3. Go to the extension's **Settings**, input your API Key under "Cloud API Key".
 
 ---
 ### Cloud Setup: Option 2 - GCP Vertex AI

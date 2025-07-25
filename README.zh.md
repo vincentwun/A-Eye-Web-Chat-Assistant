@@ -135,7 +135,8 @@ https://chromewebstore.google.com/detail/a-eye-web-chat-assistant/cdjignhknhdkld
 ---
 ### 雲端設定：選項 1 - Google AI Studio
 1.  從 [Google AI Studio](https://aistudio.google.com/) 取得您的 Gemini API 金鑰。
-2.  前往擴充功能的**設定**，在「Gemini API Key」欄位中輸入您的 API 金鑰。
+2. `Get API KEY` > `Create API Key` > `Copy`
+3.  前往擴充功能的**設定**，在「Gemini API Key」欄位中輸入您的 API 金鑰。
 
 ---
 ### 雲端設定：選項 2 - GCP Vertex AI
