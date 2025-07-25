@@ -45,7 +45,7 @@ export class GetElementAction {
       this.uiManager.showPreview('text', `${previewSnippet}...`);
 
       this.appendMessage('user', `[Page Elements Attached]`);
-      this.appendMessage('system', 'Analyzing elements...');
+      this.appendMessage('system', 'Analyzing...');
       await this.voiceController.speakText("Analyzing elements.");
 
       const result = await chrome.storage.local.get(promptsStorageKey);

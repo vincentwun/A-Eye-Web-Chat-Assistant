@@ -10,6 +10,7 @@ import { GetElementAction } from '../action/getElementAction.js';
 import { ActionFlowController } from '../components/actionFlowController.js';
 import { StateManager } from '../components/stateManager.js';
 import { defaultApiSettings } from '../option/apiRoute.js';
+import { ConfigValidator } from '../components/configValidator.js';
 
 class AIScreenReader {
     constructor() {
@@ -39,6 +40,12 @@ class AIScreenReader {
         this.apiService = new ApiService();
         this.voiceController = new VoiceController();
         this.screenshotController = new ScreenshotController();
+
+        this.configValidator = new ConfigValidator({
+            stateManager: this.stateManager,
+            appendMessage: this.appendMessage.bind(this),
+            voiceController: this.voiceController
+        });
 
         this.voiceController.setCallbacks({
             appendMessage: this.appendMessage.bind(this),
@@ -114,8 +121,8 @@ class AIScreenReader {
 
     async handleScreenshot() {
         if (!this.stateManager.isSettingsLoaded() || this.stateManager.isProcessing()) return;
-        if (this.stateManager.getState().activeApiMode === 'local' && !this.isLocalModeConfigValid()) return;
-        if (this.stateManager.getState().activeApiMode === 'cloud' && !this.isCloudModeConfigValid()) return;
+        if (this.stateManager.getState().activeApiMode === 'local' && !this.configValidator.isLocalModeConfigValid()) return;
+        if (this.stateManager.getState().activeApiMode === 'cloud' && !this.configValidator.isCloudModeConfigValid()) return;
         try {
             await this.screenshotAction.execute();
         } catch (error) {
@@ -125,8 +132,8 @@ class AIScreenReader {
 
     async handleScrollingScreenshot() {
         if (!this.stateManager.isSettingsLoaded() || this.stateManager.isProcessing()) return;
-        if (this.stateManager.getState().activeApiMode === 'local' && !this.isLocalModeConfigValid()) return;
-        if (this.stateManager.getState().activeApiMode === 'cloud' && !this.isCloudModeConfigValid()) return;
+        if (this.stateManager.getState().activeApiMode === 'local' && !this.configValidator.isLocalModeConfigValid()) return;
+        if (this.stateManager.getState().activeApiMode === 'cloud' && !this.configValidator.isCloudModeConfigValid()) return;
         try {
             await this.scrollingScreenshotAction.execute();
         } catch (error) {
@@ -136,8 +143,8 @@ class AIScreenReader {
 
     async handleContentAnalysis() {
         if (!this.stateManager.isSettingsLoaded() || this.stateManager.isProcessing()) return;
-        if (this.stateManager.getState().activeApiMode === 'local' && !this.isLocalModeConfigValid()) return;
-        if (this.stateManager.getState().activeApiMode === 'cloud' && !this.isCloudModeConfigValid()) return;
+        if (this.stateManager.getState().activeApiMode === 'local' && !this.configValidator.isLocalModeConfigValid()) return;
+        if (this.stateManager.getState().activeApiMode === 'cloud' && !this.configValidator.isCloudModeConfigValid()) return;
         try {
             await this.contentAnalysisAction.execute();
         } catch (error) {
@@ -147,8 +154,8 @@ class AIScreenReader {
 
     async handleGetElements() {
         if (!this.stateManager.isSettingsLoaded() || this.stateManager.isProcessing()) return;
-        if (this.stateManager.getState().activeApiMode === 'local' && !this.isLocalModeConfigValid()) return;
-        if (this.stateManager.getState().activeApiMode === 'cloud' && !this.isCloudModeConfigValid()) return;
+        if (this.stateManager.getState().activeApiMode === 'local' && !this.configValidator.isLocalModeConfigValid()) return;
+        if (this.stateManager.getState().activeApiMode === 'cloud' && !this.configValidator.isCloudModeConfigValid()) return;
         try {
             await this.getElementAction.execute();
         } catch (error) {
@@ -253,70 +260,13 @@ class AIScreenReader {
 
     async handleModeChange(newMode) {
         if (!this.stateManager.isSettingsLoaded() || this.stateManager.isProcessing() || newMode === this.stateManager.getState().activeApiMode) return;
-        if (newMode === 'local' && !this.isLocalModeConfigValid()) return;
-        if (newMode === 'cloud' && !this.isCloudModeConfigValid()) return;
+        if (newMode === 'local' && !this.configValidator.isLocalModeConfigValid()) return;
+        if (newMode === 'cloud' && !this.configValidator.isCloudModeConfigValid()) return;
         await this.stateManager.setActiveApiMode(newMode);
         this.uiManager.updateModeUI(newMode);
         const modeName = newMode === 'local' ? 'Local' : 'Cloud';
         this.appendMessage('system', `Switched to ${modeName} Mode.`);
         this.voiceController.speakText(`Switched to ${modeName} Mode.`);
-    }
-
-    isLocalModeConfigValid() {
-        const state = this.stateManager.getState();
-        let isValid = true;
-        if (!state.localApiUrl) {
-            const msg = 'Local API URL is missing. Please configure in Options page.';
-            this.appendMessage('system', msg);
-            this.voiceController.speakText('Local API settings missing.');
-            isValid = false;
-        }
-        if (!state.ollamaMultimodalModel) {
-            const msg = 'Local Model Name is missing. Please configure in Options page.';
-            if (isValid) this.appendMessage('system', msg);
-            if (isValid) this.voiceController.speakText('Local API settings missing.');
-            isValid = false;
-        }
-        return isValid;
-    }
-
-    isCloudModeConfigValid() {
-        const state = this.stateManager.getState();
-        const method = state.cloudApiMethod;
-        const isDirect = method === 'direct';
-        const isProxy = method === 'proxy';
-        let isValid = true;
-        let speakMsg = null;
-
-        if (!state.cloudApiKey) {
-            const msg = 'Cloud API Key is missing. Please configure in Options page.';
-            this.appendMessage('system', msg);
-            speakMsg = 'Cloud settings missing: API Key.';
-            isValid = false;
-        }
-        if (!state.cloudModelName) {
-            const msg = 'Cloud Model Name is missing. Please configure in Options page.';
-            if (isValid) this.appendMessage('system', msg);
-            if (isValid) speakMsg = 'Cloud settings missing: Model Name.';
-            isValid = false;
-        }
-        if (isDirect && !state.cloudApiUrl) {
-            const msg = 'Cloud API Base URL is missing for Direct Connection. Please configure in Options page.';
-            if (isValid) this.appendMessage('system', msg);
-            if (isValid) speakMsg = 'Cloud settings missing: Base URL for Direct mode.';
-            isValid = false;
-        }
-        if (isProxy && !state.cloudProxyUrl) {
-            const msg = 'Cloud Function URL is missing for Proxy Connection. Please configure in Options page.';
-            if (isValid) this.appendMessage('system', msg);
-            if (isValid) speakMsg = 'Cloud settings missing: Function URL for Proxy mode.';
-            isValid = false;
-        }
-
-        if (!isValid && speakMsg) {
-            this.voiceController.speakText(speakMsg);
-        }
-        return isValid;
     }
 
     getApiConfig() {
@@ -337,8 +287,8 @@ class AIScreenReader {
         if (!this.stateManager.isSettingsLoaded()) { this.appendMessage('system', 'Initializing, please wait...'); return; }
         if (this.stateManager.isProcessing()) { this.appendMessage('system', 'Processing, please wait...'); return; }
         const state = this.stateManager.getState();
-        if (state.activeApiMode === 'local' && !this.isLocalModeConfigValid()) return;
-        if (state.activeApiMode === 'cloud' && !this.isCloudModeConfigValid()) return;
+        if (state.activeApiMode === 'local' && !this.configValidator.isLocalModeConfigValid()) return;
+        if (state.activeApiMode === 'cloud' && !this.configValidator.isCloudModeConfigValid()) return;
 
         this.setProcessing(true);
         this.voiceController.playSendSound();
