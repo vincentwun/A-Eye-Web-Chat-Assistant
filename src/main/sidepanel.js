@@ -201,7 +201,7 @@ class AIScreenReader {
             this.uiManager.updateModeUI(this.stateManager.getState().activeApiMode);
             this.setupEventListeners();
             await this.voiceController.initializeAll();
-            this.voiceController.speakText('Ready');
+            this.voiceController.speakText('A-Eye Ready');
             this.uiManager.updateInputState(this.elements.userInput.value);
         } catch (error) {
             this.handleError('Initialization failed', error);

@@ -367,7 +367,7 @@ export class VoiceController {
             console.log("Silence detected.");
             this.stopVoiceInput();
           }
-        }, 500);
+        }, 100);
       };
 
       recognition.onerror = (event) => {
