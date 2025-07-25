@@ -6,6 +6,7 @@ import { CommandProcessor } from '../action/commandMap.js';
 import { ScreenshotAction } from '../action/screenshotAction.js';
 import { ScrollingScreenshotAction } from '../action/scrollingScreenshotAction.js';
 import { ContentAnalysisAction } from '../action/contentAnalysisAction.js';
+import { GetElementAction } from '../action/getElementAction.js';
 import { ActionFlowController } from '../components/actionFlowController.js';
 import { StateManager } from '../components/stateManager.js';
 import { defaultApiSettings } from '../option/apiRoute.js';
@@ -18,6 +19,7 @@ class AIScreenReader {
             screenshotButton: document.getElementById('screenshot-button'),
             scrollingScreenshotButton: document.getElementById('scrolling-screenshot-button'),
             analyzeContentButton: document.getElementById('analyze-content-button'),
+            getElementButton: document.getElementById('get-element-button'),
             openOptionsButton: document.getElementById('options-button'),
             previewContainer: document.getElementById('preview-container'),
             previewImage: document.getElementById('preview-image'),
@@ -67,6 +69,7 @@ class AIScreenReader {
         this.screenshotAction = new ScreenshotAction(actionDependencies);
         this.scrollingScreenshotAction = new ScrollingScreenshotAction(actionDependencies);
         this.contentAnalysisAction = new ContentAnalysisAction(actionDependencies);
+        this.getElementAction = new GetElementAction(actionDependencies);
 
         const commandProcessorActions = {
             _executeScreenshot: this.screenshotAction.execute.bind(this.screenshotAction),
@@ -142,6 +145,17 @@ class AIScreenReader {
         }
     }
 
+    async handleGetElements() {
+        if (!this.stateManager.isSettingsLoaded() || this.stateManager.isProcessing()) return;
+        if (this.stateManager.getState().activeApiMode === 'local' && !this.isLocalModeConfigValid()) return;
+        if (this.stateManager.getState().activeApiMode === 'cloud' && !this.isCloudModeConfigValid()) return;
+        try {
+            await this.getElementAction.execute();
+        } catch (error) {
+            this.handleError("Get elements initiation failed", error);
+        }
+    }
+
     setupMessageListener() {
         chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             const messageHandlers = {
@@ -182,9 +196,6 @@ class AIScreenReader {
             await this.voiceController.initializeAll();
             this.voiceController.speakText('Ready');
             this.uiManager.updateInputState(this.elements.userInput.value);
-            if (this.elements.userInput) {
-                this.elements.userInput.focus();
-            }
         } catch (error) {
             this.handleError('Initialization failed', error);
             const currentState = this.stateManager.getState();
@@ -197,6 +208,7 @@ class AIScreenReader {
             'screenshotButton': this.handleScreenshot,
             'scrollingScreenshotButton': this.handleScrollingScreenshot,
             'analyzeContentButton': this.handleContentAnalysis,
+            'getElementButton': this.handleGetElements,
             'openOptionsButton': this.handleOpenOptions,
             'sendButton': this.handleSendMessage,
             'voiceButton': this.voiceController.toggleVoiceInput.bind(this.voiceController),
@@ -391,12 +403,12 @@ class AIScreenReader {
             return;
         }
         const sentences = text
-            .split(/[。？！.!?]/)
+            .split(/[。？！!?]/)
             .map(s => s.trim())
             .filter(s => s.length > 0);
 
         try {
-            if (sentences.length > 4) {
+            if (sentences.length > 20) {
                 for (const sentence of sentences) {
                     this.voiceController.speakText(sentence);
                 }
@@ -488,7 +500,7 @@ class AIScreenReader {
             const fullContent = String(lastAIMessage.content);
 
             const sentences = fullContent
-                .split(/[。？！.!?]/)
+                .split(/[。？！!?]/)
                 .map(s => s.trim())
                 .filter(s => s.length > 0);
 

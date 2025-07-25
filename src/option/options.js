@@ -280,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const eventType = (el.tagName === 'SELECT' || el.type === 'radio' || el.type === 'checkbox') ? 'change' : 'blur';
         el.addEventListener(eventType, saveOptions);
 
-        if (el.type === 'text' || el.type === 'password' || el.tagName === 'TEXTAREA') {
+        if (el.type === 'text' || el.type === 'password') {
             el.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
