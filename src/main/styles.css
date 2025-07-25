@@ -48,7 +48,7 @@ body {
 .mode-indicator {
   font-size: 15px;
   color: var(--gray-800);
-  font-weight: 550;
+  font-weight: 800;
   margin-right: var(--space);
 }
 

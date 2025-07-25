@@ -84,7 +84,7 @@ export class UIManager {
             return;
         }
         const modeText = activeMode === 'local' ? 'Local' : 'Cloud';
-        this.elements.currentModeIndicator.textContent = `Current Mode: ${modeText}`;
+        this.elements.currentModeIndicator.textContent = `Mode: ${modeText}`;
     }
 
     updateInputState(inputValue) {
