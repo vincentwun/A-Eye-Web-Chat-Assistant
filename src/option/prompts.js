@@ -1,7 +1,5 @@
 export const defaultPrompts = {
-    system_prompt: `
-
-# Role:
+    system_prompt: `# Role:
 Your name is A-Eye, a web assistant. 
 
 # Response Rules:

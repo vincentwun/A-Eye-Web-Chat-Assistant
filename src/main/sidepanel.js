@@ -117,6 +117,7 @@ class AIScreenReader {
     }
 
     async handleScreenshot() {
+        this.voiceController.stopSpeaking();
         if (!this.stateManager.isSettingsLoaded() || this.stateManager.isProcessing()) return;
         if (this.stateManager.getState().activeApiMode === 'local' && !this.configValidator.isLocalModeConfigValid()) return;
         if (this.stateManager.getState().activeApiMode === 'cloud' && !this.configValidator.isCloudModeConfigValid()) return;
@@ -128,6 +129,7 @@ class AIScreenReader {
     }
 
     async handleScrollingScreenshot() {
+        this.voiceController.stopSpeaking();
         if (!this.stateManager.isSettingsLoaded() || this.stateManager.isProcessing()) return;
         if (this.stateManager.getState().activeApiMode === 'local' && !this.configValidator.isLocalModeConfigValid()) return;
         if (this.stateManager.getState().activeApiMode === 'cloud' && !this.configValidator.isCloudModeConfigValid()) return;
@@ -139,6 +141,7 @@ class AIScreenReader {
     }
 
     async handleContentAnalysis() {
+        this.voiceController.stopSpeaking();
         if (!this.stateManager.isSettingsLoaded() || this.stateManager.isProcessing()) return;
         if (this.stateManager.getState().activeApiMode === 'local' && !this.configValidator.isLocalModeConfigValid()) return;
         if (this.stateManager.getState().activeApiMode === 'cloud' && !this.configValidator.isCloudModeConfigValid()) return;
@@ -150,6 +153,7 @@ class AIScreenReader {
     }
 
     async handleGetElements() {
+        this.voiceController.stopSpeaking();
         if (!this.stateManager.isSettingsLoaded() || this.stateManager.isProcessing()) return;
         if (this.stateManager.getState().activeApiMode === 'local' && !this.configValidator.isLocalModeConfigValid()) return;
         if (this.stateManager.getState().activeApiMode === 'cloud' && !this.configValidator.isCloudModeConfigValid()) return;
@@ -256,6 +260,7 @@ class AIScreenReader {
     }
 
     async handleModeChange(newMode) {
+        this.voiceController.stopSpeaking();
         if (!this.stateManager.isSettingsLoaded() || this.stateManager.isProcessing() || newMode === this.stateManager.getState().activeApiMode) return;
         if (newMode === 'local' && !this.configValidator.isLocalModeConfigValid()) return;
         if (newMode === 'cloud' && !this.configValidator.isCloudModeConfigValid()) return;
@@ -275,6 +280,7 @@ class AIScreenReader {
     }
 
     async handleSendMessage() {
+        this.voiceController.stopSpeaking();
         const userInput = this.elements.userInput.value.trim();
         if (userInput.toLowerCase() === 'clear') {
             this.handleClear();
