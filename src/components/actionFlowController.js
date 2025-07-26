@@ -34,14 +34,18 @@ export class ActionFlowController {
           return;
         }
 
-        const elementsJsonString = JSON.stringify(elements);
+        const elementsJsonString = JSON.stringify(elements, null, 2);
         const lastUserMessage = [...this.state.messages].reverse().find(m => m.role === 'user');
         const userContext = lastUserMessage ? lastUserMessage.content : "Perform the requested action.";
-        const promptForLLM = `Based on the user request "${userContext}" and the following elements, generate the required JSON command array.\n\nElements:\n${elementsJsonString}`;
+
+        let promptForLLM = this.prompts.jsonGeneration_prompt || '';
+        promptForLLM = promptForLLM.replace('{userContext}', userContext)
+          .replace('{elementsJsonString}', elementsJsonString);
+
         const payload = { prompt: promptForLLM };
         const apiConfig = this.getApiConfig();
         const historyToSend = [];
-        const systemPrompt = this.prompts.defaultChat;
+        const systemPrompt = null;
 
         const llmResponseContent = await this.apiService.sendRequest(
           apiConfig, historyToSend, payload, null, systemPrompt
@@ -54,14 +58,14 @@ export class ActionFlowController {
       }
 
     } catch (error) {
-        this.handleError('Failed to get elements or send them to LLM', error);
-        this.setProcessing(false);
+      this.handleError('Failed to get elements or send them to LLM', error);
+      this.setProcessing(false);
     }
   }
 
   async handleExecuteActionsRequest(actions) {
     if (this.voiceController) this.voiceController.speakText('Executing actions.');
-    
+
     try {
       const response = await chrome.runtime.sendMessage({ type: 'executeActions', actions: actions });
 
