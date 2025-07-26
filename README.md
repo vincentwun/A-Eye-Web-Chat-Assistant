@@ -16,7 +16,6 @@ A-Eye Web Chat Assistant is a free and open-source Chrome extension. It's design
 ## Table of Contents
 - [Read in Chinese](./README.zh.md)
 - [Features](#features)
-- [Architecture and Technologies](#architecture-and-technologies)
 - [How to install](#how-to-install)
 - [How to Use](#how-to-use)
   - [Local Ollama Setup: Option 1 - Manual](#local-ollama-setup-option-1---manual)
@@ -25,6 +24,7 @@ A-Eye Web Chat Assistant is a free and open-source Chrome extension. It's design
   - [Cloud Setup: Option 2 - GCP Vertex AI](#cloud-setup-option-2---gcp-vertex-ai)
   - [Basic Interaction](#basic-interaction)
   - [Analyzing Web Content](#analyzing-web-content)
+- [Architecture and Technologies](#architecture-and-technologies)
 - [Privacy](#privacy)
 - [Credits](#credits)
 - [License](#license)
@@ -36,33 +36,6 @@ A-Eye Web Chat Assistant is a free and open-source Chrome extension. It's design
 -   **Full Voice Control & Q&A**: Operate everything and ask questions about the page using your voice.
 -   **Selectable AI**: Cloud Gemini / Local Gemma 3: One-click switch between powerful cloud AI and private local AI (via Ollama).
 -   **Cross-Platform Compatibility**: Works on Windows, macOS, and Linux computers using the Google Chrome browser.
-
----
-## Architecture and Technologies
-
-**Chrome Extension and Web APIs:**
-
-**Chrome Scripting API:** Executing content scripts with Readability.js.
-
-**Canvas API:** Used to merge multiple screenshots to implement the Scrolling Screenshot feature.
-
-**Fetch API:** Used to make network requests to backend APIs (Gemini / Ollama).
-
-**Web Speech API:**
-
-`SpeechRecognition`: Converting speech to text (STT).
-
-`SpeechSynthesis`: Converting text to speech (TTS).
-
-**Google Cloud Platform (GCP):**
-
-**API Gateway:** Provides a secure URL endpoint for cloud requests. Routes verified requests (via API key) to the Cloud Function.
-
-**Cloud Functions:** Receives requests from API Gateway. Calls Vertex AI (Gemini) to process data and returns the response.
-
-**Vertex AI:** Hosts the Gemini AI model. Analyzes the provided web content (text/images).
-
-![architecture](/images/architecture_v2.png)
 
 ---
 ## How to install
@@ -154,11 +127,38 @@ For more details on GCP settings, see [GCP README.md](gcp/gcloud/README.md)
 4. **Repeat Last Response**: Use shortcut `Alt+Shift+3` or click the Redo icon.
 5. **Clear Conversation**: Click the `Trash` icon in the header or input `clear` to clear the chat.
 
+---
 ### Analyzing Web Content
 
 -   **Capture Visible Area**: Click the Camera icon or activate voice input to say "Take a screenshot."
 -   **Capture Full Page**: Click the Scroll icon or activate voice input to say "Take a scrolling screenshot."
 -   **Analyze Text Content**: Click the File icon or activate voice input to say "Analyze content."
+
+## Architecture and Technologies
+
+**Chrome Extension and Web APIs:**
+
+**Chrome Scripting API:** Executing content scripts with Readability.js.
+
+**Canvas API:** Used to merge multiple screenshots to implement the Scrolling Screenshot feature.
+
+**Fetch API:** Used to make network requests to backend APIs (Gemini / Ollama).
+
+**Web Speech API:**
+
+`SpeechRecognition`: Converting speech to text (STT).
+
+`SpeechSynthesis`: Converting text to speech (TTS).
+
+**Google Cloud Platform (GCP):**
+
+**API Gateway:** Provides a secure URL endpoint for cloud requests. Routes verified requests (via API key) to the Cloud Function.
+
+**Cloud Functions:** Receives requests from API Gateway. Calls Vertex AI (Gemini) to process data and returns the response.
+
+**Vertex AI:** Hosts the Gemini AI model. Analyzes the provided web content (text/images).
+
+![architecture](/images/architecture_v2.png)
 
 ---
 ## Privacy

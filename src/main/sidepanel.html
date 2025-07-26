@@ -14,17 +14,19 @@
     <header class="header-section">
         <span id="current-mode-indicator" class="mode-indicator">Mode: Local</span>
         <nav class="button-group">
-            <button id="local-mode-button" class="mode-button action-button" data-tooltip="Local Mode">
+            <button id="local-mode-button" class="mode-button action-button" data-tooltip="Local Mode"
+                data-tooltip-position="bottom">
                 <i class="fas fa-desktop"></i>
             </button>
-            <button id="cloud-mode-button" class="mode-button action-button" data-tooltip="Cloud Mode">
+            <button id="cloud-mode-button" class="mode-button action-button" data-tooltip="Cloud Mode"
+                data-tooltip-position="bottom">
                 <i class="fas fa-cloud"></i>
             </button>
-            <button id="options-button" class="action-button" data-tooltip="Settings">
+            <button id="options-button" class="action-button" data-tooltip="Settings" data-tooltip-position="bottom">
                 <i class="fas fa-cog"></i>
             </button>
             <a href="https://github.com/vincentwun/A-Eye-Web-Chat-Assistant" target="_blank" rel="noopener noreferrer"
-                class="action-button" data-tooltip="Github">
+                class="action-button" data-tooltip="Github" data-tooltip-position="bottom-right">
                 <i class="fa-brands fa-github"></i>
             </a>
         </nav>
@@ -39,31 +41,37 @@
         <textarea id="user-input" rows="1" placeholder="Type your message here..."></textarea>
         <div class="input-controls-row">
             <div class="input-action-buttons-left">
-                <button id="screenshot-button" class="action-button" data-tooltip="Capture visible">
+                <button id="screenshot-button" class="action-button" data-tooltip="Capture visible"
+                    data-tooltip-position="top-left">
                     <i class="fas fa-camera"></i>
                 </button>
-                <button id="scrolling-screenshot-button" class="action-button" data-tooltip="Capture full page">
+                <button id="scrolling-screenshot-button" class="action-button" data-tooltip="Capture full page"
+                    data-tooltip-position="top-left">
                     <i class="fas fa-file-arrow-down"></i>
                 </button>
-                <button id="analyze-content-button" class="action-button" data-tooltip="Analyze content">
+                <button id="analyze-content-button" class="action-button" data-tooltip="Analyze content"
+                    data-tooltip-position="top-left">
                     <i class="fas fa-file-export"></i>
                 </button>
-                <button id="get-element-button" class="action-button" data-tooltip="Get Element">
+                <button id="get-element-button" class="action-button" data-tooltip="Get Element"
+                    data-tooltip-position="top-left">
                     <i class="fas fa-code"></i>
                 </button>
             </div>
 
             <div class="input-action-buttons-right">
-                <button id="voiceInput-button" class="action-button" data-tooltip="Voice Input">
+                <button id="voiceInput-button" class="action-button" data-tooltip="Voice Input"
+                    data-tooltip-position="top-right">
                     <i class="fas fa-microphone"></i>
                 </button>
-                <button id="repeat-button" class="action-button" data-tooltip="Repeat">
+                <button id="repeat-button" class="action-button" data-tooltip="Repeat"
+                    data-tooltip-position="top-right">
                     <i class="fas fa-redo"></i>
                 </button>
-                <button id="send-button" class="action-button" data-tooltip="Send">
+                <button id="send-button" class="action-button" data-tooltip="Send" data-tooltip-position="top-right">
                     <i class="fas fa-paper-plane"></i>
                 </button>
-                <button id="clear-button" class="action-button" data-tooltip="Clear">
+                <button id="clear-button" class="action-button" data-tooltip="Clear" data-tooltip-position="top-right">
                     <i class="fas fa-trash-alt"></i>
                 </button>
             </div>

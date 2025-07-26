@@ -15,7 +15,6 @@ A-Eye 網頁聊天助理是一款免費且開源的 Chrome 擴充功能。它旨
 ---
 ## 目錄
 - [功能](#功能)
-- [架構與技術](#架構與技術)
 - [安裝指南](#安裝指南)
 - [使用說明](#使用說明)
   - [本機 Ollama 設定：選項 1 - 手動](#本機-ollama-設定選項-1---手動)
@@ -24,6 +23,7 @@ A-Eye 網頁聊天助理是一款免費且開源的 Chrome 擴充功能。它旨
   - [雲端設定：選項 2 - GCP Vertex AI](#雲端設定選項-2---gcp-vertex-ai)
   - [基本互動](#基本互動)
   - [分析網頁內容](#分析網頁內容)
+- [架構與技術](#架構與技術)
 - [隱私權政策](#隱私權政策)
 - [第三方函式庫](#第三方函式庫)
 - [授權](#授權)
@@ -35,33 +35,6 @@ A-Eye 網頁聊天助理是一款免費且開源的 Chrome 擴充功能。它旨
 -   **全面語音控制與問答**: 透過語音操作所有功能並查詢頁面內容。
 -   **可選用的 AI 模型**: 雲端 Gemini / 本機 Gemma 3，一鍵在強大的雲端 AI 與注重隱私的本機 AI（透過 Ollama）之間切換。
 -   **跨平台相容性**: 適用於 Windows、macOS 和 Linux 電腦上的 Google Chrome 瀏覽器。
-
----
-## 架構與技術
-
-**Chrome 擴充功能與網頁 API：**
-
-**Chrome Scripting API：** 透過 Readability.js 執行內容指令碼。
-
-**Canvas API：** 用於合併多張螢幕截圖，以實現滾動截圖功能。
-
-**Fetch API：** 用於向後端 API（Gemini / Ollama）發出網路請求。
-
-**Web Speech API：**
-
-`SpeechRecognition`：將語音轉換為文字（STT）。
-
-`SpeechSynthesis`：將文字轉換為語音（TTS）。
-
-**Google Cloud Platform (GCP)：**
-
-**API Gateway：** 為雲端請求提供安全的 URL 端點。將通過驗證的請求（透過 API 金鑰）路由至 Cloud Function。
-
-**Cloud Functions：** 接收來自 API Gateway 的請求，並呼叫 Vertex AI (Gemini) 處理資料，然後傳回回應。
-
-**Vertex AI：** 託管 Gemini AI 模型，用於分析所提供的網頁內容（文字/圖片）。
-
-![architecture](/images/architecture_v2.png)
 
 ---
 ## 安裝指南
@@ -157,6 +130,33 @@ https://chromewebstore.google.com/detail/a-eye-web-chat-assistant/cdjignhknhdkld
 -   **擷取可見區域**: 點擊相機圖示，或啟用語音輸入並說出 "Take a screenshot"。
 -   **擷取完整頁面**: 點擊捲動圖示，或啟用語音輸入並說出 "Take a scrolling screenshot"。
 -   **分析文字內容**: 點擊文件圖示，或啟用語音輸入並說出 "Analyze content"。
+
+---
+## 架構與技術
+
+**Chrome 擴充功能與網頁 API：**
+
+**Chrome Scripting API：** 透過 Readability.js 執行內容指令碼。
+
+**Canvas API：** 用於合併多張螢幕截圖，以實現滾動截圖功能。
+
+**Fetch API：** 用於向後端 API（Gemini / Ollama）發出網路請求。
+
+**Web Speech API：**
+
+`SpeechRecognition`：將語音轉換為文字（STT）。
+
+`SpeechSynthesis`：將文字轉換為語音（TTS）。
+
+**Google Cloud Platform (GCP)：**
+
+**API Gateway：** 為雲端請求提供安全的 URL 端點。將通過驗證的請求（透過 API 金鑰）路由至 Cloud Function。
+
+**Cloud Functions：** 接收來自 API Gateway 的請求，並呼叫 Vertex AI (Gemini) 處理資料，然後傳回回應。
+
+**Vertex AI：** 託管 Gemini AI 模型，用於分析所提供的網頁內容（文字/圖片）。
+
+![architecture](/images/architecture_v2.png)
 
 ---
 ## 隱私權政策
