@@ -44,7 +44,7 @@ body {
 }
 
 .mode-indicator {
-  font-size: 15px;
+  font-size: 14px;
   color: var(--gray-800);
   font-weight: 800;
   margin-right: var(--space);
@@ -86,7 +86,7 @@ body {
   font-size: 14px;
   word-wrap: break-word;
   box-sizing: border-box;
-  line-height: 1.5;
+  line-height: 2;
   margin: var(--space) 0;
   font-weight: 550;
 }
@@ -128,8 +128,8 @@ body {
   padding: var(--space);
   border-radius: var(--radius);
   border: 1px solid var(--input-border-color);
-  font-size: 13px;
-  line-height: 1.6;
+  font-size: 12px;
+  line-height: 1.5;
   white-space: pre-wrap;
   word-wrap: break-word;
   background-color: var(--gray-50);
@@ -161,7 +161,7 @@ body {
 
 .message-assistant li {
   margin-bottom: 6px;
-  line-height: 1.6;
+  line-height: 2;
 }
 
 #input-section {
@@ -182,7 +182,7 @@ body {
   outline: none;
   padding: 4px 2px;
   font-size: 14px;
-  line-height: 1.4;
+  line-height: 2;
   background-color: transparent;
   resize: none;
   overflow-y: auto;
