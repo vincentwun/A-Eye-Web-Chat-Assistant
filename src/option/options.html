@@ -105,8 +105,17 @@
     <h1>Prompt Settings</h1>
 
     <div>
+        <label for="role-select">Role:</label>
+        <select id="role-select" data-storage-key="active_system_prompt_key" data-storage-type="prompts">
+            <option value="web_assistant">Web Assistant</option>
+            <option value="teacher">Teacher</option>
+            <option value="medical_advisor">Medical Advisor</option>
+        </select>
+    </div>
+
+    <div>
         <label for="system_prompt">System Prompt:</label>
-        <textarea id="system_prompt" data-storage-key="system_prompt" data-storage-type="prompts"></textarea>
+        <textarea id="system_prompt" data-storage-type="prompts"></textarea>
     </div>
 
     <div class="button-container">

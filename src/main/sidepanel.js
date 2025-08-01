@@ -294,7 +294,10 @@ class AIScreenReader {
 
         let imageDataToSend = null;
         let mimeTypeToSend = null;
-        let systemPrompt = this.stateManager.getPrompts().system_prompt;
+
+        const prompts = this.stateManager.getPrompts();
+        const activePromptKey = prompts.active_system_prompt_key || 'web_assistant';
+        const systemPrompt = prompts.system_prompt[activePromptKey];
 
         const lastImageData = state.lastImageData;
 

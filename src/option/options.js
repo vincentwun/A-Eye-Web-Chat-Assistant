@@ -5,6 +5,7 @@ import { voiceSettingsStorageKey, defaultVoiceSettings, availableLanguages } fro
 const notificationBar = document.getElementById('notification-bar');
 let notificationTimeout;
 let currentVoiceSettings = null;
+let currentPrompts = null;
 
 const localModelSelect = document.getElementById('local-model-name-select');
 const predefinedLocalModels = ["gemma3:4b", "gemma3:12b", "gemma3:27b"];
@@ -43,9 +44,28 @@ function saveOptions() {
             return showNotification("Error preparing to save.", true);
         }
 
+        const roleSelect = document.getElementById('role-select');
+        const systemPromptTextarea = document.getElementById('system_prompt');
+        const activeRoleKey = roleSelect ? roleSelect.value : defaultPrompts.active_system_prompt_key;
+        const promptText = systemPromptTextarea ? systemPromptTextarea.value : '';
+
+        const promptsUpdate = keysToUpdate[promptsStorageKey] || {};
+        const existingPrompts = result[promptsStorageKey] || defaultPrompts;
+
+        const newSystemPrompts = {
+            ...(existingPrompts.system_prompt || defaultPrompts.system_prompt),
+            [activeRoleKey]: promptText
+        };
+
+        const finalPrompts = {
+            ...existingPrompts,
+            ...promptsUpdate,
+            system_prompt: newSystemPrompts
+        };
+
         const finalData = {
             [settingsStorageKey]: { ...result[settingsStorageKey], ...keysToUpdate[settingsStorageKey] },
-            [promptsStorageKey]: { ...result[promptsStorageKey], ...keysToUpdate[promptsStorageKey] },
+            [promptsStorageKey]: finalPrompts,
             [voiceSettingsStorageKey]: { ...result[voiceSettingsStorageKey], ...keysToUpdate[voiceSettingsStorageKey] }
         };
 
@@ -55,6 +75,7 @@ function saveOptions() {
             } else {
                 showNotification('Settings Saved!');
                 currentVoiceSettings = finalData[voiceSettingsStorageKey];
+                currentPrompts = finalData[promptsStorageKey];
                 updateCloudUrlVisibility();
             }
         });
@@ -182,6 +203,7 @@ function loadOptions() {
     const cloudApiKeyInput = document.getElementById('cloud-api-key-input');
     const cloudModelNameInput = document.getElementById('cloud-model-name-input');
     const systemPromptTextarea = document.getElementById('system_prompt');
+    const roleSelect = document.getElementById('role-select');
     const sttSelect = document.getElementById('stt-language-select');
     const directRadio = document.getElementById('cloud-method-direct');
     const proxyRadio = document.getElementById('cloud-method-proxy');
@@ -191,9 +213,9 @@ function loadOptions() {
             return showNotification("Error loading settings: " + chrome.runtime.lastError.message, true);
         }
 
-        const savedPrompts = result[promptsStorageKey] || { ...defaultPrompts };
         const savedApiSettings = result[settingsStorageKey] || { ...defaultApiSettings };
         let savedVoiceSettings = result[voiceSettingsStorageKey];
+        currentPrompts = result[promptsStorageKey] || { ...defaultPrompts };
 
         if (!savedVoiceSettings || typeof savedVoiceSettings.sttLanguage === 'undefined' || typeof savedVoiceSettings.ttsVoiceName === 'undefined') {
             currentVoiceSettings = { sttLanguage: 'en-US', ttsVoiceName: '', ttsLanguage: 'en-US' };
@@ -235,7 +257,11 @@ function loadOptions() {
             }
         }
 
-        if (systemPromptTextarea) systemPromptTextarea.value = savedPrompts.system_prompt ?? defaultPrompts.system_prompt;
+        if (roleSelect && systemPromptTextarea) {
+            const activeKey = currentPrompts.active_system_prompt_key || 'web_assistant';
+            roleSelect.value = activeKey;
+            systemPromptTextarea.value = currentPrompts.system_prompt[activeKey] || defaultPrompts.system_prompt[activeKey];
+        }
 
         updateCloudUrlVisibility();
     });
@@ -271,6 +297,15 @@ function resetToDefaults() {
     });
 }
 
+function handleRoleChange() {
+    const roleSelect = document.getElementById('role-select');
+    const systemPromptTextarea = document.getElementById('system_prompt');
+    if (!roleSelect || !systemPromptTextarea || !currentPrompts) return;
+
+    const selectedRole = roleSelect.value;
+    systemPromptTextarea.value = currentPrompts.system_prompt[selectedRole] || defaultPrompts.system_prompt[selectedRole];
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     loadOptions();
 
@@ -280,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const eventType = (el.tagName === 'SELECT' || el.type === 'radio' || el.type === 'checkbox') ? 'change' : 'blur';
         el.addEventListener(eventType, saveOptions);
 
-        if (el.type === 'text' || el.type === 'password') {
+        if (el.type === 'text' || el.type === 'password' || el.tagName === 'TEXTAREA') {
             el.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
@@ -288,8 +323,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     el.blur();
                 }
             });
+            if (el.tagName === 'TEXTAREA') {
+                el.addEventListener('blur', saveOptions);
+            }
         }
     });
+
+    const roleSelect = document.getElementById('role-select');
+    if (roleSelect) {
+        roleSelect.addEventListener('change', handleRoleChange);
+    }
 
     const saveButton = document.getElementById('save-button');
     if (saveButton) saveButton.addEventListener('click', saveOptions);
