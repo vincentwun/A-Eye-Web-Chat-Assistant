@@ -251,12 +251,6 @@ class AIScreenReader {
             this.elements.userInput.addEventListener('input', () => this.uiManager.updateInputState(this.elements.userInput.value));
             this.elements.userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.voiceController.stopSpeaking(); this.handleSendMessage(); } });
         } else { console.error("User input element not found!"); }
-
-        window.addEventListener('focus', () => {
-            if (this.elements.userInput && !this.stateManager.isProcessing()) {
-                this.elements.userInput.focus();
-            }
-        });
     }
 
     async handleModeChange(newMode) {
@@ -267,7 +261,6 @@ class AIScreenReader {
         await this.stateManager.setActiveApiMode(newMode);
         this.uiManager.updateModeUI(newMode);
         const modeName = newMode === 'local' ? 'Local' : 'Cloud';
-        this.appendMessage('system', `Switched to ${modeName} Mode.`);
         this.voiceController.speakText(`Switched to ${modeName} Mode.`);
     }
 
@@ -338,8 +331,14 @@ class AIScreenReader {
         }
 
         if (!isSilent) {
-            const formattedContent = this.uiManager.escapeHTML(String(content));
-            this.uiManager.appendMessage(role, formattedContent);
+            let htmlContent;
+            if (role === 'assistant') {
+                const dirtyHtml = marked.parse(content);
+                htmlContent = DOMPurify.sanitize(dirtyHtml);
+            } else {
+                htmlContent = this.uiManager.escapeHTML(String(content));
+            }
+            this.uiManager.appendMessage(role, htmlContent);
         }
 
         if (role !== 'system') {
@@ -351,7 +350,10 @@ class AIScreenReader {
         if (!text || typeof text !== 'string' || !text.trim()) {
             return;
         }
-        const sentences = text
+
+        const cleanedText = text.replace(/-{3,}/g, ' ');
+
+        const sentences = cleanedText
             .split(/[。？！!?]/)
             .map(s => s.trim())
             .filter(s => s.length > 0);
@@ -362,7 +364,7 @@ class AIScreenReader {
                     this.voiceController.speakText(sentence);
                 }
             } else {
-                this.voiceController.speakText(text);
+                this.voiceController.speakText(cleanedText);
             }
         } catch (error) {
             console.error("Error during speech synthesis:", error);

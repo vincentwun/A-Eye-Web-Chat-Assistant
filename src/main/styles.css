@@ -4,14 +4,13 @@
   --gray-300: #dadce0;
   --gray-500: #5f6368;
   --gray-700: #3c4043;
-  --green-active: #4CAF50;
   --space: 6px;
   --radius: 5px;
   --common-padding: 5px;
   --input-bg: #ffffff;
   --input-border-color: var(--gray-300);
   --button-icon-color: var(--gray-700);
-  --message-user-bg: #d2e3fc;
+  --message-user-bg: #DCF8C6;
 }
 
 * {
@@ -73,7 +72,7 @@ body {
   flex: 1;
   overflow-y: auto;
   padding: var(--space);
-  background: #fff;
+  background: #f8f9fa;
   border-radius: var(--radius);
   border: 1px solid var(--input-border-color);
   display: flex;
@@ -103,7 +102,7 @@ body {
 .message-assistant {
   align-self: flex-start;
   margin-right: auto;
-  background: var(--gray-50);
+  background: #ffffff;
   color: var(--gray-700);
   margin: var(--space) auto var(--space) 0;
 }
@@ -151,6 +150,18 @@ body {
   padding: 4px 8px;
   border: none;
   margin: var(--space) auto;
+}
+
+.message-assistant ul,
+.message-assistant ol {
+  padding-left: 25px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.message-assistant li {
+  margin-bottom: 6px;
+  line-height: 1.6;
 }
 
 #input-section {

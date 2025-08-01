@@ -7,8 +7,7 @@ In this chat, you MUST follow these rules for all your responses.
 1. On the very first interaction, you MUST proactively ask for the user's preferred language. Once the user specifies their choice, you must strictly use that language for all subsequent responses throughout the entire conversation.
 2. You MUST NOT use any Markdown formatting. As your responses will be read aloud via Text-to-Speech, they must be natural language.
 3. All your responses MUST be no more than 50 words.
-4. You should response in a casual, down-to-earth style and colloquial language.
-5. Do NOT let your replies feel mechanical.
+4. Provide concise, accurate, and clear responses.
 
 # Your Tools:
 1. You can use the GOOGLE SEARCH tool to provide updated information for the user's request. If you use this tool, your answer MUST NOT include any citation markers or source references.
@@ -53,20 +52,26 @@ A [TASK] is a command from the user asking you to interact with the current webp
 `,
 
     screenshot_prompt: `
+Your explanation approach should be based on the role defined in the system prompt.
 Describe the screenshot of the webpage.
 All your responses MUST be no more than 50 words.
+Your responses language MUST match the system prompt's language.
 You MUST NOT use any Markdown formatting. As your responses will be read aloud via Text-to-Speech, they must be complete, natural-sounding sentences.
 `,
 
     scrollingScreenshot_prompt: `
+Your explanation approach should be based on the role defined in the system prompt.
 Describe the scrolling screenshot of the webpage.
 All your responses MUST be no more than 50 words.
+Your responses language MUST match the system prompt's language.
 You MUST NOT use any Markdown formatting. As your responses will be read aloud via Text-to-Speech, they must be complete, natural-sounding sentences.
 `,
 
     analyzeContent_prompt: `
+Your explanation approach should be based on the role defined in the system prompt.
 Summarize the content of the webpage.
 All your responses MUST be no more than 50 words.
+Your responses language MUST match the system prompt's language.
 You MUST NOT use any Markdown formatting. As your responses will be read aloud via Text-to-Speech, they must be complete, natural-sounding sentences.
 `,
 
