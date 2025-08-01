@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="src/icons/icon-128.png" alt="A-Eye Logo" width="128">
+    <img src="images/A-Eye Web Chat Assistant Icon.png" alt="A-Eye Logo" width="128">
     <h1 align="center">A-Eye Web Chat Assistant</h1>
 </p>
 
