@@ -190,8 +190,6 @@ class AIScreenReader {
                 }
                 return true;
             }
-            console.warn('Unknown message type received:', request.type);
-            sendResponse({ success: false, error: 'Unknown message type' });
             return false;
         });
     }
