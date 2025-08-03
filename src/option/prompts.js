@@ -106,18 +106,22 @@ A [TASK] is a command from the user asking you to interact with the current webp
     active_system_prompt_key: 'web_assistant',
 
     screenshot_prompt: `
+Task: Describe the screenshot of the webpage.
+    
+Rules:
 Your explanation approach should be based on the role defined in the system prompt.
-Describe the screenshot of the webpage.
-All your responses MUST be no more than 50 words.
 Your responses language MUST match the system prompt's language.
+In this Task, your responses MUST be no more than 50 words.
 You MUST NOT use any Markdown formatting. As your responses will be read aloud via Text-to-Speech, they must be complete, natural-sounding sentences.
 `,
 
     scrollingScreenshot_prompt: `
+Task: Describe the scrolling screenshot of the webpage.
+
+Rules:
 Your explanation approach should be based on the role defined in the system prompt.
-Describe the scrolling screenshot of the webpage.
-All your responses MUST be no more than 50 words.
 Your responses language MUST match the system prompt's language.
+In this Task, your responses MUST be no more than 75 words.
 You MUST NOT use any Markdown formatting. As your responses will be read aloud via Text-to-Speech, they must be complete, natural-sounding sentences.
 `,
 

@@ -4,7 +4,6 @@ export class ScreenshotController {
         this.callbacks = {
             onStart: null
         };
-        this.SCROLL_STEP_FRACTION = 0.5;
     }
 
     setCallbacks(callbacks) {
@@ -94,80 +93,81 @@ export class ScreenshotController {
         }
     }
 
+    async getScrollPosition(tabId) {
+        try {
+            const results = await chrome.scripting.executeScript({
+                target: { tabId },
+                function: () => window.scrollY,
+            });
+            return results?.[0]?.result ?? 0;
+        } catch (error) {
+            console.error('Failed to get scroll position:', error);
+            return 0;
+        }
+    }
+
     async captureScreenshots(tab, pageInfo) {
         const { scrollHeight, clientHeight } = pageInfo;
-        if (clientHeight <= 0) {
-            throw new Error("Client height is zero, cannot capture screenshots.");
-        }
+        if (clientHeight <= 0) throw new Error("Client height is zero, cannot capture screenshots.");
 
-        const stepSize = Math.floor(clientHeight * this.SCROLL_STEP_FRACTION);
-        const actualStepSize = Math.max(1, stepSize);
+        const maxScroll = scrollHeight - clientHeight;
+        const overlap = 60;
+        const stepSize = clientHeight > overlap ? clientHeight - overlap : clientHeight;
 
-        const maxScroll = Math.max(0, scrollHeight - clientHeight);
+        console.log(`Starting scrolling capture: scrollHeight=${scrollHeight}, clientHeight=${clientHeight}, stepSize=${stepSize}, maxScroll=${maxScroll}`);
 
-        let currentScroll = 0;
-        await this.executeScroll(tab, 0);
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        let capturedCount = 0;
+        const capturedPositions = new Set();
         const MAX_CAPTURES = 100;
+        let currentScroll = 0;
 
-        console.log(`Starting scrolling capture: scrollHeight=${scrollHeight}, clientHeight=${clientHeight}, stepSize=${actualStepSize}, maxScroll=${maxScroll}`);
+        while (this.scrollingScreenshotImages.length < MAX_CAPTURES) {
+            await this.executeScroll(tab, currentScroll);
+            await new Promise(resolve => setTimeout(resolve, 300));
 
-        while (capturedCount < MAX_CAPTURES) {
-            const scrollToPos = Math.min(currentScroll, maxScroll);
+            const actualScrollY = await this.getScrollPosition(tab.id);
 
-            console.log(`Capturing at scroll: ${scrollToPos} (Attempt ${capturedCount + 1})`);
-            await this.executeScroll(tab, scrollToPos);
-            await new Promise(resolve => setTimeout(resolve, 400));
+            if (capturedPositions.has(actualScrollY)) {
+                console.log(`Already captured at scroll position ${actualScrollY}. Ending capture.`);
+                break;
+            }
+
+            console.log(`Capturing at scroll: ${actualScrollY} (Attempt ${this.scrollingScreenshotImages.length + 1})`);
 
             try {
                 const screenshot = await chrome.tabs.captureVisibleTab(null, { format: 'png' });
-
-                if (!screenshot) {
-                    console.warn(`captureVisibleTab returned empty at scroll: ${scrollToPos}. Retrying.`);
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                    const retryScreenshot = await chrome.tabs.captureVisibleTab(null, { format: 'png' });
-                    if (!retryScreenshot) {
-                        throw new Error(`captureVisibleTab failed twice at scroll: ${scrollToPos}`);
-                    }
-                    this.scrollingScreenshotImages.push(retryScreenshot);
+                if (screenshot) {
+                    this.scrollingScreenshotImages.push({ image: screenshot, y: actualScrollY });
+                    capturedPositions.add(actualScrollY);
                 } else {
-                    this.scrollingScreenshotImages.push(screenshot);
+                    console.warn(`captureVisibleTab returned empty at scroll: ${actualScrollY}.`);
                 }
-                capturedCount++;
-
-                if (scrollToPos >= maxScroll) {
-                    console.log(`Captured at or past max scroll (${maxScroll}). Breaking loop.`);
-                    break;
-                }
-
-                currentScroll += actualStepSize;
-
-                if (currentScroll > scrollHeight && scrollToPos < maxScroll) {
-                    console.warn(`Next scroll position (${currentScroll}) exceeds scroll height (${scrollHeight}), but current position (${scrollToPos}) is less than maxScroll (${maxScroll}). Adjusting next scroll to maxScroll for final capture.`);
-                    currentScroll = maxScroll;
-                }
-
-
             } catch (error) {
                 if (error.message.includes('MAX_CAPTURE_VISIBLE_TAB_CALLS_PER_SECOND')) {
                     console.warn('Rate limit exceeded. Waiting before retrying...');
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     continue;
-                } else {
-                    console.error(`Error capturing tab at scroll ${scrollToPos}:`, error);
-                    throw error;
                 }
+                console.error(`Error capturing tab at scroll ${actualScrollY}:`, error);
+                throw error;
+            }
+
+            if (actualScrollY >= maxScroll) {
+                console.log("Captured at or past max scroll. Finishing.");
+                break;
+            }
+
+            currentScroll += stepSize;
+            if (currentScroll > maxScroll) {
+                currentScroll = maxScroll;
             }
         }
 
-        if (capturedCount >= MAX_CAPTURES) {
-            console.warn(`Reached maximum capture limit (${MAX_CAPTURES}) for scrolling screenshot.`);
+        if (this.scrollingScreenshotImages.length >= MAX_CAPTURES) {
+            console.warn(`Reached maximum capture limit (${MAX_CAPTURES}).`);
         }
 
         await this.executeScroll(tab, 0);
-        console.log(`Scrolling capture finished. Captured ${capturedCount} images.`);
+        console.log(`Scrolling capture finished. Captured ${this.scrollingScreenshotImages.length} images.`);
     }
 
     async executeScroll(tab, scrollPosition) {
@@ -187,114 +187,39 @@ export class ScreenshotController {
         }
     }
 
-    async mergeScreenshots(screenshots, pageDimensions) {
-        if (!screenshots || screenshots.length === 0) {
+    async mergeScreenshots(capturedData, pageDimensions) {
+        if (!capturedData || capturedData.length === 0) {
             throw new Error('No screenshots provided to merge');
         }
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
 
-        const firstImage = await this.loadImage(screenshots[0]);
-        const imgWidth = firstImage.width;
-        const imgHeight = firstImage.height;
-
-        if (imgWidth === 0 || imgHeight === 0) {
-            console.error("First image dimensions:", { width: imgWidth, height: imgHeight });
-            throw new Error("Cannot merge screenshots: Invalid initial image dimensions (0).");
-        }
-
+        const firstImageLoaded = await this.loadImage(capturedData[0].image);
+        const imgWidth = firstImageLoaded.width;
         const totalHeight = pageDimensions.scrollHeight;
 
+        if (imgWidth === 0 || totalHeight <= 0) {
+            console.error("Cannot merge: Invalid dimensions.", { imgWidth, totalHeight });
+            throw new Error("Cannot merge screenshots: Invalid dimensions (width is 0 or scrollHeight is 0).");
+        }
+
+        const canvas = document.createElement('canvas');
         canvas.width = imgWidth;
-        canvas.height = totalHeight > 0 ? totalHeight : imgHeight * screenshots.length;
+        canvas.height = totalHeight;
+        const ctx = canvas.getContext('2d');
 
-
-        console.log(`Merging ${screenshots.length} screenshots. Target Canvas: ${canvas.width}x${canvas.height}. Viewport height: ${imgHeight}`);
+        console.log(`Creating final canvas: ${canvas.width}x${canvas.height}`);
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        let lastImageBottom = 0;
-
-        const actualStepSize = Math.max(1, Math.floor(imgHeight * this.SCROLL_STEP_FRACTION));
-
-
-        for (let i = 0; i < screenshots.length; i++) {
+        for (let i = 0; i < capturedData.length; i++) {
+            const item = capturedData[i];
             try {
-                const image = await this.loadImage(screenshots[i]);
-                const currentImgWidth = image.width;
-                const currentImgHeight = image.height;
-
-                if (currentImgWidth === 0 || currentImgHeight === 0) {
-                    console.warn(`Image ${i} has zero dimensions (${currentImgWidth}x${currentImgHeight}). Skipping draw.`);
-                    continue;
-                }
-
-                const targetY = i * actualStepSize;
-
-                const isLastImage = (i === screenshots.length - 1);
-
-                let drawHeight = currentImgHeight;
-                let sourceY = 0;
-
-                if (totalHeight > 0 && isLastImage && (targetY + currentImgHeight) > totalHeight) {
-                    const heightNeededAtBottom = totalHeight - targetY;
-                    if (heightNeededAtBottom > 0 && heightNeededAtBottom < currentImgHeight) {
-                        drawHeight = heightNeededAtBottom;
-                        sourceY = currentImgHeight - drawHeight;
-                    } else if (heightNeededAtBottom <= 0) {
-                        console.warn(`Calculated needed height for last image is ${heightNeededAtBottom}. Skipping final draw.`);
-                        drawHeight = 0;
-                    }
-                } else if (totalHeight > 0 && targetY >= totalHeight) {
-                    console.warn(`Image ${i} targetY (${targetY}) >= totalHeight (${totalHeight}). Skipping draw.`);
-                    drawHeight = 0;
-                }
-
-
-                if (drawHeight > 0) {
-                    ctx.drawImage(
-                        image,
-                        0,
-                        sourceY,
-                        currentImgWidth,
-                        drawHeight,
-
-                        0,
-                        targetY,
-                        currentImgWidth,
-                        drawHeight
-                    );
-                    lastImageBottom = targetY + drawHeight;
-                }
-
+                const image = (i === 0) ? firstImageLoaded : await this.loadImage(item.image);
+                console.log(`Drawing image ${i} at y: ${item.y}`);
+                ctx.drawImage(image, 0, item.y);
             } catch (loadError) {
-                console.error(`Failed to load screenshot index ${i} for merging during redraw:`, loadError);
+                console.error(`Failed to load and draw screenshot index ${i} for merging:`, loadError);
             }
         }
-
-        const finalCanvasHeight = totalHeight > 0 ? totalHeight : lastImageBottom;
-        const effectiveFinalHeight = Math.max(finalCanvasHeight, lastImageBottom);
-
-
-        console.log(`Final canvas height will be adjusted to: ${effectiveFinalHeight}`);
-
-        if (canvas.height > effectiveFinalHeight && effectiveFinalHeight >= 0) {
-            console.log(`Resizing canvas height from ${canvas.height} to actual drawn height ${effectiveFinalHeight}`);
-            const finalCanvas = document.createElement('canvas');
-            finalCanvas.width = canvas.width;
-            finalCanvas.height = effectiveFinalHeight;
-            const finalCtx = finalCanvas.getContext('2d');
-            finalCtx.drawImage(canvas, 0, 0, canvas.width, effectiveFinalHeight, 0, 0, canvas.width, effectiveFinalHeight);
-            return finalCanvas.toDataURL('image/png');
-        } else if (effectiveFinalHeight < 0) {
-            console.warn(`Calculated final canvas height is negative (${effectiveFinalHeight}). Returning empty canvas.`);
-            const fallbackCanvas = document.createElement('canvas');
-            fallbackCanvas.width = canvas.width || 1;
-            fallbackCanvas.height = 1;
-            return fallbackCanvas.toDataURL('image/png');
-
-        }
-
 
         return canvas.toDataURL('image/png');
     }
