@@ -130,13 +130,33 @@ functions.http('geminiProxyFunction', async (req, res) => {
       { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
     ];
 
-    const generativeModel = vertexClient.getGenerativeModel({
+    const modelParams = {
       model: modelName,
       safety_settings: safetySettings,
-      ...(requestBody.systemInstruction && { systemInstruction: requestBody.systemInstruction }),
-      ...(requestBody.tools && { tools: requestBody.tools }),
-      ...(requestBody.generationConfig && { generationConfig: requestBody.generationConfig })
-    });
+    };
+
+    if (requestBody.systemInstruction) {
+      modelParams.systemInstruction = requestBody.systemInstruction;
+    }
+
+    if (requestBody.generationConfig) {
+      modelParams.generationConfig = requestBody.generationConfig;
+    }
+
+    if (Array.isArray(requestBody.tools)) {
+      const urlContextTool = requestBody.tools.find(tool => tool && typeof tool === 'object' && tool.hasOwnProperty('urlContext'));
+
+      if (urlContextTool) {
+        modelParams.groundingConfig = { urlContext: urlContextTool.urlContext };
+      } else {
+        const filteredTools = requestBody.tools.filter(Boolean);
+        if (filteredTools.length > 0) {
+          modelParams.tools = filteredTools;
+        }
+      }
+    }
+
+    const generativeModel = vertexClient.getGenerativeModel(modelParams);
     const contents = requestBody.contents;
 
     console.log(`Sending request to Vertex AI model: ${modelName} in project ${currentProjectId}`);
