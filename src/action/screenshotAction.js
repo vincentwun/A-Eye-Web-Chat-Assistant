@@ -34,7 +34,7 @@ export class ScreenshotAction {
         await this.updateLastImageData(screenshotDataUrl, mimeType);
 
         this.uiManager.showThinkingIndicator();
-        await this.voiceController.speakText("Analyzing screenshot.");
+        await this.voiceController.speakText("Analyzing...");
 
         const result = await chrome.storage.local.get(promptsStorageKey);
         const currentPrompts = result[promptsStorageKey] || { ...defaultPrompts };

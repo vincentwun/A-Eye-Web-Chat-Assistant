@@ -42,7 +42,7 @@ export class ContentAnalysisAction {
                 await this.uiManager.appendPreviewMessage('text', formattedText);
 
                 this.uiManager.showThinkingIndicator();
-                await this.voiceController.speakText("Analyzing content.");
+                await this.voiceController.speakText("Analyzing...");
 
                 const result = await chrome.storage.local.get(promptsStorageKey);
                 const currentPrompts = result[promptsStorageKey] || { ...defaultPrompts };

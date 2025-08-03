@@ -44,7 +44,7 @@ export class GetElementAction {
       await this.uiManager.appendPreviewMessage('text', formattedJson);
 
       this.uiManager.showThinkingIndicator();
-      await this.voiceController.speakText("Analyzing elements.");
+      await this.voiceController.speakText("Analyzing...");
 
       const result = await chrome.storage.local.get(promptsStorageKey);
       const currentPrompts = result[promptsStorageKey] || { ...defaultPrompts };

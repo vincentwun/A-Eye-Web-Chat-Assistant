@@ -37,7 +37,7 @@ export class ScrollingScreenshotAction {
                 await this.updateLastImageData(mergedImageDataUrl, mimeType);
 
                 this.uiManager.showThinkingIndicator();
-                await this.voiceController.speakText("Analyzing scrolling screenshot.");
+                await this.voiceController.speakText("Analyzing...");
 
                 const result = await chrome.storage.local.get(promptsStorageKey);
                 const currentPrompts = result[promptsStorageKey] || { ...defaultPrompts };

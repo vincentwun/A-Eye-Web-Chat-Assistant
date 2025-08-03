@@ -64,7 +64,7 @@ export class ActionFlowController {
   }
 
   async handleExecuteActionsRequest(actions) {
-    if (this.voiceController) this.voiceController.speakText('Executing actions.');
+    if (this.voiceController) this.voiceController.speakText('Executing...');
 
     try {
       const response = await chrome.runtime.sendMessage({ type: 'executeActions', actions: actions });
