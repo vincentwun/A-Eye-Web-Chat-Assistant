@@ -85,7 +85,6 @@ body {
   border-radius: 12px;
   font-size: 14px;
   word-wrap: break-word;
-  box-sizing: border-box;
   line-height: 2;
   margin: var(--space) 0;
   font-weight: 500;
@@ -192,7 +191,6 @@ body {
   overflow-y: auto;
   font-family: inherit;
   color: inherit;
-  box-sizing: border-box;
   field-sizing: content;
   min-height: calc(2 * 1.4em + 8px);
   max-height: calc(4 * 1.4em + 8px);
