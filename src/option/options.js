@@ -309,13 +309,13 @@ function handleRoleChange() {
 document.addEventListener('DOMContentLoaded', () => {
     loadOptions();
 
-    const elementsToSave = document.querySelectorAll('input[data-storage-key], select[data-storage-key], textarea[data-storage-key]');
+    const elementsToSave = document.querySelectorAll('input[data-storage-key], select[data-storage-key]');
 
     elementsToSave.forEach(el => {
         const eventType = (el.tagName === 'SELECT' || el.type === 'radio' || el.type === 'checkbox') ? 'change' : 'blur';
         el.addEventListener(eventType, saveOptions);
 
-        if (el.type === 'text' || el.type === 'password' || el.tagName === 'TEXTAREA') {
+        if (el.type === 'text' || el.type === 'password') {
             el.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
@@ -323,11 +323,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     el.blur();
                 }
             });
-            if (el.tagName === 'TEXTAREA') {
-                el.addEventListener('blur', saveOptions);
-            }
         }
     });
+
+    const systemPromptTextarea = document.getElementById('system_prompt');
+    if (systemPromptTextarea) {
+        systemPromptTextarea.addEventListener('blur', saveOptions);
+        systemPromptTextarea.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                saveOptions();
+                systemPromptTextarea.blur();
+            }
+        });
+    }
 
     const roleSelect = document.getElementById('role-select');
     if (roleSelect) {
