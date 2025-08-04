@@ -1,5 +1,7 @@
-export async function executeJSON(actions, dependencies) {
-  const { getCurrentTab, executeScriptOnTab, waitForTabLoad, delay, clickElement, typeInElement, simulateKeyPress } = dependencies;
+import { getCurrentTab, executeScriptOnTab, waitForTabLoad, delay } from './backgroundUtils.js';
+import { clickElement, typeInElement, simulateKeyPress } from './pageActions.js';
+
+export async function executeJSON(actions) {
   let tab = await getCurrentTab();
   const results = [];
 

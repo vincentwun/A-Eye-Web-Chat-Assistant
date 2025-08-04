@@ -1,5 +1,7 @@
-export async function findElementsOnPage(dependencies) {
-  const { getCurrentTab, executeScriptOnTab, findAllInteractableElements } = dependencies;
+import { getCurrentTab, executeScriptOnTab } from './backgroundUtils.js';
+import { findAllInteractableElements } from './elementInspector.js';
+
+export async function findElementsOnPage() {
   try {
     const tab = await getCurrentTab();
     if (!tab || !tab.id) {
