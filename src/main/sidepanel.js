@@ -13,8 +13,15 @@ import { ConfigValidator } from '../components/configValidator.js';
 
 class AIScreenReader {
     constructor() {
-        this.stateManager = new StateManager(this.onStateChange.bind(this));
+        this._getElements();
+        this._initializeComponents();
+        this._setupDependencies();
+        this._setupActions();
+        this._setupMessageListener();
+        this.initializeAll();
+    }
 
+    _getElements() {
         this.elements = {
             screenshotButton: document.getElementById('screenshot-button'),
             scrollingScreenshotButton: document.getElementById('scrolling-screenshot-button'),
@@ -34,47 +41,54 @@ class AIScreenReader {
             pastedImagePreview: document.getElementById('pasted-image-preview'),
             removePastedImageButton: document.getElementById('remove-pasted-image-button')
         };
+    }
 
+    _initializeComponents() {
+        this.stateManager = new StateManager(this.onStateChange.bind(this));
         this.uiManager = new UIManager(this.elements);
         this.apiService = new ApiService();
         this.voiceController = new VoiceController();
         this.screenshotController = new ScreenshotController();
-
         this.configValidator = new ConfigValidator({
             stateManager: this.stateManager,
             appendMessage: this.appendMessage.bind(this),
             voiceController: this.voiceController
         });
+    }
 
+    _setupDependencies() {
         this.voiceController.setCallbacks({
             appendMessage: this.appendMessage.bind(this),
             updateVoiceInputButtonState: (isActive) => this.uiManager.updateVoiceButtonState(isActive),
             handleSendMessage: this.handleSendMessage.bind(this)
         });
+
         this.screenshotController.setCallbacks({
-            onStart: () => {
-                this.voiceController.speakText("Taking scrolling screenshot.");
-            }
+            onStart: () => this.voiceController.speakText("Taking scrolling screenshot.")
         });
 
-        const actionDependencies = {
-            screenshotController: this.screenshotController,
+        this.actionDependencies = {
+            apiService: this.apiService,
             uiManager: this.uiManager,
             voiceController: this.voiceController,
-            apiService: this.apiService,
+            screenshotController: this.screenshotController,
             state: this.stateManager.getState(),
             getApiConfig: this.stateManager.getApiConfig.bind(this.stateManager),
             getHistoryToSend: this.stateManager.getHistoryToSend.bind(this.stateManager),
+            prompts: this.stateManager.getPrompts(),
             handleResponse: this.handleResponse.bind(this),
             handleError: this.handleError.bind(this),
             setProcessing: this.setProcessing.bind(this),
             appendMessage: this.appendMessage.bind(this),
             updateLastImageData: this.updateLastImageData.bind(this)
         };
+    }
 
-        this.screenshotAction = new ScreenshotAction(actionDependencies);
-        this.contentAnalysisAction = new ContentAnalysisAction(actionDependencies);
-        this.getElementAction = new GetElementAction(actionDependencies);
+    _setupActions() {
+        this.screenshotAction = new ScreenshotAction(this.actionDependencies);
+        this.contentAnalysisAction = new ContentAnalysisAction(this.actionDependencies);
+        this.getElementAction = new GetElementAction(this.actionDependencies);
+        this.actionFlowController = new ActionFlowController(this.actionDependencies);
 
         const commandProcessorActions = {
             _executeScreenshot: () => this.screenshotAction.execute('visible'),
@@ -83,23 +97,132 @@ class AIScreenReader {
             handleError: this.handleError.bind(this)
         };
         this.commandProcessor = new CommandProcessor(commandProcessorActions);
+    }
 
-        const flowControllerDependencies = {
-            apiService: this.apiService,
-            prompts: this.stateManager.getPrompts(),
-            state: this.stateManager.getState(),
-            getApiConfig: this.stateManager.getApiConfig.bind(this.stateManager),
-            getHistoryToSend: this.stateManager.getHistoryToSend.bind(this.stateManager),
-            handleResponse: this.handleResponse.bind(this),
-            handleError: this.handleError.bind(this),
-            setProcessing: this.setProcessing.bind(this),
-            appendMessage: this.appendMessage.bind(this),
-            voiceController: this.voiceController
+    async initializeAll() {
+        try {
+            await this.stateManager.initialize();
+            this.uiManager.updateModeUI(this.stateManager.getState().activeApiMode);
+            this._setupEventListeners();
+            await this.voiceController.initializeAll();
+            this.voiceController.speakText('A-Eye Ready');
+            this.uiManager.updateInputState(this.elements.userInput.value);
+        } catch (error) {
+            this.handleError('Initialization failed', error);
+            const currentState = this.stateManager.getState();
+            this.uiManager.updateModeUI(currentState.activeApiMode ?? defaultApiSettings.activeApiMode);
+        }
+    }
+
+    _canPerformAction({ checkConfig = true } = {}) {
+        if (!this.stateManager.isSettingsLoaded()) {
+            this.appendMessage('system', 'Initializing, please wait...');
+            return false;
+        }
+        if (this.stateManager.isProcessing()) {
+            this.appendMessage('system', 'Processing, please wait...');
+            return false;
+        }
+        if (checkConfig) {
+            const state = this.stateManager.getState();
+            if (state.activeApiMode === 'local' && !this.configValidator.isLocalModeConfigValid()) return false;
+            if (state.activeApiMode === 'cloud' && !this.configValidator.isCloudModeConfigValid()) return false;
+        }
+        return true;
+    }
+
+    _withActionGuards(handler, { ignoreProcessing = false, checkConfig = true } = {}) {
+        return async (event) => {
+            if (!this.stateManager.isSettingsLoaded()) {
+                this.appendMessage('system', 'Initializing, please wait...');
+                return;
+            }
+            if (!ignoreProcessing && this.stateManager.isProcessing()) {
+                this.appendMessage('system', 'Processing, please wait...');
+                return;
+            }
+            if (checkConfig) {
+                const state = this.stateManager.getState();
+                if (state.activeApiMode === 'local' && !this.configValidator.isLocalModeConfigValid()) return;
+                if (state.activeApiMode === 'cloud' && !this.configValidator.isCloudModeConfigValid()) return;
+            }
+            try {
+                await handler.call(this, event);
+            } catch (error) {
+                console.error(`Error in guarded action for ${handler.name}:`, error);
+                this.handleError(`Action failed`, error);
+            }
         };
-        this.actionFlowController = new ActionFlowController(flowControllerDependencies);
+    }
 
-        this.setupMessageListener();
-        this.initializeAll();
+    _setupEventListeners() {
+        const eventHandlers = {
+            'screenshotButton': this._withActionGuards(this.handleScreenshot),
+            'scrollingScreenshotButton': this._withActionGuards(this.handleScrollingScreenshot),
+            'analyzeContentButton': this._withActionGuards(this.handleContentAnalysis),
+            'getElementButton': this._withActionGuards(this.handleGetElements),
+            'sendButton': this._withActionGuards(this.handleSendMessage),
+            'voiceButton': this._withActionGuards(this.voiceController.toggleVoiceInput.bind(this.voiceController)),
+            'repeatButton': this._withActionGuards(this.handleRepeat, { checkConfig: false }),
+            'localModeButton': this._withActionGuards(() => this.handleModeChange('local')),
+            'cloudModeButton': this._withActionGuards(() => this.handleModeChange('cloud')),
+            'clearButton': this._withActionGuards(this.handleClear, { ignoreProcessing: true, checkConfig: false }),
+            'removePastedImageButton': (event) => this.handleRemovePastedImage(event),
+            'openOptionsButton': () => this.handleOpenOptions()
+        };
+
+        for (const [elementId, handler] of Object.entries(eventHandlers)) {
+            const element = this.elements[elementId];
+            if (element) {
+                element.addEventListener('click', handler);
+            } else {
+                console.warn(`Element with ID '${elementId}' not found for event listener.`);
+            }
+        }
+
+        if (this.elements.userInput) {
+            this.elements.userInput.addEventListener('paste', this.handlePaste.bind(this));
+            this.elements.userInput.addEventListener('input', () => this.uiManager.updateInputState(this.elements.userInput.value));
+            this.elements.userInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.voiceController.stopSpeaking();
+                    this.handleSendMessage();
+                }
+            });
+        } else {
+            console.error("User input element not found!");
+        }
+    }
+
+    _setupMessageListener() {
+        chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+            const messageHandlers = {
+                toggleApiMode: () => this.handleModeChange(this.stateManager.getState().activeApiMode === 'local' ? 'cloud' : 'local'),
+                toggleVoiceInput: () => this.voiceController.toggleVoiceInput(),
+                toggleRepeat: () => this.handleRepeat(),
+                executeScreenshot: () => this.handleScreenshot(),
+                executeScrollingScreenshot: () => this.handleScrollingScreenshot(),
+                executeAnalyzeContent: () => this.handleContentAnalysis()
+            };
+
+            const handler = messageHandlers[request.type];
+            if (handler) {
+                if (!this._canPerformAction()) {
+                    sendResponse({ success: false, error: 'Cannot perform action right now' });
+                    return true;
+                }
+                try {
+                    handler();
+                    sendResponse({ success: true });
+                } catch (error) {
+                    this.handleError(`Failed to execute ${request.type}`, error);
+                    sendResponse({ success: false, error: error.message });
+                }
+                return true;
+            }
+            return false;
+        });
     }
 
     onStateChange(changes) {
@@ -119,158 +242,35 @@ class AIScreenReader {
 
     async handleScreenshot() {
         this.voiceController.stopSpeaking();
-        if (!this.stateManager.isSettingsLoaded() || this.stateManager.isProcessing()) return;
-        if (this.stateManager.getState().activeApiMode === 'local' && !this.configValidator.isLocalModeConfigValid()) return;
-        if (this.stateManager.getState().activeApiMode === 'cloud' && !this.configValidator.isCloudModeConfigValid()) return;
-        try {
-            await this.screenshotAction.execute('visible');
-        } catch (error) {
-            this.handleError("Screenshot initiation failed", error);
-        }
+        await this.screenshotAction.execute('visible');
     }
 
     async handleScrollingScreenshot() {
         this.voiceController.stopSpeaking();
-        if (!this.stateManager.isSettingsLoaded() || this.stateManager.isProcessing()) return;
-        if (this.stateManager.getState().activeApiMode === 'local' && !this.configValidator.isLocalModeConfigValid()) return;
-        if (this.stateManager.getState().activeApiMode === 'cloud' && !this.configValidator.isCloudModeConfigValid()) return;
-        try {
-            await this.screenshotAction.execute('scrolling');
-        } catch (error) {
-            this.handleError("Scrolling screenshot initiation failed", error);
-        }
+        await this.screenshotAction.execute('scrolling');
     }
 
     async handleContentAnalysis() {
         this.voiceController.stopSpeaking();
-        if (!this.stateManager.isSettingsLoaded() || this.stateManager.isProcessing()) return;
-        if (this.stateManager.getState().activeApiMode === 'local' && !this.configValidator.isLocalModeConfigValid()) return;
-        if (this.stateManager.getState().activeApiMode === 'cloud' && !this.configValidator.isCloudModeConfigValid()) return;
-        try {
-            await this.contentAnalysisAction.execute();
-        } catch (error) {
-            this.handleError("Content analysis initiation failed", error);
-        }
+        await this.contentAnalysisAction.execute();
     }
 
     async handleGetElements() {
         this.voiceController.stopSpeaking();
-        if (!this.stateManager.isSettingsLoaded() || this.stateManager.isProcessing()) return;
-        if (this.stateManager.getState().activeApiMode === 'local' && !this.configValidator.isLocalModeConfigValid()) return;
-        if (this.stateManager.getState().activeApiMode === 'cloud' && !this.configValidator.isCloudModeConfigValid()) return;
-        try {
-            await this.getElementAction.execute();
-        } catch (error) {
-            this.handleError("Get elements initiation failed", error);
-        }
-    }
-
-    setupMessageListener() {
-        chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-            const messageHandlers = {
-                toggleApiMode: () => this.handleModeChange(this.stateManager.getState().activeApiMode === 'local' ? 'cloud' : 'local'),
-                toggleVoiceInput: () => this.voiceController.toggleVoiceInput(),
-                toggleRepeat: () => this.handleRepeat(),
-                executeScreenshot: () => this.handleScreenshot(),
-                executeScrollingScreenshot: () => this.handleScrollingScreenshot(),
-                executeAnalyzeContent: () => this.handleContentAnalysis()
-            };
-
-            if (messageHandlers[request.type]) {
-                if (this.stateManager.isProcessing()) {
-                    this.appendMessage('system', 'Processing, please wait...'); sendResponse({ success: false, error: 'Busy processing' }); return true;
-                }
-                if (!this.stateManager.isSettingsLoaded()) {
-                    this.appendMessage('system', 'Initializing, please wait...'); sendResponse({ success: false, error: 'Initializing' }); return true;
-                }
-                try {
-                    messageHandlers[request.type]();
-                    sendResponse({ success: true });
-                } catch (error) {
-                    this.handleError(`Failed to execute ${request.type}`, error); sendResponse({ success: false, error: error.message });
-                }
-                return true;
-            }
-            return false;
-        });
-    }
-
-    async initializeAll() {
-        try {
-            await this.stateManager.initialize();
-            this.uiManager.updateModeUI(this.stateManager.getState().activeApiMode);
-            this.setupEventListeners();
-            await this.voiceController.initializeAll();
-            this.voiceController.speakText('A-Eye Ready');
-            this.uiManager.updateInputState(this.elements.userInput.value);
-        } catch (error) {
-            this.handleError('Initialization failed', error);
-            const currentState = this.stateManager.getState();
-            this.uiManager.updateModeUI(currentState.activeApiMode ?? defaultApiSettings.activeApiMode);
-        }
-    }
-
-    setupEventListeners() {
-        const eventHandlers = {
-            'screenshotButton': this.handleScreenshot,
-            'scrollingScreenshotButton': this.handleScrollingScreenshot,
-            'analyzeContentButton': this.handleContentAnalysis,
-            'getElementButton': this.handleGetElements,
-            'openOptionsButton': this.handleOpenOptions,
-            'sendButton': this.handleSendMessage,
-            'voiceButton': this.voiceController.toggleVoiceInput.bind(this.voiceController),
-            'repeatButton': this.handleRepeat,
-            'clearButton': this.handleClear,
-            'localModeButton': () => this.handleModeChange('local'),
-            'cloudModeButton': () => this.handleModeChange('cloud'),
-            'removePastedImageButton': this.handleRemovePastedImage.bind(this)
-        };
-        Object.entries(eventHandlers).forEach(([elementId, handler]) => {
-            const element = this.elements[elementId];
-            if (element) {
-                element.addEventListener('click', async (event) => {
-                    if (this.stateManager.isProcessing() && !['clearButton', 'removePastedImageButton'].includes(elementId)) {
-                        this.appendMessage('system', 'Processing, please wait...');
-                        return;
-                    }
-                    if (!this.stateManager.isSettingsLoaded() && elementId !== 'openOptionsButton') {
-                        this.appendMessage('system', 'Initializing, please wait...');
-                        return;
-                    }
-                    try {
-                        await handler.call(this, event);
-                    } catch (error) {
-                        console.error(`Error in event listener for ${elementId}:`, error);
-                        this.handleError(`Action failed: ${elementId}`, error);
-                    }
-                });
-            }
-            else { console.warn(`Element with ID '${elementId}' not found for event listener.`); }
-        });
-        if (this.elements.userInput) {
-            this.elements.userInput.addEventListener('paste', this.handlePaste.bind(this));
-            this.elements.userInput.addEventListener('input', () => this.uiManager.updateInputState(this.elements.userInput.value));
-            this.elements.userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.voiceController.stopSpeaking(); this.handleSendMessage(); } });
-        } else { console.error("User input element not found!"); }
+        await this.getElementAction.execute();
     }
 
     handlePaste(event) {
         if (this.stateManager.isProcessing()) return;
-        const items = event.clipboardData.files;
-        const imageFile = Array.from(items).find(file => file.type.startsWith('image/'));
-
+        const imageFile = Array.from(event.clipboardData.files).find(file => file.type.startsWith('image/'));
         if (imageFile) {
             event.preventDefault();
             const reader = new FileReader();
-            reader.onload = (e) => {
-                const dataUrl = e.target.result;
-                const mimeType = imageFile.type;
-                this.stateManager.updateLastImageData(dataUrl, mimeType);
-                this.uiManager.showPastedImagePreview(dataUrl);
+            reader.onload = e => {
+                this.stateManager.updateLastImageData(e.target.result, imageFile.type);
+                this.uiManager.showPastedImagePreview(e.target.result);
             };
-            reader.onerror = (error) => {
-                this.handleError("Failed to read pasted image", error);
-            };
+            reader.onerror = error => this.handleError("Failed to read pasted image", error);
             reader.readAsDataURL(imageFile);
         }
     }
@@ -282,21 +282,11 @@ class AIScreenReader {
 
     async handleModeChange(newMode) {
         this.voiceController.stopSpeaking();
-        if (!this.stateManager.isSettingsLoaded() || this.stateManager.isProcessing() || newMode === this.stateManager.getState().activeApiMode) return;
-        if (newMode === 'local' && !this.configValidator.isLocalModeConfigValid()) return;
-        if (newMode === 'cloud' && !this.configValidator.isCloudModeConfigValid()) return;
+        if (newMode === this.stateManager.getState().activeApiMode) return;
         await this.stateManager.setActiveApiMode(newMode);
         this.uiManager.updateModeUI(newMode);
         const modeName = newMode === 'local' ? 'Local' : 'Cloud';
         this.voiceController.speakText(`Switched to ${modeName} Mode.`);
-    }
-
-    getApiConfig() {
-        return this.stateManager.getApiConfig();
-    }
-
-    getHistoryToSend(commandToExclude = null) {
-        return this.stateManager.getHistoryToSend(commandToExclude);
     }
 
     async handleSendMessage() {
@@ -309,12 +299,7 @@ class AIScreenReader {
             this.handleClear();
             return;
         }
-        if (!userInput && !hasImage) { return; }
-        if (!this.stateManager.isSettingsLoaded()) { this.appendMessage('system', 'Initializing, please wait...'); return; }
-        if (this.stateManager.isProcessing()) { this.appendMessage('system', 'Processing, please wait...'); return; }
-
-        if (state.activeApiMode === 'local' && !this.configValidator.isLocalModeConfigValid()) return;
-        if (state.activeApiMode === 'cloud' && !this.configValidator.isCloudModeConfigValid()) return;
+        if (!userInput && !hasImage) return;
 
         this.setProcessing(true);
         this.voiceController.playSendSound();
@@ -332,33 +317,16 @@ class AIScreenReader {
         this.uiManager.hidePastedImagePreview();
         this.uiManager.showThinkingIndicator();
 
-        let imageDataToSend = null;
-
-        const prompts = this.stateManager.getPrompts();
-        const activePromptKey = prompts.active_system_prompt_key || 'web_assistant';
-        const systemPrompt = prompts.system_prompt[activePromptKey];
-
-        const lastImageData = state.lastImageData;
-
-        if (lastImageData.dataUrl) {
-            imageDataToSend = lastImageData.dataUrl;
-        }
-
         try {
-            const payload = { prompt: userInput || "Analyze the image." };
-            const apiConfig = this.getApiConfig();
-            const historyToSend = this.getHistoryToSend();
-
             const responseContent = await this.apiService.sendRequest(
-                apiConfig,
-                historyToSend,
-                payload,
-                imageDataToSend,
-                systemPrompt
+                this.stateManager.getApiConfig(),
+                this.stateManager.getHistoryToSend(),
+                { prompt: userInput || "Analyze the image." },
+                hasImage ? state.lastImageData.dataUrl : null,
+                this.stateManager.getPrompts().system_prompt[this.stateManager.getPrompts().active_system_prompt_key || 'web_assistant']
             );
             this.stateManager.clearLastImageData();
             await this.handleResponse(responseContent);
-
         } catch (error) {
             this.handleError('Message sending failed', error);
             if (this.stateManager.isProcessing()) {
@@ -369,46 +337,27 @@ class AIScreenReader {
     }
 
     appendMessage(role, content, isSilent = false) {
-        if (!content || (typeof content === 'string' && !content.trim())) {
-            return;
-        }
-
+        if (!content || (typeof content === 'string' && !content.trim())) return;
         if (!isSilent) {
-            let htmlContent;
-            if (role === 'assistant') {
-                const dirtyHtml = marked.parse(content);
-                htmlContent = DOMPurify.sanitize(dirtyHtml);
-            } else {
-                htmlContent = this.uiManager.escapeHTML(String(content));
-            }
+            const htmlContent = (role === 'assistant')
+                ? DOMPurify.sanitize(marked.parse(content))
+                : this.uiManager.escapeHTML(String(content));
             this.uiManager.appendMessage(role, htmlContent);
         }
-
         if (role !== 'system') {
             this.stateManager.addMessage({ role, content: String(content) });
         }
     }
 
     async _speakResponse(text) {
-        if (!text || typeof text !== 'string' || !text.trim()) {
-            return;
-        }
-
-        const cleanedText = text.replace(/-{3,}/g, ' ');
-
-        const sentences = cleanedText
-            .split(/[。？！!?]/)
-            .map(s => s.trim())
-            .filter(s => s.length > 0);
-
+        if (!text || typeof text !== 'string' || !text.trim()) return;
+        const cleanedText = text.replace(/-{3,}/g, ' ').replace(/`/g, '');
+        const sentences = cleanedText.split(/[。？！!?]/).map(s => s.trim()).filter(Boolean);
         try {
-            if (sentences.length > 20) {
-                for (const sentence of sentences) {
-                    this.voiceController.speakText(sentence);
-                }
-            } else {
-                this.voiceController.speakText(cleanedText);
-            }
+            const speakMethod = sentences.length > 20
+                ? (txt) => { for (const sentence of sentences) this.voiceController.speakText(sentence); }
+                : (txt) => this.voiceController.speakText(txt);
+            speakMethod(cleanedText);
         } catch (error) {
             console.error("Error during speech synthesis:", error);
             this.appendMessage('system', `Error speaking: ${error.message}`);
@@ -418,27 +367,24 @@ class AIScreenReader {
     async handleResponse(responseContent) {
         this.uiManager.hideThinkingIndicator();
         const responseText = (typeof responseContent === 'string') ? responseContent : JSON.stringify(responseContent);
-        let commandResult = null;
         try {
-            commandResult = this.commandProcessor.processResponse(responseText);
-        } catch (processorError) {
-            this.handleError('Failed to process command from response', processorError);
-            this.setProcessing(false);
-            return;
-        }
-
-        if (commandResult) {
-            if (commandResult.command === 'executeActions') {
-                await this.actionFlowController.handleExecuteActionsRequest(commandResult.actions);
-            } else if (commandResult.command === 'getElement') {
-                await this.actionFlowController.handleGetElementRequest();
-            } else if (commandResult === true) {
-                this.appendMessage('assistant', '[{"action": "Done"}]', true);
+            const commandResult = this.commandProcessor.processResponse(responseText);
+            if (commandResult) {
+                if (commandResult.command === 'executeActions') {
+                    await this.actionFlowController.handleExecuteActionsRequest(commandResult.actions);
+                } else if (commandResult.command === 'getElement') {
+                    await this.actionFlowController.handleGetElementRequest();
+                } else if (commandResult === true) {
+                    this.appendMessage('assistant', '[{"action": "Done"}]', true);
+                    this.setProcessing(false);
+                }
+            } else {
+                this.appendMessage('assistant', responseText, false);
+                await this._speakResponse(responseText);
                 this.setProcessing(false);
             }
-        } else {
-            this.appendMessage('assistant', responseText, false);
-            await this._speakResponse(responseText);
+        } catch (processorError) {
+            this.handleError('Failed to process command from response', processorError);
             this.setProcessing(false);
         }
     }
@@ -446,13 +392,9 @@ class AIScreenReader {
     handleError(message, error) {
         this.uiManager.hideThinkingIndicator();
         console.error(message, error);
+        let detail = (error instanceof Error) ? error.message : (typeof error === 'string' ? error : JSON.stringify(error));
+        detail = detail.replace(/API Error \(\d+.*?\):\s*/, '').replace(/^Error:\s*/, '');
         const userFriendlyMessage = message || "An unexpected error occurred";
-        let detail = '';
-        if (error instanceof Error) { detail = error.message; }
-        else if (typeof error === 'string') { detail = error; }
-        else { try { detail = JSON.stringify(error); } catch (e) { detail = 'No specific details available.'; } }
-        detail = detail.replace(/API Error \(\d+.*?\):\s*/, '');
-        detail = detail.replace(/^Error:\s*/, '');
         const errorMessage = detail ? `${userFriendlyMessage}: ${detail}` : userFriendlyMessage;
         this.appendMessage('system', `Error: ${errorMessage}`);
         this.voiceController.speakText(`Error occurred. ${userFriendlyMessage}.`);
@@ -464,7 +406,6 @@ class AIScreenReader {
     }
 
     handleClear() {
-        if (this.stateManager.isProcessing()) { this.appendMessage('system', 'Processing, please wait...'); return; }
         this.voiceController.stopSpeaking();
         this.uiManager.hideThinkingIndicator();
         this.uiManager.clearConversation();
@@ -473,50 +414,14 @@ class AIScreenReader {
         this.handleRemovePastedImage();
         this.voiceController.speakText('Conversation cleared.');
         this.setProcessing(false);
-        if (this.elements.userInput) {
-            this.elements.userInput.focus();
-        }
+        this.elements.userInput?.focus();
     }
 
     async handleRepeat() {
         this.voiceController.stopSpeaking();
-
-        if (!this.stateManager.isSettingsLoaded()) {
-            this.appendMessage('system', 'Initializing, please wait...');
-            return;
-        }
-        if (this.stateManager.isProcessing()) {
-            this.appendMessage('system', 'Currently processing, cannot repeat now.');
-            return;
-        }
-
         const lastAIMessage = [...this.stateManager.getState().messages].reverse().find(m => m.role === 'assistant');
-
-        if (lastAIMessage && lastAIMessage.content) {
-            const fullContent = String(lastAIMessage.content);
-
-            const sentences = fullContent
-                .split(/[。？！!?]/)
-                .map(s => s.trim())
-                .filter(s => s.length > 0);
-
-            let shouldSetProcessing = sentences.length > 20;
-
-            if (shouldSetProcessing) {
-                this.setProcessing(true);
-            }
-
-            try {
-                await this._speakResponse(fullContent);
-            } catch (error) {
-                console.error("Error during repeat speaking:", error);
-                this.appendMessage('system', `Error repeating message: ${error.message}`);
-            } finally {
-                if (shouldSetProcessing) {
-                    this.setProcessing(false);
-                }
-            }
-
+        if (lastAIMessage?.content) {
+            await this._speakResponse(String(lastAIMessage.content));
         } else {
             const msg = 'No previous response to repeat.';
             this.appendMessage('system', msg);
@@ -528,14 +433,7 @@ class AIScreenReader {
         if (chrome.runtime.openOptionsPage) {
             chrome.runtime.openOptionsPage();
         } else {
-            const optionsUrl = chrome.runtime.getURL('option/options.html');
-            try {
-                if (chrome.tabs?.create) {
-                    chrome.tabs.create({ url: optionsUrl, active: true })
-                        .then(() => console.log("Options page tab opened via fallback."))
-                        .catch(error => this.handleError("Failed to open options page", error));
-                } else { throw new Error("chrome.tabs.create API not available."); }
-            } catch (error) { this.handleError("Failed to open options page", error); }
+            chrome.tabs.create({ url: chrome.runtime.getURL('option/options.html') });
         }
     }
 
@@ -543,16 +441,18 @@ class AIScreenReader {
         if (this.stateManager.isProcessing() === isProcessing) return;
         this.stateManager.setProcessing(isProcessing);
         this.uiManager.setProcessingState(isProcessing);
-
-        if (!isProcessing && this.elements.userInput) {
-            this.elements.userInput.focus();
+        if (!isProcessing) {
+            this.elements.userInput?.focus();
         }
     }
 }
 
 function initializeApp() {
-    if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', () => { if (!window.aiScreenReader) { window.aiScreenReader = new AIScreenReader(); } }); }
-    else { if (!window.aiScreenReader) { window.aiScreenReader = new AIScreenReader(); } }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => { if (!window.aiScreenReader) window.aiScreenReader = new AIScreenReader(); });
+    } else {
+        if (!window.aiScreenReader) window.aiScreenReader = new AIScreenReader();
+    }
 }
 
 initializeApp();
