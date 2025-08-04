@@ -7,8 +7,6 @@ let notificationTimeout;
 let currentVoiceSettings = null;
 let currentPrompts = null;
 
-const localModelSelect = document.getElementById('local-model-name-select');
-
 function saveOptions() {
     const elementsToSave = document.querySelectorAll('[data-storage-key]');
     const keysToUpdate = {
@@ -76,6 +74,7 @@ function saveOptions() {
                 currentVoiceSettings = finalData[voiceSettingsStorageKey];
                 currentPrompts = finalData[promptsStorageKey];
                 updateCloudUrlVisibility();
+                updateCloudProviderVisibility();
             }
         });
     });
@@ -102,6 +101,26 @@ function updateCloudUrlVisibility() {
         proxyUrlContainer.classList.add('hidden');
     }
 }
+
+function updateCloudProviderVisibility() {
+    const geminiRadio = document.getElementById('provider-gemini');
+    const mistralRadio = document.getElementById('provider-mistral');
+    const geminiContainer = document.getElementById('gemini-settings-container');
+    const mistralContainer = document.getElementById('mistral-settings-container');
+
+    if (!geminiRadio || !mistralRadio || !geminiContainer || !mistralContainer) {
+        return;
+    }
+
+    if (geminiRadio.checked) {
+        geminiContainer.classList.remove('hidden');
+        mistralContainer.classList.add('hidden');
+    } else if (mistralRadio.checked) {
+        geminiContainer.classList.add('hidden');
+        mistralContainer.classList.remove('hidden');
+    }
+}
+
 
 function showNotification(message, isError = false) {
     if (!notificationBar) return;
@@ -195,17 +214,23 @@ function populateVoiceList() {
 function loadOptions() {
     populateSttLanguageDropdown();
 
-    const localUrlInput = document.getElementById('local-url-input');
-    const localModelSelect = document.getElementById('local-model-name-select');
-    const cloudApiUrlInput = document.getElementById('cloud-api-url-input');
-    const cloudProxyUrlInput = document.getElementById('cloud-proxy-url-input');
-    const cloudApiKeyInput = document.getElementById('cloud-api-key-input');
-    const cloudModelNameInput = document.getElementById('cloud-model-name-input');
-    const systemPromptTextarea = document.getElementById('system_prompt');
-    const roleSelect = document.getElementById('role-select');
-    const sttSelect = document.getElementById('stt-language-select');
-    const directRadio = document.getElementById('cloud-method-direct');
-    const proxyRadio = document.getElementById('cloud-method-proxy');
+    const elements = {
+        localUrlInput: document.getElementById('local-url-input'),
+        localModelSelect: document.getElementById('local-model-name-select'),
+        cloudApiUrlInput: document.getElementById('cloud-api-url-input'),
+        cloudProxyUrlInput: document.getElementById('cloud-proxy-url-input'),
+        cloudApiKeyInput: document.getElementById('cloud-api-key-input'),
+        cloudModelNameInput: document.getElementById('cloud-model-name-input'),
+        mistralApiKeyInput: document.getElementById('mistral-api-key-input'),
+        mistralModelSelect: document.getElementById('mistral-model-name-select'),
+        systemPromptTextarea: document.getElementById('system_prompt'),
+        roleSelect: document.getElementById('role-select'),
+        sttSelect: document.getElementById('stt-language-select'),
+        directRadio: document.getElementById('cloud-method-direct'),
+        proxyRadio: document.getElementById('cloud-method-proxy'),
+        geminiProviderRadio: document.getElementById('provider-gemini'),
+        mistralProviderRadio: document.getElementById('provider-mistral')
+    };
 
     chrome.storage.local.get([promptsStorageKey, settingsStorageKey, voiceSettingsStorageKey], (result) => {
         if (chrome.runtime.lastError) {
@@ -220,51 +245,58 @@ function loadOptions() {
             currentVoiceSettings = { sttLanguage: 'en-US', ttsVoiceName: '', ttsLanguage: 'en-US' };
             chrome.storage.local.set({ [voiceSettingsStorageKey]: currentVoiceSettings }, () => {
                 if (!chrome.runtime.lastError) {
-                    if (sttSelect) sttSelect.value = currentVoiceSettings.sttLanguage;
+                    if (elements.sttSelect) elements.sttSelect.value = currentVoiceSettings.sttLanguage;
                     populateVoiceList();
                 }
             });
         } else {
             currentVoiceSettings = { ...savedVoiceSettings };
-            if (sttSelect) sttSelect.value = currentVoiceSettings.sttLanguage;
+            if (elements.sttSelect) elements.sttSelect.value = currentVoiceSettings.sttLanguage;
             populateVoiceList();
         }
 
-        if (localUrlInput) localUrlInput.value = savedApiSettings.localApiUrl ?? defaultApiSettings.localApiUrl;
+        if (elements.localUrlInput) elements.localUrlInput.value = savedApiSettings.localApiUrl ?? defaultApiSettings.localApiUrl;
 
-        if (localModelSelect) {
+        if (elements.localModelSelect) {
             const savedLocalModel = savedApiSettings.ollamaMultimodalModel ?? defaultApiSettings.ollamaMultimodalModel;
-            const availableModels = Array.from(localModelSelect.options).map(option => option.value);
-
-            if (availableModels.includes(savedLocalModel)) {
-                localModelSelect.value = savedLocalModel;
-            } else {
-                localModelSelect.value = defaultApiSettings.ollamaMultimodalModel;
-                saveOptions();
-            }
+            const availableModels = Array.from(elements.localModelSelect.options).map(option => option.value);
+            elements.localModelSelect.value = availableModels.includes(savedLocalModel) ? savedLocalModel : defaultApiSettings.ollamaMultimodalModel;
         }
 
-        if (cloudApiUrlInput) cloudApiUrlInput.value = savedApiSettings.cloudApiUrl ?? defaultApiSettings.cloudApiUrl;
-        if (cloudProxyUrlInput) cloudProxyUrlInput.value = savedApiSettings.cloudProxyUrl ?? defaultApiSettings.cloudProxyUrl;
-        if (cloudApiKeyInput) cloudApiKeyInput.value = savedApiSettings.cloudApiKey ?? defaultApiSettings.cloudApiKey;
-        if (cloudModelNameInput) cloudModelNameInput.value = savedApiSettings.cloudModelName ?? defaultApiSettings.cloudModelName;
+        const savedCloudProvider = savedApiSettings.cloudProvider ?? defaultApiSettings.cloudProvider;
+        if (elements.geminiProviderRadio && elements.mistralProviderRadio) {
+            if (savedCloudProvider === 'mistral') {
+                elements.mistralProviderRadio.checked = true;
+            } else {
+                elements.geminiProviderRadio.checked = true;
+            }
+        }
+        
+        if (elements.cloudApiUrlInput) elements.cloudApiUrlInput.value = savedApiSettings.cloudApiUrl ?? defaultApiSettings.cloudApiUrl;
+        if (elements.cloudProxyUrlInput) elements.cloudProxyUrlInput.value = savedApiSettings.cloudProxyUrl ?? defaultApiSettings.cloudProxyUrl;
+        if (elements.cloudApiKeyInput) elements.cloudApiKeyInput.value = savedApiSettings.cloudApiKey ?? defaultApiSettings.cloudApiKey;
+        if (elements.cloudModelNameInput) elements.cloudModelNameInput.value = savedApiSettings.cloudModelName ?? defaultApiSettings.cloudModelName;
+        
+        if (elements.mistralApiKeyInput) elements.mistralApiKeyInput.value = savedApiSettings.mistralApiKey ?? defaultApiSettings.mistralApiKey;
+        if (elements.mistralModelSelect) elements.mistralModelSelect.value = savedApiSettings.mistralModelName ?? defaultApiSettings.mistralModelName;
 
         const savedMethod = savedApiSettings.cloudApiMethod ?? defaultApiSettings.cloudApiMethod;
-        if (directRadio && proxyRadio) {
+        if (elements.directRadio && elements.proxyRadio) {
             if (savedMethod === 'proxy') {
-                proxyRadio.checked = true;
+                elements.proxyRadio.checked = true;
             } else {
-                directRadio.checked = true;
+                elements.directRadio.checked = true;
             }
         }
 
-        if (roleSelect && systemPromptTextarea) {
+        if (elements.roleSelect && elements.systemPromptTextarea) {
             const activeKey = currentPrompts.active_system_prompt_key || 'web_assistant';
-            roleSelect.value = activeKey;
-            systemPromptTextarea.value = currentPrompts.system_prompt[activeKey] || defaultPrompts.system_prompt[activeKey];
+            elements.roleSelect.value = activeKey;
+            elements.systemPromptTextarea.value = currentPrompts.system_prompt[activeKey] || defaultPrompts.system_prompt[activeKey];
         }
 
         updateCloudUrlVisibility();
+        updateCloudProviderVisibility();
     });
 }
 
@@ -276,13 +308,16 @@ function resetToDefaults() {
         const currentSettings = result[settingsStorageKey] || {};
         const preservedApiKey = currentSettings.cloudApiKey || defaultApiSettings.cloudApiKey;
         const preservedProxyUrl = currentSettings.cloudProxyUrl || defaultApiSettings.cloudProxyUrl;
+        const preservedMistralApiKey = currentSettings.mistralApiKey || defaultApiSettings.mistralApiKey;
 
         const settingsToReset = {
             [settingsStorageKey]: {
                 ...defaultApiSettings,
                 cloudApiKey: preservedApiKey,
-                cloudApiMethod: 'direct',
-                cloudProxyUrl: preservedProxyUrl
+                cloudProxyUrl: preservedProxyUrl,
+                mistralApiKey: preservedMistralApiKey,
+                cloudProvider: 'gemini',
+                cloudApiMethod: 'direct'
             },
             [promptsStorageKey]: { ...defaultPrompts }
         };
@@ -311,7 +346,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadOptions();
 
     const elementsToSave = document.querySelectorAll('input[data-storage-key], select[data-storage-key]');
-
     elementsToSave.forEach(el => {
         const eventType = (el.tagName === 'SELECT' || el.type === 'radio' || el.type === 'checkbox') ? 'change' : 'blur';
         el.addEventListener(eventType, saveOptions);
@@ -325,6 +359,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
+    });
+
+    const providerRadios = document.querySelectorAll('input[name="cloudProvider"]');
+    providerRadios.forEach(radio => {
+        radio.addEventListener('change', updateCloudProviderVisibility);
+    });
+
+    const geminiMethodRadios = document.querySelectorAll('input[name="cloudApiMethod"]');
+    geminiMethodRadios.forEach(radio => {
+        radio.addEventListener('change', updateCloudUrlVisibility);
     });
 
     const systemPromptTextarea = document.getElementById('system_prompt');

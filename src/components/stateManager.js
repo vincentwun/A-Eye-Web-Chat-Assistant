@@ -7,11 +7,14 @@ export class StateManager {
             activeApiMode: defaultApiSettings.activeApiMode,
             localApiUrl: defaultApiSettings.localApiUrl,
             ollamaMultimodalModel: defaultApiSettings.ollamaMultimodalModel,
+            cloudProvider: defaultApiSettings.cloudProvider,
             cloudApiUrl: defaultApiSettings.cloudApiUrl,
             cloudApiKey: defaultApiSettings.cloudApiKey,
             cloudModelName: defaultApiSettings.cloudModelName,
             cloudApiMethod: defaultApiSettings.cloudApiMethod,
             cloudProxyUrl: defaultApiSettings.cloudProxyUrl,
+            mistralApiKey: defaultApiSettings.mistralApiKey,
+            mistralModelName: defaultApiSettings.mistralModelName,
             isProcessing: false,
             messages: [],
             lastCommandTime: 0,
@@ -45,14 +48,20 @@ export class StateManager {
 
             if (changes[this.settingsStorageKey]) {
                 const newSettings = changes[this.settingsStorageKey].newValue || {};
-                this.state.activeApiMode = newSettings.activeApiMode ?? defaultApiSettings.activeApiMode;
-                this.state.localApiUrl = newSettings.localApiUrl || defaultApiSettings.localApiUrl;
-                this.state.ollamaMultimodalModel = newSettings.ollamaMultimodalModel || defaultApiSettings.ollamaMultimodalModel;
-                this.state.cloudApiUrl = newSettings.cloudApiUrl || defaultApiSettings.cloudApiUrl;
-                this.state.cloudApiKey = newSettings.cloudApiKey ?? defaultApiSettings.cloudApiKey;
-                this.state.cloudModelName = newSettings.cloudModelName || defaultApiSettings.cloudModelName;
-                this.state.cloudApiMethod = newSettings.cloudApiMethod || defaultApiSettings.cloudApiMethod;
-                this.state.cloudProxyUrl = newSettings.cloudProxyUrl || defaultApiSettings.cloudProxyUrl;
+                this.state = {
+                    ...this.state,
+                    activeApiMode: newSettings.activeApiMode ?? defaultApiSettings.activeApiMode,
+                    localApiUrl: newSettings.localApiUrl ?? defaultApiSettings.localApiUrl,
+                    ollamaMultimodalModel: newSettings.ollamaMultimodalModel ?? defaultApiSettings.ollamaMultimodalModel,
+                    cloudProvider: newSettings.cloudProvider ?? defaultApiSettings.cloudProvider,
+                    cloudApiUrl: newSettings.cloudApiUrl ?? defaultApiSettings.cloudApiUrl,
+                    cloudApiKey: newSettings.cloudApiKey ?? defaultApiSettings.cloudApiKey,
+                    cloudModelName: newSettings.cloudModelName ?? defaultApiSettings.cloudModelName,
+                    cloudApiMethod: newSettings.cloudApiMethod ?? defaultApiSettings.cloudApiMethod,
+                    cloudProxyUrl: newSettings.cloudProxyUrl ?? defaultApiSettings.cloudProxyUrl,
+                    mistralApiKey: newSettings.mistralApiKey ?? defaultApiSettings.mistralApiKey,
+                    mistralModelName: newSettings.mistralModelName ?? defaultApiSettings.mistralModelName,
+                };
                 updatedKeys.settingsChanged = true;
             }
 
@@ -73,14 +82,21 @@ export class StateManager {
             const result = await chrome.storage.local.get([this.settingsStorageKey, this.promptsStorageKey]);
             const savedSettings = result[this.settingsStorageKey] || {};
             const savedPrompts = result[this.promptsStorageKey] || {};
-            this.state.activeApiMode = savedSettings.activeApiMode ?? defaultApiSettings.activeApiMode;
-            this.state.localApiUrl = savedSettings.localApiUrl || defaultApiSettings.localApiUrl;
-            this.state.ollamaMultimodalModel = savedSettings.ollamaMultimodalModel || defaultApiSettings.ollamaMultimodalModel;
-            this.state.cloudApiUrl = savedSettings.cloudApiUrl || defaultApiSettings.cloudApiUrl;
-            this.state.cloudApiKey = savedSettings.cloudApiKey ?? defaultApiSettings.cloudApiKey;
-            this.state.cloudModelName = savedSettings.cloudModelName || defaultApiSettings.cloudModelName;
-            this.state.cloudApiMethod = savedSettings.cloudApiMethod || defaultApiSettings.cloudApiMethod;
-            this.state.cloudProxyUrl = savedSettings.cloudProxyUrl || defaultApiSettings.cloudProxyUrl;
+
+            this.state = {
+                ...this.state,
+                activeApiMode: savedSettings.activeApiMode ?? defaultApiSettings.activeApiMode,
+                localApiUrl: savedSettings.localApiUrl ?? defaultApiSettings.localApiUrl,
+                ollamaMultimodalModel: savedSettings.ollamaMultimodalModel ?? defaultApiSettings.ollamaMultimodalModel,
+                cloudProvider: savedSettings.cloudProvider ?? defaultApiSettings.cloudProvider,
+                cloudApiUrl: savedSettings.cloudApiUrl ?? defaultApiSettings.cloudApiUrl,
+                cloudApiKey: savedSettings.cloudApiKey ?? defaultApiSettings.cloudApiKey,
+                cloudModelName: savedSettings.cloudModelName ?? defaultApiSettings.cloudModelName,
+                cloudApiMethod: savedSettings.cloudApiMethod ?? defaultApiSettings.cloudApiMethod,
+                cloudProxyUrl: savedSettings.cloudProxyUrl ?? defaultApiSettings.cloudProxyUrl,
+                mistralApiKey: savedSettings.mistralApiKey ?? defaultApiSettings.mistralApiKey,
+                mistralModelName: savedSettings.mistralModelName ?? defaultApiSettings.mistralModelName,
+            };
             this.prompts = { ...defaultPrompts, ...savedPrompts };
         } catch (error) {
             console.error('Error loading settings and prompts:', error);
@@ -118,14 +134,17 @@ export class StateManager {
 
     getApiConfig() {
         return {
+            activeApiMode: this.state.activeApiMode,
             localApiUrl: this.state.localApiUrl,
             ollamaMultimodalModel: this.state.ollamaMultimodalModel,
+            cloudProvider: this.state.cloudProvider,
             cloudApiUrl: this.state.cloudApiUrl,
             cloudApiKey: this.state.cloudApiKey,
             cloudModelName: this.state.cloudModelName,
             cloudApiMethod: this.state.cloudApiMethod,
             cloudProxyUrl: this.state.cloudProxyUrl,
-            activeApiMode: this.state.activeApiMode
+            mistralApiKey: this.state.mistralApiKey,
+            mistralModelName: this.state.mistralModelName
         };
     }
 
