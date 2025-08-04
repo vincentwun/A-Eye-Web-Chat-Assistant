@@ -1,4 +1,5 @@
 import { defaultPrompts, promptsStorageKey } from '../option/prompts.js';
+
 export class ScreenshotAction {
   constructor(dependencies) {
     this.screenshotController = dependencies.screenshotController;
@@ -21,48 +22,65 @@ export class ScreenshotAction {
     console.log("ScreenshotAction initialized successfully.");
   }
 
-  async execute() {
-    console.log("ScreenshotAction execute called");
+  async execute(type = 'visible') {
+    console.log(`ScreenshotAction execute called with type: ${type}`);
     this.setProcessing(true);
 
     try {
-      const screenshotDataUrl = await this.screenshotController.captureVisibleTab();
+      let imageDataUrl, mimeType, promptKey, commandName;
 
-      if (screenshotDataUrl) {
-        const mimeTypeMatch = screenshotDataUrl.match(/^data:(image\/(?:jpeg|png|webp));base64,/);
-        const mimeType = mimeTypeMatch ? mimeTypeMatch[1] : 'image/png';
-        await this.updateLastImageData(screenshotDataUrl, mimeType);
+      if (type === 'visible') {
+        imageDataUrl = await this.screenshotController.captureVisibleTab();
+        const mimeTypeMatch = imageDataUrl ? imageDataUrl.match(/^data:(image\/(?:jpeg|png|webp));base64,/) : null;
+        mimeType = mimeTypeMatch ? mimeTypeMatch[1] : 'image/png';
+        promptKey = 'screenshot_prompt';
+        commandName = 'takeScreenshot';
+      } else if (type === 'scrolling') {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (!tab || !tab.id) throw new Error('No active tab found or tab ID missing for scrolling screenshot.');
+        imageDataUrl = await this.screenshotController.handleScrollingScreenshot(tab);
+        mimeType = 'image/png';
+        promptKey = 'scrollingScreenshot_prompt';
+        commandName = 'scrollingScreenshot';
+      } else {
+        throw new Error(`Unknown screenshot type: ${type}`);
+      }
 
+      if (imageDataUrl) {
+        await this.updateLastImageData(imageDataUrl, mimeType);
         this.uiManager.showThinkingIndicator();
         await this.voiceController.speakText("Analyzing...");
 
         const result = await chrome.storage.local.get(promptsStorageKey);
         const currentPrompts = result[promptsStorageKey] || { ...defaultPrompts };
-        const screenshotPromptText = currentPrompts.screenshot_prompt ?? defaultPrompts.screenshot;
-        console.log("Using screenshot prompt:", screenshotPromptText);
 
-        const payload = { prompt: screenshotPromptText };
+        const defaultPromptText = type === 'scrolling' ? defaultPrompts.scrollingScreenshot : defaultPrompts.screenshot;
+        const promptText = currentPrompts[promptKey] ?? defaultPromptText;
+        console.log(`Using ${type} screenshot prompt:`, promptText);
+
+        const payload = { prompt: promptText };
         const apiConfig = this.getApiConfig();
-        const historyToSend = this.getHistoryToSend('takeScreenshot');
+        const historyToSend = this.getHistoryToSend(commandName);
         const systemPromptForTask = null;
 
         const responseContent = await this.apiService.sendRequest(
           apiConfig,
           historyToSend,
           payload,
-          screenshotDataUrl,
+          imageDataUrl,
           systemPromptForTask
         );
         await this.handleResponse(responseContent);
 
       } else {
-        throw new Error('Screenshot capture returned empty data.');
+        throw new Error(`${type === 'scrolling' ? 'Scrolling screenshot' : 'Screenshot capture'} returned empty data.`);
       }
     } catch (error) {
-      this.handleError('Screenshot analysis failed', error);
+      const errorMessage = type === 'scrolling' ? 'Scrolling screenshot analysis failed' : 'Screenshot analysis failed';
+      this.handleError(errorMessage, error);
     } finally {
       this.setProcessing(false);
-      console.log("ScreenshotAction execute finished trigger");
+      console.log(`ScreenshotAction execute finished for type: ${type}`);
     }
   }
 }

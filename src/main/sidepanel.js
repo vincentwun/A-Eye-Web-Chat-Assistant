@@ -4,7 +4,6 @@ import { ApiService } from '../api/apiService.js';
 import { UIManager } from '../components/uiManager.js';
 import { CommandProcessor } from '../action/commandMap.js';
 import { ScreenshotAction } from '../action/screenshotAction.js';
-import { ScrollingScreenshotAction } from '../action/scrollingScreenshotAction.js';
 import { ContentAnalysisAction } from '../action/contentAnalysisAction.js';
 import { GetElementAction } from '../action/getElementAction.js';
 import { ActionFlowController } from '../components/actionFlowController.js';
@@ -71,13 +70,12 @@ class AIScreenReader {
         };
 
         this.screenshotAction = new ScreenshotAction(actionDependencies);
-        this.scrollingScreenshotAction = new ScrollingScreenshotAction(actionDependencies);
         this.contentAnalysisAction = new ContentAnalysisAction(actionDependencies);
         this.getElementAction = new GetElementAction(actionDependencies);
 
         const commandProcessorActions = {
-            _executeScreenshot: this.screenshotAction.execute.bind(this.screenshotAction),
-            _executeScrollingScreenshot: this.scrollingScreenshotAction.execute.bind(this.scrollingScreenshotAction),
+            _executeScreenshot: () => this.screenshotAction.execute('visible'),
+            _executeScrollingScreenshot: () => this.screenshotAction.execute('scrolling'),
             _executeContentAnalysis: this.contentAnalysisAction.execute.bind(this.contentAnalysisAction),
             handleError: this.handleError.bind(this)
         };
@@ -122,7 +120,7 @@ class AIScreenReader {
         if (this.stateManager.getState().activeApiMode === 'local' && !this.configValidator.isLocalModeConfigValid()) return;
         if (this.stateManager.getState().activeApiMode === 'cloud' && !this.configValidator.isCloudModeConfigValid()) return;
         try {
-            await this.screenshotAction.execute();
+            await this.screenshotAction.execute('visible');
         } catch (error) {
             this.handleError("Screenshot initiation failed", error);
         }
@@ -134,7 +132,7 @@ class AIScreenReader {
         if (this.stateManager.getState().activeApiMode === 'local' && !this.configValidator.isLocalModeConfigValid()) return;
         if (this.stateManager.getState().activeApiMode === 'cloud' && !this.configValidator.isCloudModeConfigValid()) return;
         try {
-            await this.scrollingScreenshotAction.execute();
+            await this.screenshotAction.execute('scrolling');
         } catch (error) {
             this.handleError("Scrolling screenshot initiation failed", error);
         }
