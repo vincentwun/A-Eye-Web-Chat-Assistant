@@ -8,7 +8,6 @@ let currentVoiceSettings = null;
 let currentPrompts = null;
 
 const localModelSelect = document.getElementById('local-model-name-select');
-const predefinedLocalModels = ["gemma3:4b", "gemma3:12b", "gemma3:27b"];
 
 function saveOptions() {
     const elementsToSave = document.querySelectorAll('[data-storage-key]');
@@ -233,9 +232,11 @@ function loadOptions() {
 
         if (localUrlInput) localUrlInput.value = savedApiSettings.localApiUrl ?? defaultApiSettings.localApiUrl;
 
-        const savedLocalModel = savedApiSettings.ollamaMultimodalModel ?? defaultApiSettings.ollamaMultimodalModel;
         if (localModelSelect) {
-            if (predefinedLocalModels.includes(savedLocalModel)) {
+            const savedLocalModel = savedApiSettings.ollamaMultimodalModel ?? defaultApiSettings.ollamaMultimodalModel;
+            const availableModels = Array.from(localModelSelect.options).map(option => option.value);
+
+            if (availableModels.includes(savedLocalModel)) {
                 localModelSelect.value = savedLocalModel;
             } else {
                 localModelSelect.value = defaultApiSettings.ollamaMultimodalModel;
