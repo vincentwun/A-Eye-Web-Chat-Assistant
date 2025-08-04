@@ -89,28 +89,27 @@ function saveOptions() {
 function updateCloudConfigVisibility() {
     const selectedService = document.querySelector('input[name="cloudSelection"]:checked').value;
 
-    const proxyUrlContainer = document.getElementById('proxy-url-container');
-    const geminiApiKeyContainer = document.getElementById('gemini-api-key-container');
-    const geminiModelContainer = document.getElementById('gemini-model-container');
-    const mistralApiKeyContainer = document.getElementById('mistral-api-key-container');
-    const mistralModelContainer = document.getElementById('mistral-model-container');
+    const containers = {
+        proxyUrl: document.getElementById('proxy-url-container'),
+        gcpApiKey: document.getElementById('gcp-api-key-container'),
+        geminiApiKey: document.getElementById('gemini-api-key-container'),
+        geminiModel: document.getElementById('gemini-model-container'),
+        mistralApiKey: document.getElementById('mistral-api-key-container'),
+        mistralModel: document.getElementById('mistral-model-container')
+    };
 
-    proxyUrlContainer.classList.add('hidden');
-    geminiApiKeyContainer.classList.add('hidden');
-    geminiModelContainer.classList.add('hidden');
-    mistralApiKeyContainer.classList.add('hidden');
-    mistralModelContainer.classList.add('hidden');
-    
+    Object.values(containers).forEach(c => c.classList.add('hidden'));
+
     if (selectedService === 'gemini') {
-        geminiApiKeyContainer.classList.remove('hidden');
-        geminiModelContainer.classList.remove('hidden');
+        containers.geminiApiKey.classList.remove('hidden');
+        containers.geminiModel.classList.remove('hidden');
     } else if (selectedService === 'gateway') {
-        proxyUrlContainer.classList.remove('hidden');
-        geminiApiKeyContainer.classList.remove('hidden');
-        geminiModelContainer.classList.remove('hidden');
+        containers.proxyUrl.classList.remove('hidden');
+        containers.gcpApiKey.classList.remove('hidden');
+        containers.geminiModel.classList.remove('hidden');
     } else if (selectedService === 'mistral') {
-        mistralApiKeyContainer.classList.remove('hidden');
-        mistralModelContainer.classList.remove('hidden');
+        containers.mistralApiKey.classList.remove('hidden');
+        containers.mistralModel.classList.remove('hidden');
     }
 }
 
@@ -211,6 +210,7 @@ function loadOptions() {
         localModelSelect: document.getElementById('local-model-name-select'),
         cloudProxyUrlInput: document.getElementById('cloud-proxy-url-input'),
         cloudApiKeyInput: document.getElementById('cloud-api-key-input'),
+        gcpApiKeyInput: document.getElementById('gcp-api-key-input'),
         cloudModelNameInput: document.getElementById('cloud-model-name-input'),
         mistralApiKeyInput: document.getElementById('mistral-api-key-input'),
         mistralModelSelect: document.getElementById('mistral-model-name-select'),
@@ -263,6 +263,7 @@ function loadOptions() {
         
         if (elements.cloudProxyUrlInput) elements.cloudProxyUrlInput.value = savedApiSettings.cloudProxyUrl ?? defaultApiSettings.cloudProxyUrl;
         if (elements.cloudApiKeyInput) elements.cloudApiKeyInput.value = savedApiSettings.cloudApiKey ?? defaultApiSettings.cloudApiKey;
+        if (elements.gcpApiKeyInput) elements.gcpApiKeyInput.value = savedApiSettings.gcpApiKey ?? defaultApiSettings.gcpApiKey;
         if (elements.cloudModelNameInput) elements.cloudModelNameInput.value = savedApiSettings.cloudModelName ?? defaultApiSettings.cloudModelName;
         
         if (elements.mistralApiKeyInput) elements.mistralApiKeyInput.value = savedApiSettings.mistralApiKey ?? defaultApiSettings.mistralApiKey;
@@ -284,14 +285,16 @@ function resetToDefaults() {
             return showNotification("Error resetting: could not read current settings", true);
         }
         const currentSettings = result[settingsStorageKey] || {};
-        const preservedApiKey = currentSettings.cloudApiKey || defaultApiSettings.cloudApiKey;
+        const preservedGeminiApiKey = currentSettings.cloudApiKey || defaultApiSettings.cloudApiKey;
+        const preservedGcpApiKey = currentSettings.gcpApiKey || defaultApiSettings.gcpApiKey;
         const preservedProxyUrl = currentSettings.cloudProxyUrl || defaultApiSettings.cloudProxyUrl;
         const preservedMistralApiKey = currentSettings.mistralApiKey || defaultApiSettings.mistralApiKey;
 
         const settingsToReset = {
             [settingsStorageKey]: {
                 ...defaultApiSettings,
-                cloudApiKey: preservedApiKey,
+                cloudApiKey: preservedGeminiApiKey,
+                gcpApiKey: preservedGcpApiKey,
                 cloudProxyUrl: preservedProxyUrl,
                 mistralApiKey: preservedMistralApiKey,
             },

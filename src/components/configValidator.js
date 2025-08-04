@@ -28,23 +28,33 @@ export class ConfigValidator {
         let isValid = true;
         let speakMsg = null;
 
-        if (!state.cloudApiKey) {
-            const msg = 'Gemini API Key is missing. Please configure in Options page.';
-            this.appendMessage('system', msg);
-            speakMsg = 'Gemini settings missing: API Key.';
-            isValid = false;
-        }
         if (!state.cloudModelName) {
             const msg = 'Gemini Model Name is missing. Please configure in Options page.';
-            if (isValid) this.appendMessage('system', msg);
-            if (isValid) speakMsg = 'Gemini settings missing: Model Name.';
+            this.appendMessage('system', msg);
+            speakMsg = 'Gemini settings missing: Model Name.';
             isValid = false;
         }
-        if (isProxy && !state.cloudProxyUrl) {
-            const msg = 'API Gateway URL is missing for Proxy Connection. Please configure in Options page.';
-            if (isValid) this.appendMessage('system', msg);
-            if (isValid) speakMsg = 'Gemini settings missing: Gateway URL for Proxy mode.';
-            isValid = false;
+
+        if (isProxy) {
+            if (!state.cloudProxyUrl) {
+                const msg = 'API Gateway Endpoint is missing for Vertex AI (GCP). Please configure in Options page.';
+                if (isValid) this.appendMessage('system', msg);
+                if (isValid) speakMsg = 'Vertex AI settings missing: Gateway Endpoint.';
+                isValid = false;
+            }
+            if (!state.gcpApiKey) {
+                const msg = 'GCP API Key is missing for Vertex AI (GCP). Please configure in Options page.';
+                if (isValid) this.appendMessage('system', msg);
+                if (isValid) speakMsg = 'Vertex AI settings missing: GCP API Key.';
+                isValid = false;
+            }
+        } else { // Direct method
+            if (!state.cloudApiKey) {
+                const msg = 'Gemini API Key is missing. Please configure in Options page.';
+                if (isValid) this.appendMessage('system', msg);
+                if (isValid) speakMsg = 'Gemini settings missing: API Key.';
+                isValid = false;
+            }
         }
 
         if (!isValid && speakMsg) {

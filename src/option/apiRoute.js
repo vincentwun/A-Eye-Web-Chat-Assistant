@@ -10,7 +10,9 @@ export const defaultApiSettings = {
   cloudApiMethod: 'direct',
   cloudModelName: 'gemini-2.5-flash',
   cloudApiKey: '',
+
   cloudProxyUrl: '',
+  gcpApiKey: '',
 
   mistralApiKey: '',
   mistralModelName: 'pixtral-large-latest'

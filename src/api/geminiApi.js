@@ -5,20 +5,21 @@ export async function sendGeminiRequest(
 ) {
   const connectionMethod = apiConfig.cloudApiMethod || 'direct';
 
-  if (!apiConfig.cloudApiKey) throw new Error('Cloud Gemini API Key not configured.');
   if (!apiConfig.cloudModelName) throw new Error('Cloud Gemini model name not set.');
 
   let endpoint;
   let headers = { 'Content-Type': 'application/json' };
   const modelToUse = apiConfig.cloudModelName;
-  const apiKey = apiConfig.cloudApiKey;
-
+  
   if (connectionMethod === 'proxy') {
-    if (!apiConfig.cloudProxyUrl) throw new Error('API Gateway / Cloud Function Proxy URL not configured for proxy method.');
+    if (!apiConfig.cloudProxyUrl) throw new Error('API Gateway Endpoint not configured for Vertex AI (GCP) method.');
+    if (!apiConfig.gcpApiKey) throw new Error('GCP API Key not configured for Vertex AI (GCP) method.');
     endpoint = apiConfig.cloudProxyUrl;
-    headers['x-api-key'] = apiKey;
+    headers['x-api-key'] = apiConfig.gcpApiKey;
     headers['X-Model-Name'] = modelToUse;
   } else {
+    if (!apiConfig.cloudApiKey) throw new Error('Cloud Gemini API Key not configured.');
+    const apiKey = apiConfig.cloudApiKey;
     const cloudBaseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/';
     const fullApiUrl = `${cloudBaseUrl}${modelToUse}:generateContent`;
     endpoint = `${fullApiUrl}?key=${apiKey}`;
