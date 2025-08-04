@@ -25,12 +25,40 @@
     <div>
         <label for="local-model-name-select">Local Model Name:</label>
         <select id="local-model-name-select" data-storage-key="ollamaMultimodalModel" data-storage-type="settings">
-            <option value="gemma3:4b">gemma3:4b</option>
-            <option value="gemma3:12b">gemma3:12b</option>
-            <option value="gemma3:27b">gemma3:27b</option>
-            <option value="qwen2.5vl:3b">qwen2.5vl:3b</option>
-            <option value="qwen2.5vl:7b">qwen2.5vl:7b</option>
-            <option value="qwen2.5vl:32b">qwen2.5vl:32b</option>
+            <optgroup label="Gemma">
+                <option value="gemma3:4b">gemma3:4b (3.3GB)</option>
+                <option value="gemma3:12b">gemma3:12b (8.1GB)</option>
+                <option value="gemma3:27b">gemma3:27b (17GB)</option>
+            </optgroup>
+            <optgroup label="Llama">
+                <option value="llama3.2-vision:11b">llama3.2-vision:11b (7.8GB)</option>
+                <option value="llama3.2-vision:90b">llama3.2-vision:90b (55GB)</option>
+                <option value="llama4:16x17b">llama4:16x17b (67GB)</option>
+                <option value="llama4:128x17b">llama4:128x17b (245GB)</option>
+            </optgroup>
+            <optgroup label="Llava">
+                <option value="llava:7b">llava:7b (4.7GB)</option>
+                <option value="llava:13b">llava:13b (8GB)</option>
+                <option value="llava:34b">llava:34b (20GB)</option>
+                <option value="llava-llama3:8b">llava-llama3:8b (5.5GB)</option>
+                <option value="llava-phi3:3.8b">llava-phi3:3.8b (2.9GB)</option>
+                <option value="bakllava:7b">bakllava:7b (4.7GB)</option>
+            </optgroup>
+            <optgroup label="Mistral">
+                <option value="mistral-small3.1:24b">mistral-small3.1:24b (15GB)</option>
+                <option value="mistral-small3.2:24b">mistral-small3.2:24b (15GB)</option>
+            </optgroup>
+            <optgroup label="Qwen">
+                <option value="qwen2.5vl:3b">qwen2.5vl:3b (3.2GB)</option>
+                <option value="qwen2.5vl:7b">qwen2.5vl:7b (6GB)</option>
+                <option value="qwen2.5vl:32b">qwen2.5vl:32b (21GB)</option>
+                <option value="qwen2.5vl:72b">qwen2.5vl:72b (49GB)</option>
+            </optgroup>
+            <optgroup label="Other">
+                <option value="minicpm-v:8b">minicpm-v:8b (5.5GB)</option>
+                <option value="moondream:1.8b">moondream:1.8b (1.7GB)</option>
+                <option value="granite3.2-vision:2b">granite3.2-vision:2b (2.4GB)</option>
+            </optgroup>
         </select>
     </div>
 
