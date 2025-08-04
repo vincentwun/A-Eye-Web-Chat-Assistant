@@ -16,6 +16,45 @@ function stripBase64Prefix(dataUrl) {
 
 export class ApiService {
 
+  _prepareStandardMessages(messagesHistory, currentPayload, rawBase64, systemPrompt, maxHistory) {
+    const standardMessages = [];
+
+    if (systemPrompt) {
+      standardMessages.push({ role: 'system', content: systemPrompt });
+    }
+
+    const relevantHistory = messagesHistory.slice(-maxHistory);
+
+    for (const message of relevantHistory) {
+      if ((message.role === 'user' || message.role === 'assistant') && message.content) {
+        const lastMessage = standardMessages.length > 0 ? standardMessages[standardMessages.length - 1] : null;
+        if (lastMessage && lastMessage.role === message.role && !lastMessage.images) {
+          lastMessage.content += "\n" + message.content;
+        } else {
+          standardMessages.push({ role: message.role, content: message.content, images: null });
+        }
+      }
+    }
+
+    const currentUserContent = currentPayload.prompt || "";
+    const currentUserImage = rawBase64 ? [rawBase64] : null;
+
+    if (currentUserContent || currentUserImage) {
+      const lastMessage = standardMessages.length > 0 ? standardMessages[standardMessages.length - 1] : null;
+
+      if (lastMessage && lastMessage.role === 'user' && !lastMessage.images) {
+        lastMessage.content = (lastMessage.content + "\n" + currentUserContent).trim();
+        if (currentUserImage) {
+          lastMessage.images = currentUserImage;
+        }
+      } else {
+        standardMessages.push({ role: 'user', content: currentUserContent, images: currentUserImage });
+      }
+    }
+
+    return standardMessages;
+  }
+
   async sendRequest(apiConfig, messagesHistory, currentPayload, imageDataUrl = null, systemPrompt = null) {
     let rawBase64 = null;
     let mimeType = 'image/png';
@@ -29,31 +68,27 @@ export class ApiService {
         }
       } else {
         imageDataUrl = null;
-        rawBase64 = null;
       }
+    }
+
+    const standardMessages = this._prepareStandardMessages(
+      messagesHistory,
+      currentPayload,
+      rawBase64,
+      systemPrompt,
+      MAX_HISTORY_MESSAGES
+    );
+
+    const hasContent = standardMessages.some(m => (m.content && m.content.trim()) || (m.images && m.images.length > 0));
+    if (!hasContent) {
+      throw new Error("Cannot send an empty request.");
     }
 
     try {
       if (apiConfig.activeApiMode === 'local') {
-        return await sendOllamaRequest(
-          apiConfig,
-          messagesHistory,
-          currentPayload,
-          rawBase64,
-          mimeType,
-          systemPrompt,
-          MAX_HISTORY_MESSAGES
-        );
+        return await sendOllamaRequest(apiConfig, standardMessages);
       } else if (apiConfig.activeApiMode === 'cloud') {
-        return await sendGeminiRequest(
-          apiConfig,
-          messagesHistory,
-          currentPayload,
-          rawBase64,
-          mimeType,
-          systemPrompt,
-          MAX_HISTORY_MESSAGES
-        );
+        return await sendGeminiRequest(apiConfig, standardMessages, mimeType);
       } else {
         throw new Error('Invalid API mode selected.');
       }

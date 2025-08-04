@@ -1,11 +1,7 @@
 export async function sendGeminiRequest(
   apiConfig,
-  messagesHistory,
-  currentPayload,
-  rawBase64,
-  mimeType,
-  systemPrompt,
-  maxHistory
+  standardMessages,
+  mimeType
 ) {
   const connectionMethod = apiConfig.cloudApiMethod || 'direct';
 
@@ -30,74 +26,47 @@ export async function sendGeminiRequest(
   }
 
   let body;
-
-  const relevantHistory = messagesHistory.slice(-maxHistory);
+  let systemInstruction = null;
   const geminiContents = [];
+  const messagesToProcess = [...standardMessages];
 
-  for (const message of relevantHistory) {
-    let role = null;
-    let parts = [];
-    if (message.role === 'user' && message.content) {
-      role = 'user';
+  if (messagesToProcess.length > 0 && messagesToProcess[0].role === 'system') {
+    const systemMsg = messagesToProcess.shift();
+    if (systemMsg.content) {
+      systemInstruction = { parts: [{ text: systemMsg.content }] };
+    }
+  }
+
+  for (const message of messagesToProcess) {
+    const role = message.role === 'assistant' ? 'model' : 'user';
+    const parts = [];
+
+    if (message.content) {
       parts.push({ text: message.content });
-    } else if (message.role === 'assistant' && message.content) {
-      role = 'model';
-      parts.push({ text: message.content });
     }
 
-    if (role && parts.length > 0) {
-      if (geminiContents.length === 0 && role !== 'user') {
-        continue;
+    if (message.images && message.images.length > 0 && role === 'user') {
+      for (const imgData of message.images) {
+        parts.push({
+          inline_data: {
+            mime_type: mimeType,
+            data: imgData
+          }
+        });
       }
-      const lastRole = geminiContents.length > 0 ? geminiContents[geminiContents.length - 1].role : null;
-      if (lastRole === role) {
-        const lastParts = geminiContents[geminiContents.length - 1].parts;
-        const currentText = parts.find(p => p.text)?.text;
-        if (currentText) {
-          const lastTextPartIndex = lastParts.findLastIndex(p => p.text);
-          if (lastTextPartIndex !== -1) { lastParts[lastTextPartIndex].text += "\n" + currentText; }
-          else { lastParts.push({ text: currentText }); }
-        }
-      } else {
-        geminiContents.push({ role, parts });
-      }
+    }
+
+    if (parts.length > 0) {
+      geminiContents.push({ role, parts });
     }
   }
 
-  const currentUserParts = [];
-  if (currentPayload.prompt) {
-    currentUserParts.push({ text: currentPayload.prompt });
-  }
-  if (rawBase64) {
-    currentUserParts.push({
-      inline_data: {
-        mime_type: mimeType,
-        data: rawBase64
-      }
-    });
+  if (geminiContents.length > 0 && geminiContents[0].role === 'model') {
+    geminiContents.shift();
   }
 
-  if (currentUserParts.length > 0) {
-    const lastRole = geminiContents.length > 0 ? geminiContents[geminiContents.length - 1].role : null;
-    if (lastRole === 'user') {
-      const lastParts = geminiContents[geminiContents.length - 1].parts;
-      const currentText = currentUserParts.find(p => p.text)?.text;
-      const currentImage = currentUserParts.find(p => p.inline_data);
-      if (currentText) {
-        const lastTextPartIndex = lastParts.findLastIndex(p => p.text);
-        if (lastTextPartIndex !== -1) { lastParts[lastTextPartIndex].text += "\n" + currentText; }
-        else { lastParts.push({ text: currentText }); }
-      }
-      if (currentImage && !lastParts.some(p => p.inline_data)) {
-        lastParts.push(currentImage);
-      }
-    } else {
-      geminiContents.push({ role: 'user', parts: currentUserParts });
-    }
-  } else {
-    if (geminiContents.length === 0 && !systemPrompt) {
-      throw new Error(`Cannot send empty request to Gemini via ${connectionMethod} method.`);
-    }
+  if (geminiContents.length === 0) {
+    throw new Error(`Cannot send empty request to Gemini via ${connectionMethod} method.`);
   }
 
   const geminiPayload = {
@@ -108,11 +77,10 @@ export async function sendGeminiRequest(
         "googleSearch": {}
       }
     ],
-    ...(systemPrompt && { systemInstruction: { parts: [{ text: systemPrompt }] } })
+    ...(systemInstruction && { systemInstruction: systemInstruction })
   };
 
   const modelsWithThinkingConfig = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
-
   if (modelsWithThinkingConfig.includes(modelToUse)) {
     geminiPayload.generationConfig = {
       thinkingConfig: {
@@ -159,7 +127,7 @@ export async function sendGeminiRequest(
       if (data.candidates && data.candidates[0]?.content?.parts) {
         const textParts = data.candidates[0].content.parts.filter(part => part.text);
         if (textParts.length > 0) {
-          responseText = textParts[textParts.length - 1].text;
+          responseText = textParts.map(p => p.text).join('');
         }
       } else if (data.promptFeedback?.blockReason) {
         responseText = `Request blocked by API: ${data.promptFeedback.blockReason}`;
