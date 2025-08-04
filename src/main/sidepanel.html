@@ -38,7 +38,13 @@
     </main>
 
     <div id="input-section">
-        <textarea id="user-input" rows="1" placeholder="Type your message here..."></textarea>
+        <div id="pasted-image-preview-container" style="display: none;">
+            <img id="pasted-image-preview" src="" alt="Pasted image preview" />
+            <button id="remove-pasted-image-button" class="action-button">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <textarea id="user-input" rows="1" placeholder="Type message or paste an image..."></textarea>
         <div class="input-controls-row">
             <div class="input-action-buttons-left">
                 <button id="screenshot-button" class="action-button" data-tooltip="Capture visible"
@@ -80,7 +86,9 @@
 
     <footer class="footer">
         <div class="footer-content">
-            Developed by Students of <a href="https://hkiit.edu.hk/en/programmes/it114115-higher-diploma-in-cloud-and-data-centre-administration/index.html" target="_blank" rel="noopener noreferrer">HD in CDCA | HKIIT - IVE (LWL)</a>
+            Developed by Students of <a
+                href="https://hkiit.edu.hk/en/programmes/it114115-higher-diploma-in-cloud-and-data-centre-administration/index.html"
+                target="_blank" rel="noopener noreferrer">HD in CDCA | HKIIT - IVE (LWL)</a>
         </div>
     </footer>
 

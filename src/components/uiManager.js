@@ -20,6 +20,34 @@ export class UIManager {
         this.elements.conversation.scrollTop = this.elements.conversation.scrollHeight;
     }
 
+    async appendUserMessageWithImage({ text, imageUrl }) {
+        if (!this.elements.conversation) return;
+
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', 'message-user');
+
+        if (text) {
+            const textDiv = document.createElement('div');
+            textDiv.className = 'message-text';
+            textDiv.innerHTML = this.escapeHTML(text);
+            messageDiv.appendChild(textDiv);
+        }
+
+        if (imageUrl) {
+            const imageContainer = document.createElement('div');
+            imageContainer.className = 'message-image-container';
+            const thumbnailUrl = await this._createThumbnail(imageUrl, 150);
+            const img = document.createElement('img');
+            img.src = thumbnailUrl;
+            imageContainer.appendChild(img);
+            messageDiv.appendChild(imageContainer);
+        }
+
+        this.elements.conversation.appendChild(messageDiv);
+        this.elements.conversation.scrollTop = this.elements.conversation.scrollHeight;
+    }
+
+
     async appendPreviewMessage(type, content) {
         if (!this.elements.conversation) return;
 
@@ -116,21 +144,22 @@ export class UIManager {
 
     updateInputState(inputValue) {
         if (!this.elements.sendButton) return;
-        this.elements.sendButton.disabled = !inputValue || inputValue.trim().length === 0;
+        const hasImage = this.elements.pastedImagePreviewContainer.style.display !== 'none';
+        this.elements.sendButton.disabled = (!inputValue || inputValue.trim().length === 0) && !hasImage;
     }
 
     setProcessingState(isProcessing) {
-        console.log(isProcessing ? "Disabling interface (UIManager)" : "Enabling interface (UIManager)");
-
         this.elements.userInput.disabled = isProcessing;
         this.elements.sendButton.disabled = isProcessing || !this.elements.userInput.value.trim();
 
         this.elements.screenshotButton.disabled = isProcessing;
         this.elements.scrollingScreenshotButton.disabled = isProcessing;
         this.elements.analyzeContentButton.disabled = isProcessing;
+        this.elements.getElementButton.disabled = isProcessing;
         this.elements.repeatButton.disabled = isProcessing;
         this.elements.voiceButton.disabled = isProcessing;
         this.elements.clearButton.disabled = isProcessing;
+        this.elements.removePastedImageButton.disabled = isProcessing;
 
         this.elements.localModeButton.disabled = isProcessing;
         this.elements.cloudModeButton.disabled = isProcessing;
@@ -152,6 +181,7 @@ export class UIManager {
     clearConversation() {
         if (!this.elements.conversation) return;
         this.elements.conversation.innerHTML = '';
+        this.hidePastedImagePreview();
     }
 
     clearUserInput() {
@@ -160,10 +190,26 @@ export class UIManager {
         this.updateInputState('');
     }
 
+
+
     escapeHTML(str) {
         if (!str) return '';
         const p = document.createElement('p');
         p.textContent = str;
         return p.innerHTML.replace(/\n/g, '<br>');
+    }
+
+    showPastedImagePreview(dataUrl) {
+        if (!this.elements.pastedImagePreviewContainer || !this.elements.pastedImagePreview) return;
+        this.elements.pastedImagePreview.src = dataUrl;
+        this.elements.pastedImagePreviewContainer.style.display = 'block';
+        this.updateInputState(this.elements.userInput.value);
+    }
+
+    hidePastedImagePreview() {
+        if (!this.elements.pastedImagePreviewContainer || !this.elements.pastedImagePreview) return;
+        this.elements.pastedImagePreview.src = '';
+        this.elements.pastedImagePreviewContainer.style.display = 'none';
+        this.updateInputState(this.elements.userInput.value);
     }
 }

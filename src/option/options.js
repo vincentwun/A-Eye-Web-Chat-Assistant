@@ -330,13 +330,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const systemPromptTextarea = document.getElementById('system_prompt');
     if (systemPromptTextarea) {
         systemPromptTextarea.addEventListener('blur', saveOptions);
-        systemPromptTextarea.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                saveOptions();
-                systemPromptTextarea.blur();
-            }
-        });
     }
 
     const roleSelect = document.getElementById('role-select');

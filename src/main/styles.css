@@ -98,6 +98,23 @@ body {
   margin: var(--space) 0 var(--space) auto;
 }
 
+.message-user .message-text {
+  margin-bottom: 5px;
+}
+
+.message-user .message-image-container {
+  max-width: 100%;
+}
+
+.message-user .message-image-container img {
+  max-width: 100%;
+  max-height: 150px;
+  border-radius: var(--radius);
+  display: block;
+  object-fit: contain;
+  cursor: default;
+}
+
 .message-assistant {
   align-self: flex-start;
   margin-right: auto;
@@ -177,6 +194,45 @@ body {
   flex-direction: column;
   gap: calc(var(--space) / 1.5);
   flex-shrink: 0;
+}
+
+#pasted-image-preview-container {
+  position: relative;
+  width: fit-content;
+  max-width: 120px;
+  margin-bottom: 4px;
+  background-color: var(--gray-50);
+  border: 1px solid var(--input-border-color);
+  border-radius: var(--radius);
+  padding: 4px;
+}
+
+#pasted-image-preview {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 80px;
+  object-fit: contain;
+  border-radius: calc(var(--radius) - 2px);
+}
+
+#pasted-image-preview-container #remove-pasted-image-button {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  background-color: var(--gray-700);
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+  line-height: 1;
+  padding: 0;
+  z-index: 10;
+}
+
+#pasted-image-preview-container #remove-pasted-image-button:hover {
+  background-color: #c82333;
 }
 
 #user-input {

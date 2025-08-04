@@ -29,7 +29,10 @@ class AIScreenReader {
             clearButton: document.getElementById('clear-button'),
             localModeButton: document.getElementById('local-mode-button'),
             cloudModeButton: document.getElementById('cloud-mode-button'),
-            currentModeIndicator: document.getElementById('current-mode-indicator')
+            currentModeIndicator: document.getElementById('current-mode-indicator'),
+            pastedImagePreviewContainer: document.getElementById('pasted-image-preview-container'),
+            pastedImagePreview: document.getElementById('pasted-image-preview'),
+            removePastedImageButton: document.getElementById('remove-pasted-image-button')
         };
 
         this.uiManager = new UIManager(this.elements);
@@ -220,12 +223,13 @@ class AIScreenReader {
             'clearButton': this.handleClear,
             'localModeButton': () => this.handleModeChange('local'),
             'cloudModeButton': () => this.handleModeChange('cloud'),
+            'removePastedImageButton': this.handleRemovePastedImage.bind(this)
         };
         Object.entries(eventHandlers).forEach(([elementId, handler]) => {
             const element = this.elements[elementId];
             if (element) {
                 element.addEventListener('click', async (event) => {
-                    if (this.stateManager.isProcessing() && elementId !== 'clearButton') {
+                    if (this.stateManager.isProcessing() && !['clearButton', 'removePastedImageButton'].includes(elementId)) {
                         this.appendMessage('system', 'Processing, please wait...');
                         return;
                     }
@@ -244,9 +248,36 @@ class AIScreenReader {
             else { console.warn(`Element with ID '${elementId}' not found for event listener.`); }
         });
         if (this.elements.userInput) {
+            this.elements.userInput.addEventListener('paste', this.handlePaste.bind(this));
             this.elements.userInput.addEventListener('input', () => this.uiManager.updateInputState(this.elements.userInput.value));
             this.elements.userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.voiceController.stopSpeaking(); this.handleSendMessage(); } });
         } else { console.error("User input element not found!"); }
+    }
+
+    handlePaste(event) {
+        if (this.stateManager.isProcessing()) return;
+        const items = event.clipboardData.files;
+        const imageFile = Array.from(items).find(file => file.type.startsWith('image/'));
+
+        if (imageFile) {
+            event.preventDefault();
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const dataUrl = e.target.result;
+                const mimeType = imageFile.type;
+                this.stateManager.updateLastImageData(dataUrl, mimeType);
+                this.uiManager.showPastedImagePreview(dataUrl);
+            };
+            reader.onerror = (error) => {
+                this.handleError("Failed to read pasted image", error);
+            };
+            reader.readAsDataURL(imageFile);
+        }
+    }
+
+    handleRemovePastedImage() {
+        this.stateManager.clearLastImageData();
+        this.uiManager.hidePastedImagePreview();
     }
 
     async handleModeChange(newMode) {
@@ -271,25 +302,37 @@ class AIScreenReader {
     async handleSendMessage() {
         this.voiceController.stopSpeaking();
         const userInput = this.elements.userInput.value.trim();
+        const state = this.stateManager.getState();
+        const hasImage = !!state.lastImageData.dataUrl;
+
         if (userInput.toLowerCase() === 'clear') {
             this.handleClear();
             return;
         }
-        if (!userInput) { return; }
+        if (!userInput && !hasImage) { return; }
         if (!this.stateManager.isSettingsLoaded()) { this.appendMessage('system', 'Initializing, please wait...'); return; }
         if (this.stateManager.isProcessing()) { this.appendMessage('system', 'Processing, please wait...'); return; }
-        const state = this.stateManager.getState();
+
         if (state.activeApiMode === 'local' && !this.configValidator.isLocalModeConfigValid()) return;
         if (state.activeApiMode === 'cloud' && !this.configValidator.isCloudModeConfigValid()) return;
 
         this.setProcessing(true);
         this.voiceController.playSendSound();
-        this.appendMessage('user', userInput);
+
+        await this.uiManager.appendUserMessageWithImage({
+            text: userInput,
+            imageUrl: hasImage ? state.lastImageData.dataUrl : null
+        });
+
+        if (userInput) {
+            this.stateManager.addMessage({ role: 'user', content: userInput });
+        }
+
         this.uiManager.clearUserInput();
+        this.uiManager.hidePastedImagePreview();
         this.uiManager.showThinkingIndicator();
 
         let imageDataToSend = null;
-        let mimeTypeToSend = null;
 
         const prompts = this.stateManager.getPrompts();
         const activePromptKey = prompts.active_system_prompt_key || 'web_assistant';
@@ -299,11 +342,10 @@ class AIScreenReader {
 
         if (lastImageData.dataUrl) {
             imageDataToSend = lastImageData.dataUrl;
-            mimeTypeToSend = lastImageData.mimeType;
         }
 
         try {
-            const payload = { prompt: userInput };
+            const payload = { prompt: userInput || "Analyze the image." };
             const apiConfig = this.getApiConfig();
             const historyToSend = this.getHistoryToSend();
 
@@ -314,12 +356,14 @@ class AIScreenReader {
                 imageDataToSend,
                 systemPrompt
             );
+            this.stateManager.clearLastImageData();
             await this.handleResponse(responseContent);
 
         } catch (error) {
             this.handleError('Message sending failed', error);
             if (this.stateManager.isProcessing()) {
                 this.setProcessing(false);
+                this.stateManager.clearLastImageData();
             }
         }
     }
@@ -426,7 +470,7 @@ class AIScreenReader {
         this.uiManager.clearConversation();
         this.uiManager.clearUserInput();
         this.stateManager.clearMessages();
-        this.stateManager.clearLastImageData();
+        this.handleRemovePastedImage();
         this.voiceController.speakText('Conversation cleared.');
         this.setProcessing(false);
         if (this.elements.userInput) {
