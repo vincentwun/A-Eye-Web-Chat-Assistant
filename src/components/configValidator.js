@@ -24,9 +24,7 @@ export class ConfigValidator {
     }
 
     _isGeminiConfigValid(state) {
-        const method = state.cloudApiMethod;
-        const isDirect = method === 'direct';
-        const isProxy = method === 'proxy';
+        const isProxy = state.cloudApiMethod === 'proxy';
         let isValid = true;
         let speakMsg = null;
 
@@ -40,12 +38,6 @@ export class ConfigValidator {
             const msg = 'Gemini Model Name is missing. Please configure in Options page.';
             if (isValid) this.appendMessage('system', msg);
             if (isValid) speakMsg = 'Gemini settings missing: Model Name.';
-            isValid = false;
-        }
-        if (isDirect && !state.cloudApiUrl) {
-            const msg = 'Gemini API Base URL is missing for Direct Connection. Please configure in Options page.';
-            if (isValid) this.appendMessage('system', msg);
-            if (isValid) speakMsg = 'Gemini settings missing: Base URL for Direct mode.';
             isValid = false;
         }
         if (isProxy && !state.cloudProxyUrl) {

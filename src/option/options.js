@@ -14,6 +14,19 @@ function saveOptions() {
         [promptsStorageKey]: {},
         [voiceSettingsStorageKey]: {}
     };
+    
+    const selectedCloudService = document.querySelector('input[name="cloudSelection"]:checked').value;
+    const settingsUpdate = keysToUpdate[settingsStorageKey];
+    
+    if (selectedCloudService === 'mistral') {
+        settingsUpdate.cloudProvider = 'mistral';
+    } else if (selectedCloudService === 'gateway') {
+        settingsUpdate.cloudProvider = 'gemini';
+        settingsUpdate.cloudApiMethod = 'proxy';
+    } else {
+        settingsUpdate.cloudProvider = 'gemini';
+        settingsUpdate.cloudApiMethod = 'direct';
+    }
 
     elementsToSave.forEach(el => {
         const storageKey = el.dataset.storageKey;
@@ -26,13 +39,7 @@ function saveOptions() {
         else if (storageType === 'voice') storageAreaKey = voiceSettingsStorageKey;
         else return;
 
-        if (el.type === 'radio') {
-            if (!el.checked) return;
-            value = el.value;
-        } else {
-            value = el.type === 'checkbox' ? el.checked : el.value;
-        }
-
+        value = el.type === 'checkbox' ? el.checked : el.value;
         keysToUpdate[storageAreaKey][storageKey] = value;
     });
 
@@ -73,54 +80,39 @@ function saveOptions() {
                 showNotification('Settings Saved!');
                 currentVoiceSettings = finalData[voiceSettingsStorageKey];
                 currentPrompts = finalData[promptsStorageKey];
-                updateCloudUrlVisibility();
-                updateCloudProviderVisibility();
+                updateCloudConfigVisibility();
             }
         });
     });
 }
 
-function updateCloudUrlVisibility() {
-    const directMethodRadio = document.getElementById('cloud-method-direct');
-    const proxyMethodRadio = document.getElementById('cloud-method-proxy');
-    const directUrlContainer = document.getElementById('direct-url-container');
+function updateCloudConfigVisibility() {
+    const selectedService = document.querySelector('input[name="cloudSelection"]:checked').value;
+
     const proxyUrlContainer = document.getElementById('proxy-url-container');
+    const geminiApiKeyContainer = document.getElementById('gemini-api-key-container');
+    const geminiModelContainer = document.getElementById('gemini-model-container');
+    const mistralApiKeyContainer = document.getElementById('mistral-api-key-container');
+    const mistralModelContainer = document.getElementById('mistral-model-container');
 
-    if (!directMethodRadio || !proxyMethodRadio || !directUrlContainer || !proxyUrlContainer) {
-        return;
-    }
-
-    if (directMethodRadio.checked) {
-        directUrlContainer.classList.remove('hidden');
-        proxyUrlContainer.classList.add('hidden');
-    } else if (proxyMethodRadio.checked) {
-        directUrlContainer.classList.add('hidden');
+    proxyUrlContainer.classList.add('hidden');
+    geminiApiKeyContainer.classList.add('hidden');
+    geminiModelContainer.classList.add('hidden');
+    mistralApiKeyContainer.classList.add('hidden');
+    mistralModelContainer.classList.add('hidden');
+    
+    if (selectedService === 'gemini') {
+        geminiApiKeyContainer.classList.remove('hidden');
+        geminiModelContainer.classList.remove('hidden');
+    } else if (selectedService === 'gateway') {
         proxyUrlContainer.classList.remove('hidden');
-    } else {
-        directUrlContainer.classList.remove('hidden');
-        proxyUrlContainer.classList.add('hidden');
+        geminiApiKeyContainer.classList.remove('hidden');
+        geminiModelContainer.classList.remove('hidden');
+    } else if (selectedService === 'mistral') {
+        mistralApiKeyContainer.classList.remove('hidden');
+        mistralModelContainer.classList.remove('hidden');
     }
 }
-
-function updateCloudProviderVisibility() {
-    const geminiRadio = document.getElementById('provider-gemini');
-    const mistralRadio = document.getElementById('provider-mistral');
-    const geminiContainer = document.getElementById('gemini-settings-container');
-    const mistralContainer = document.getElementById('mistral-settings-container');
-
-    if (!geminiRadio || !mistralRadio || !geminiContainer || !mistralContainer) {
-        return;
-    }
-
-    if (geminiRadio.checked) {
-        geminiContainer.classList.remove('hidden');
-        mistralContainer.classList.add('hidden');
-    } else if (mistralRadio.checked) {
-        geminiContainer.classList.add('hidden');
-        mistralContainer.classList.remove('hidden');
-    }
-}
-
 
 function showNotification(message, isError = false) {
     if (!notificationBar) return;
@@ -217,7 +209,6 @@ function loadOptions() {
     const elements = {
         localUrlInput: document.getElementById('local-url-input'),
         localModelSelect: document.getElementById('local-model-name-select'),
-        cloudApiUrlInput: document.getElementById('cloud-api-url-input'),
         cloudProxyUrlInput: document.getElementById('cloud-proxy-url-input'),
         cloudApiKeyInput: document.getElementById('cloud-api-key-input'),
         cloudModelNameInput: document.getElementById('cloud-model-name-input'),
@@ -226,10 +217,9 @@ function loadOptions() {
         systemPromptTextarea: document.getElementById('system_prompt'),
         roleSelect: document.getElementById('role-select'),
         sttSelect: document.getElementById('stt-language-select'),
-        directRadio: document.getElementById('cloud-method-direct'),
-        proxyRadio: document.getElementById('cloud-method-proxy'),
-        geminiProviderRadio: document.getElementById('provider-gemini'),
-        mistralProviderRadio: document.getElementById('provider-mistral')
+        geminiRadio: document.getElementById('cloud-select-gemini'),
+        gatewayRadio: document.getElementById('cloud-select-gateway'),
+        mistralRadio: document.getElementById('cloud-select-mistral')
     };
 
     chrome.storage.local.get([promptsStorageKey, settingsStorageKey, voiceSettingsStorageKey], (result) => {
@@ -263,16 +253,14 @@ function loadOptions() {
             elements.localModelSelect.value = availableModels.includes(savedLocalModel) ? savedLocalModel : defaultApiSettings.ollamaMultimodalModel;
         }
 
-        const savedCloudProvider = savedApiSettings.cloudProvider ?? defaultApiSettings.cloudProvider;
-        if (elements.geminiProviderRadio && elements.mistralProviderRadio) {
-            if (savedCloudProvider === 'mistral') {
-                elements.mistralProviderRadio.checked = true;
-            } else {
-                elements.geminiProviderRadio.checked = true;
-            }
+        if (savedApiSettings.cloudProvider === 'mistral') {
+            elements.mistralRadio.checked = true;
+        } else if (savedApiSettings.cloudApiMethod === 'proxy') {
+            elements.gatewayRadio.checked = true;
+        } else {
+            elements.geminiRadio.checked = true;
         }
         
-        if (elements.cloudApiUrlInput) elements.cloudApiUrlInput.value = savedApiSettings.cloudApiUrl ?? defaultApiSettings.cloudApiUrl;
         if (elements.cloudProxyUrlInput) elements.cloudProxyUrlInput.value = savedApiSettings.cloudProxyUrl ?? defaultApiSettings.cloudProxyUrl;
         if (elements.cloudApiKeyInput) elements.cloudApiKeyInput.value = savedApiSettings.cloudApiKey ?? defaultApiSettings.cloudApiKey;
         if (elements.cloudModelNameInput) elements.cloudModelNameInput.value = savedApiSettings.cloudModelName ?? defaultApiSettings.cloudModelName;
@@ -280,23 +268,13 @@ function loadOptions() {
         if (elements.mistralApiKeyInput) elements.mistralApiKeyInput.value = savedApiSettings.mistralApiKey ?? defaultApiSettings.mistralApiKey;
         if (elements.mistralModelSelect) elements.mistralModelSelect.value = savedApiSettings.mistralModelName ?? defaultApiSettings.mistralModelName;
 
-        const savedMethod = savedApiSettings.cloudApiMethod ?? defaultApiSettings.cloudApiMethod;
-        if (elements.directRadio && elements.proxyRadio) {
-            if (savedMethod === 'proxy') {
-                elements.proxyRadio.checked = true;
-            } else {
-                elements.directRadio.checked = true;
-            }
-        }
-
         if (elements.roleSelect && elements.systemPromptTextarea) {
             const activeKey = currentPrompts.active_system_prompt_key || 'web_assistant';
             elements.roleSelect.value = activeKey;
             elements.systemPromptTextarea.value = currentPrompts.system_prompt[activeKey] || defaultPrompts.system_prompt[activeKey];
         }
-
-        updateCloudUrlVisibility();
-        updateCloudProviderVisibility();
+        
+        updateCloudConfigVisibility();
     });
 }
 
@@ -316,8 +294,6 @@ function resetToDefaults() {
                 cloudApiKey: preservedApiKey,
                 cloudProxyUrl: preservedProxyUrl,
                 mistralApiKey: preservedMistralApiKey,
-                cloudProvider: 'gemini',
-                cloudApiMethod: 'direct'
             },
             [promptsStorageKey]: { ...defaultPrompts }
         };
@@ -361,14 +337,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    const providerRadios = document.querySelectorAll('input[name="cloudProvider"]');
-    providerRadios.forEach(radio => {
-        radio.addEventListener('change', updateCloudProviderVisibility);
-    });
-
-    const geminiMethodRadios = document.querySelectorAll('input[name="cloudApiMethod"]');
-    geminiMethodRadios.forEach(radio => {
-        radio.addEventListener('change', updateCloudUrlVisibility);
+    const cloudSelectionRadios = document.querySelectorAll('input[name="cloudSelection"]');
+    cloudSelectionRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            updateCloudConfigVisibility();
+            saveOptions();
+        });
     });
 
     const systemPromptTextarea = document.getElementById('system_prompt');

@@ -19,8 +19,7 @@ export async function sendGeminiRequest(
     headers['x-api-key'] = apiKey;
     headers['X-Model-Name'] = modelToUse;
   } else {
-    if (!apiConfig.cloudApiUrl) throw new Error('Cloud API Base URL not configured for direct method.');
-    const cloudBaseUrl = apiConfig.cloudApiUrl.endsWith('/') ? apiConfig.cloudApiUrl : apiConfig.cloudApiUrl + '/';
+    const cloudBaseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/';
     const fullApiUrl = `${cloudBaseUrl}${modelToUse}:generateContent`;
     endpoint = `${fullApiUrl}?key=${apiKey}`;
   }

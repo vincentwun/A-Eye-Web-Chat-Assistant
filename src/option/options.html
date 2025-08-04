@@ -64,49 +64,33 @@
     <h2>Cloud AI Settings</h2>
 
     <div>
-        <label>Cloud AI Provider:</label>
+        <label>Cloud Service:</label>
         <div style="margin-top: 5px;">
-            <input type="radio" id="provider-gemini" name="cloudProvider" value="gemini"
-                data-storage-key="cloudProvider" data-storage-type="settings" checked>
-            <label for="provider-gemini" style="display: inline; font-weight: normal; margin-right: 15px;">Gemini</label>
+            <input type="radio" id="cloud-select-gemini" name="cloudSelection" value="gemini" checked>
+            <label for="cloud-select-gemini"
+                style="display: inline; font-weight: normal; margin-right: 15px;">Gemini</label>
 
-            <input type="radio" id="provider-mistral" name="cloudProvider" value="mistral"
-                data-storage-key="cloudProvider" data-storage-type="settings">
-            <label for="provider-mistral" style="display: inline; font-weight: normal;">Mistral</label>
+            <input type="radio" id="cloud-select-gateway" name="cloudSelection" value="gateway">
+            <label for="cloud-select-gateway" style="display: inline; font-weight: normal; margin-right: 15px;">Vertex
+                AI (GCP)</label>
+
+            <input type="radio" id="cloud-select-mistral" name="cloudSelection" value="mistral">
+            <label for="cloud-select-mistral" style="display: inline; font-weight: normal;">Mistral</label>
         </div>
     </div>
 
-    <div id="gemini-settings-container">
-        <h3>Gemini Settings</h3>
-        <div>
-            <label>Connection Method:</label>
-            <div style="margin-top: 5px;">
-                <input type="radio" id="cloud-method-direct" name="cloudApiMethod" value="direct"
-                    data-storage-key="cloudApiMethod" data-storage-type="settings" checked>
-                <label for="cloud-method-direct" style="display: inline; font-weight: normal; margin-right: 15px;">Use
-                    Default Gemini URL</label>
-
-                <input type="radio" id="cloud-method-proxy" name="cloudApiMethod" value="proxy"
-                    data-storage-key="cloudApiMethod" data-storage-type="settings">
-                <label for="cloud-method-proxy" style="display: inline; font-weight: normal;">Use API Gateway</label>
-            </div>
-        </div>
-        <div id="direct-url-container">
-            <label for="cloud-api-url-input">Default Gemini URL:</label>
-            <input type="text" id="cloud-api-url-input" data-storage-key="cloudApiUrl" data-storage-type="settings"
-                placeholder="Usually leave as default">
-        </div>
-        <div id="proxy-url-container">
+    <div id="cloud-settings-container">
+        <div id="proxy-url-container" class="hidden">
             <label for="cloud-proxy-url-input">API Gateway Endpoint:</label>
-            <input type="text" id="cloud-proxy-url-input" data-storage-key="cloudProxyUrl"
-                data-storage-type="settings" placeholder="Enter your API Gateway Endpoint here">
+            <input type="text" id="cloud-proxy-url-input" data-storage-key="cloudProxyUrl" data-storage-type="settings"
+                placeholder="Enter your API Gateway Endpoint here">
         </div>
-        <div>
+        <div id="gemini-api-key-container">
             <label for="cloud-api-key-input">Gemini API Key:</label>
             <input type="password" id="cloud-api-key-input" data-storage-key="cloudApiKey" data-storage-type="settings"
                 placeholder="Enter your API Key">
         </div>
-        <div>
+        <div id="gemini-model-container">
             <label for="cloud-model-name-input">Gemini Model Name:</label>
             <select id="cloud-model-name-input" data-storage-key="cloudModelName" data-storage-type="settings">
                 <option value="gemini-2.5-pro">gemini-2.5-pro</option>
@@ -114,22 +98,18 @@
                 <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
             </select>
         </div>
-    </div>
-
-    <div id="mistral-settings-container" class="hidden">
-        <h3>Mistral Settings</h3>
-        <div>
+        <div id="mistral-api-key-container" class="hidden">
             <label for="mistral-api-key-input">Mistral API Key:</label>
             <input type="password" id="mistral-api-key-input" data-storage-key="mistralApiKey"
                 data-storage-type="settings" placeholder="Enter your Mistral API Key">
         </div>
-        <div>
+        <div id="mistral-model-container" class="hidden">
             <label for="mistral-model-name-select">Mistral Model Name:</label>
             <select id="mistral-model-name-select" data-storage-key="mistralModelName" data-storage-type="settings">
-                <option value="pixtral-12b-latest">Pixtral 12B</option>
-                <option value="pixtral-large-latest">Pixtral Large</option>
                 <option value="mistral-medium-latest">Mistral Medium</option>
                 <option value="mistral-small-latest">Mistral Small</option>
+                <option value="pixtral-large-latest">Pixtral Large</option>
+                <option value="pixtral-12b-latest">Pixtral 12B</option>
             </select>
         </div>
     </div>
