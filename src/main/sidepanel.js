@@ -293,20 +293,21 @@ class AIScreenReader {
         this.voiceController.stopSpeaking();
         const userInput = this.elements.userInput.value.trim();
         const state = this.stateManager.getState();
-        const hasImage = !!state.lastImageData.dataUrl;
+        const hasImageContext = !!state.lastImageData.dataUrl;
+        const isPastedImageActive = this.elements.pastedImagePreviewContainer.style.display !== 'none';
 
         if (userInput.toLowerCase() === 'clear') {
             this.handleClear();
             return;
         }
-        if (!userInput && !hasImage) return;
+        if (!userInput && !hasImageContext) return;
 
         this.setProcessing(true);
         this.voiceController.playSendSound();
 
         await this.uiManager.appendUserMessageWithImage({
             text: userInput,
-            imageUrl: hasImage ? state.lastImageData.dataUrl : null
+            imageUrl: isPastedImageActive ? state.lastImageData.dataUrl : null
         });
 
         if (userInput) {
@@ -322,10 +323,14 @@ class AIScreenReader {
                 this.stateManager.getApiConfig(),
                 this.stateManager.getHistoryToSend(),
                 { prompt: userInput || "Analyze the image." },
-                hasImage ? state.lastImageData.dataUrl : null,
+                hasImageContext ? state.lastImageData.dataUrl : null,
                 this.stateManager.getPrompts().system_prompt[this.stateManager.getPrompts().active_system_prompt_key || 'web_assistant']
             );
-            this.stateManager.clearLastImageData();
+
+            if (isPastedImageActive) {
+                this.stateManager.clearLastImageData();
+            }
+
             await this.handleResponse(responseContent);
         } catch (error) {
             this.handleError('Message sending failed', error);
