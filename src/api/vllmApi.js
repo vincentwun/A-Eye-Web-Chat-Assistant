@@ -27,14 +27,14 @@ export async function sendVllmRequest(apiConfig, standardMessages) {
     const apiUrl = apiConfig.localApiUrl;
     const model = apiConfig.vllmModelName;
 
-    if (!apiUrl) throw new Error('VLLM Server URL is not set.');
-    if (!model) throw new Error('VLLM model name is not set.');
+    if (!apiUrl) throw new Error('vLLM Server URL is not set.');
+    if (!model) throw new Error('vLLM model name is not set.');
 
     let endpoint;
     try {
         endpoint = new URL('/v1/chat/completions', apiUrl).toString();
     } catch (e) {
-        throw new Error(`Invalid VLLM Server URL provided: ${apiUrl}`);
+        throw new Error(`Invalid vLLM Server URL provided: ${apiUrl}`);
     }
 
     const headers = { 'Content-Type': 'application/json' };
@@ -42,7 +42,7 @@ export async function sendVllmRequest(apiConfig, standardMessages) {
     const formattedMessages = formatMessagesForVllm(standardMessages);
     
     if (formattedMessages.length === 0) {
-        throw new Error("Cannot send an empty request to VLLM.");
+        throw new Error("Cannot send an empty request to vLLM.");
     }
 
     const body = JSON.stringify({
@@ -80,7 +80,7 @@ export async function sendVllmRequest(apiConfig, standardMessages) {
             return data.choices[0].message.content;
         }
 
-        return 'Error: Could not parse VLLM response.';
+        return 'Error: Could not parse vLLM response.';
 
     } catch (error) {
         throw error;

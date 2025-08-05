@@ -150,7 +150,7 @@ class AIScreenReader {
                 await handler.call(this, event);
             } catch (error) {
                 console.error(`Error in guarded action for ${handler.name}:`, error);
-                this.handleError(`Action failed`, error);
+                this.handleError('Action failed', error);
             }
         };
     }
@@ -164,8 +164,8 @@ class AIScreenReader {
             'sendButton': this._withActionGuards(this.handleSendMessage),
             'voiceButton': this._withActionGuards(this.voiceController.toggleVoiceInput.bind(this.voiceController)),
             'repeatButton': this._withActionGuards(this.handleRepeat, { checkConfig: false }),
-            'localModeButton': this._withActionGuards(() => this.handleModeChange('local')),
-            'cloudModeButton': this._withActionGuards(() => this.handleModeChange('cloud')),
+            'localModeButton': this._withActionGuards(() => this.handleModeChange('local'), { checkConfig: false }),
+            'cloudModeButton': this._withActionGuards(() => this.handleModeChange('cloud'), { checkConfig: false }),
             'clearButton': this._withActionGuards(this.handleClear, { ignoreProcessing: true, checkConfig: false }),
             'removePastedImageButton': (event) => this.handleRemovePastedImage(event),
             'openOptionsButton': () => this.handleOpenOptions()
@@ -208,7 +208,8 @@ class AIScreenReader {
 
             const handler = messageHandlers[request.type];
             if (handler) {
-                if (!this._canPerformAction()) {
+                const needsConfigCheck = request.type !== 'toggleApiMode' && request.type !== 'toggleRepeat';
+                if (!this._canPerformAction({ checkConfig: needsConfigCheck })) {
                     sendResponse({ success: false, error: 'Cannot perform action right now' });
                     return true;
                 }
@@ -224,6 +225,7 @@ class AIScreenReader {
             return false;
         });
     }
+
 
     onStateChange(changes) {
         if (changes.settingsChanged) {
@@ -344,9 +346,9 @@ class AIScreenReader {
     appendMessage(role, content, isSilent = false) {
         if (!content || (typeof content === 'string' && !content.trim())) return;
         if (!isSilent) {
-            const htmlContent = (role === 'assistant')
-                ? DOMPurify.sanitize(marked.parse(content))
-                : this.uiManager.escapeHTML(String(content));
+            const htmlContent = (role === 'assistant') ?
+                DOMPurify.sanitize(marked.parse(content)) :
+                this.uiManager.escapeHTML(String(content));
             this.uiManager.appendMessage(role, htmlContent);
         }
         if (role !== 'system') {
@@ -356,7 +358,7 @@ class AIScreenReader {
 
     async _speakResponse(text) {
         if (!text || typeof text !== 'string' || !text.trim()) return;
-        const cleanedText = text.replace(/-{3,}/g, ' ').replace(/`/g, ' ').replace(/\^/g, ' ');
+        const cleanedText = text.replace(/-{3,}/g, ' ').replace(/\*/g, ' ').replace(/\^/g, ' ');
         try {
             this.voiceController.speakText(cleanedText);
         } catch (error) {
@@ -394,7 +396,7 @@ class AIScreenReader {
         this.uiManager.hideThinkingIndicator();
         console.error(message, error);
         let detail = (error instanceof Error) ? error.message : (typeof error === 'string' ? error : JSON.stringify(error));
-        detail = detail.replace(/API Error \(\d+.*?\):\s*/, '').replace(/^Error:\s*/, '');
+        detail = detail.replace(/API Error (\d+\.?):\s/, '').replace(/^Error:\s*/, '');
         const userFriendlyMessage = message || "An unexpected error occurred";
         const errorMessage = detail ? `${userFriendlyMessage}: ${detail}` : userFriendlyMessage;
         this.appendMessage('system', `Error: ${errorMessage}`);
