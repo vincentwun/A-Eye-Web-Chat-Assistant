@@ -58,15 +58,20 @@ async function _sendConversationsRequest(apiConfig, standardMessages) {
         throw new Error("Cannot send empty request to Mistral conversations endpoint.");
     }
 
-    const body = JSON.stringify({
+    const bodyPayload = {
         model: apiConfig.mistralModelName,
         inputs: inputs,
         instructions: systemPrompt,
-        tools: [{ type: "web_search_premium" }],
         completion_args: {
             max_tokens: 4096
         }
-    });
+    };
+
+    if (apiConfig.mistralModelName !== 'pixtral-large-latest') {
+        bodyPayload.tools = [{ type: "web_search_premium" }];
+    }
+
+    const body = JSON.stringify(bodyPayload);
 
     const response = await fetch(endpoint, { method: 'POST', headers, body });
     const data = await response.json();

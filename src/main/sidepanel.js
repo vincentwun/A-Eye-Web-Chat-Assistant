@@ -356,13 +356,9 @@ class AIScreenReader {
 
     async _speakResponse(text) {
         if (!text || typeof text !== 'string' || !text.trim()) return;
-        const cleanedText = text.replace(/-{3,}/g, ' ').replace(/`/g, '');
-        const sentences = cleanedText.split(/[。？！!?]/).map(s => s.trim()).filter(Boolean);
+        const cleanedText = text.replace(/-{3,}/g, ' ').replace(/`/g, ' ').replace(/\^/g, ' ');
         try {
-            const speakMethod = sentences.length > 20
-                ? (txt) => { for (const sentence of sentences) this.voiceController.speakText(sentence); }
-                : (txt) => this.voiceController.speakText(txt);
-            speakMethod(cleanedText);
+            this.voiceController.speakText(cleanedText);
         } catch (error) {
             console.error("Error during speech synthesis:", error);
             this.appendMessage('system', `Error speaking: ${error.message}`);

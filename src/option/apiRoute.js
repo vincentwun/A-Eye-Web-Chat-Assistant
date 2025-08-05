@@ -15,6 +15,6 @@ export const defaultApiSettings = {
   cloudProxyUrl: '',
   gcpApiKey: '',
 
-  mistralModelName: 'mistral-small-latest',
+  mistralModelName: 'mistral-medium-latest',
   mistralApiKey: ''
 };
