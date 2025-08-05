@@ -2,6 +2,7 @@ import { sendOllamaRequest } from './ollamaApi.js';
 import { sendGeminiRequest } from './geminiApi.js';
 import { sendMistralRequest } from './mistralApi.js';
 import { sendLmstudioRequest } from './lmstudioApi.js';
+import { sendVllmRequest } from './vllmApi.js';
 
 const MAX_HISTORY_MESSAGES = 10;
 
@@ -93,8 +94,10 @@ export class ApiService {
                         return await sendOllamaRequest(apiConfig, standardMessages);
                     case 'lmstudio':
                         return await sendLmstudioRequest(apiConfig, standardMessages);
+                    case 'vllm':
+                        return await sendVllmRequest(apiConfig, standardMessages);
                     default:
-                        return await sendOllamaRequest(apiConfig, standardMessages);
+                        throw new Error(`Unsupported local API mode: ${apiConfig.localApiMode}`);
                 }
             } else if (apiConfig.activeApiMode === 'cloud') {
                 if (apiConfig.cloudProvider === 'mistral') {

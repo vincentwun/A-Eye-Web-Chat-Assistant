@@ -46,6 +46,19 @@ function saveOptions() {
         keysToUpdate[storageAreaKey][storageKey] = value;
     });
 
+    const ollamaModelSelect = document.getElementById('ollama-model-name-select');
+    if (ollamaModelSelect && ollamaModelSelect.value === 'custom') {
+        const customInput = document.getElementById('custom-ollama-model-input');
+        keysToUpdate[settingsStorageKey].localMultimodalModel = customInput.value;
+    }
+
+    const lmstudioModelSelect = document.getElementById('lmstudio-model-name-select');
+    if (lmstudioModelSelect && lmstudioModelSelect.value === 'custom') {
+        const customInput = document.getElementById('custom-lmstudio-model-input');
+        keysToUpdate[settingsStorageKey].lmstudioModelName = customInput.value;
+    }
+
+
     chrome.storage.local.get(Object.keys(keysToUpdate), (result) => {
         if (chrome.runtime.lastError) {
             return showNotification("Error preparing to save.", true);
@@ -212,7 +225,9 @@ function populateVoiceList() {
                 ttsVoiceSelect.value = defaultEnUsVoice.name;
                 if (!targetVoiceName) {
                     currentVoiceSettings.ttsVoiceName = defaultEnUsVoice.name;
-                    const dataToStore = { [voiceSettingsStorageKey]: currentVoiceSettings };
+                    const dataToStore = {
+                        [voiceSettingsStorageKey]: currentVoiceSettings
+                    };
                     chrome.storage.local.set(dataToStore);
                 }
             } else {
@@ -230,13 +245,29 @@ function populateVoiceList() {
     }
 }
 
+function handleCustomModelSelection(selectElement, customContainer, customInput, savedModelValue) {
+    const isCustom = ![...selectElement.options].some(opt => opt.value === savedModelValue && opt.value !== 'custom');
+    if (isCustom) {
+        selectElement.value = 'custom';
+        customInput.value = savedModelValue;
+        customContainer.classList.remove('hidden');
+    } else {
+        selectElement.value = savedModelValue;
+        customContainer.classList.add('hidden');
+    }
+}
+
 function loadOptions() {
     populateSttLanguageDropdown();
 
     const elements = {
         vllmUrlInput: document.getElementById('vllm-url-input'),
         ollamaModelSelect: document.getElementById('ollama-model-name-select'),
+        customOllamaModelContainer: document.getElementById('custom-ollama-model-container'),
+        customOllamaModelInput: document.getElementById('custom-ollama-model-input'),
         lmstudioModelSelect: document.getElementById('lmstudio-model-name-select'),
+        customLmstudioModelContainer: document.getElementById('custom-lmstudio-model-container'),
+        customLmstudioModelInput: document.getElementById('custom-lmstudio-model-input'),
         vllmModelInput: document.getElementById('vllm-model-name-input'),
 
         cloudProxyUrlInput: document.getElementById('cloud-proxy-url-input'),
@@ -255,20 +286,32 @@ function loadOptions() {
             return showNotification("Error loading settings: " + chrome.runtime.lastError.message, true);
         }
 
-        const savedApiSettings = result[settingsStorageKey] || { ...defaultApiSettings };
+        const savedApiSettings = result[settingsStorageKey] || {
+            ...defaultApiSettings
+        };
         let savedVoiceSettings = result[voiceSettingsStorageKey];
-        currentPrompts = result[promptsStorageKey] || { ...defaultPrompts };
+        currentPrompts = result[promptsStorageKey] || {
+            ...defaultPrompts
+        };
 
         if (!savedVoiceSettings || typeof savedVoiceSettings.sttLanguage === 'undefined' || typeof savedVoiceSettings.ttsVoiceName === 'undefined') {
-            currentVoiceSettings = { sttLanguage: 'en-US', ttsVoiceName: '', ttsLanguage: 'en-US' };
-            chrome.storage.local.set({ [voiceSettingsStorageKey]: currentVoiceSettings }, () => {
+            currentVoiceSettings = {
+                sttLanguage: 'en-US',
+                ttsVoiceName: '',
+                ttsLanguage: 'en-US'
+            };
+            chrome.storage.local.set({
+                [voiceSettingsStorageKey]: currentVoiceSettings
+            }, () => {
                 if (!chrome.runtime.lastError) {
                     if (elements.sttSelect) elements.sttSelect.value = currentVoiceSettings.sttLanguage;
                     populateVoiceList();
                 }
             });
         } else {
-            currentVoiceSettings = { ...savedVoiceSettings };
+            currentVoiceSettings = {
+                ...savedVoiceSettings
+            };
             if (elements.sttSelect) elements.sttSelect.value = currentVoiceSettings.sttLanguage;
             populateVoiceList();
         }
@@ -279,13 +322,20 @@ function loadOptions() {
 
         if (elements.vllmUrlInput) elements.vllmUrlInput.value = savedApiSettings.localApiUrl ?? defaultApiSettings.localApiUrl;
 
-        if (elements.ollamaModelSelect) {
-            const savedOllamaModel = savedApiSettings.localMultimodalModel ?? defaultApiSettings.localMultimodalModel;
-            elements.ollamaModelSelect.value = savedOllamaModel;
-        }
-        if (elements.lmstudioModelSelect) {
-            elements.lmstudioModelSelect.value = savedApiSettings.lmstudioModelName ?? defaultApiSettings.lmstudioModelName;
-        }
+        handleCustomModelSelection(
+            elements.ollamaModelSelect,
+            elements.customOllamaModelContainer,
+            elements.customOllamaModelInput,
+            savedApiSettings.localMultimodalModel ?? defaultApiSettings.localMultimodalModel
+        );
+
+        handleCustomModelSelection(
+            elements.lmstudioModelSelect,
+            elements.customLmstudioModelContainer,
+            elements.customLmstudioModelInput,
+            savedApiSettings.lmstudioModelName ?? defaultApiSettings.lmstudioModelName
+        );
+
         if (elements.vllmModelInput) {
             elements.vllmModelInput.value = savedApiSettings.vllmModelName ?? defaultApiSettings.vllmModelName;
         }
@@ -340,7 +390,9 @@ function resetToDefaults() {
                 cloudProxyUrl: preservedProxyUrl,
                 mistralApiKey: preservedMistralApiKey,
             },
-            [promptsStorageKey]: { ...defaultPrompts }
+            [promptsStorageKey]: {
+                ...defaultPrompts
+            }
         };
 
         chrome.storage.local.set(settingsToReset, () => {
@@ -382,6 +434,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    const ollamaModelSelect = document.getElementById('ollama-model-name-select');
+    const customOllamaContainer = document.getElementById('custom-ollama-model-container');
+    ollamaModelSelect.addEventListener('change', () => {
+        customOllamaContainer.classList.toggle('hidden', ollamaModelSelect.value !== 'custom');
+    });
+
+    const lmstudioModelSelect = document.getElementById('lmstudio-model-name-select');
+    const customLmstudioContainer = document.getElementById('custom-lmstudio-model-container');
+    lmstudioModelSelect.addEventListener('change', () => {
+        customLmstudioContainer.classList.toggle('hidden', lmstudioModelSelect.value !== 'custom');
+    });
+
+    const customOllamaInput = document.getElementById('custom-ollama-model-input');
+    customOllamaInput.addEventListener('blur', saveOptions);
+    const customLmstudioInput = document.getElementById('custom-lmstudio-model-input');
+    customLmstudioInput.addEventListener('blur', saveOptions);
+
+
     const localApiModeRadios = document.querySelectorAll('input[name="localApiModeSelection"]');
     localApiModeRadios.forEach(radio => {
         radio.addEventListener('change', () => {
@@ -415,4 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (resetButton) resetButton.addEventListener('click', resetToDefaults);
 });
 
-export { promptsStorageKey, defaultPrompts };
+export {
+    promptsStorageKey,
+    defaultPrompts
+};
