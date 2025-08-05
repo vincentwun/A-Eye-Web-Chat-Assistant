@@ -181,21 +181,21 @@ button:active {
 }
 
 #save-button {
-  background-color: var(--primary-color);
+  background-color: #28a745;
   color: white;
 }
 
 #save-button:hover {
-  background-color: var(--primary-color-hover);
+  background-color: #218838;
 }
 
 #reset-button {
-  background-color: #6c757d;
+  background-color: var(--danger-color);
   color: white;
 }
 
 #reset-button:hover {
-  background-color: #5a6268;
+  background-color: var(--danger-color-hover);
 }
 
 .hidden {
