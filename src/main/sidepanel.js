@@ -412,12 +412,12 @@ class AIScreenReader {
 
     handleClear() {
         this.voiceController.stopSpeaking();
+        this.voiceController.speakText('Conversation cleared.');
         this.uiManager.hideThinkingIndicator();
         this.uiManager.clearConversation();
         this.uiManager.clearUserInput();
         this.stateManager.clearMessages();
         this.handleRemovePastedImage();
-        this.voiceController.speakText('Conversation cleared.');
         this.setProcessing(false);
         this.elements.userInput?.focus();
     }

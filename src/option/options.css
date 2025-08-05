@@ -81,6 +81,10 @@ h2 {
   margin-bottom: 20px;
 }
 
+#cloud-settings-container>div:not(:last-child) {
+  margin-bottom: 20px;
+}
+
 label {
   display: block;
   font-weight: 500;

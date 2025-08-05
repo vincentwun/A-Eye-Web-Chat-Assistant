@@ -8,13 +8,15 @@ export class ConfigValidator {
     isLocalModeConfigValid() {
         const state = this.stateManager.getState();
         let isValid = true;
-        if (!state.localApiUrl) {
-            const msg = 'Local API URL is missing. Please configure in Options page.';
+        
+        if (state.localApiMode === 'vllm' && !state.localApiUrl) {
+            const msg = 'VLLM Server URL is missing. Please configure in Options page.';
             this.appendMessage('system', msg);
             this.voiceController.speakText('Local API settings missing.');
             isValid = false;
         }
-        if (!state.ollamaMultimodalModel) {
+
+        if (!state.localMultimodalModel) {
             const msg = 'Local Model Name is missing. Please configure in Options page.';
             if (isValid) this.appendMessage('system', msg);
             if (isValid) this.voiceController.speakText('Local API settings missing.');

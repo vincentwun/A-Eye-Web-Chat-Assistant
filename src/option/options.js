@@ -14,10 +14,13 @@ function saveOptions() {
         [promptsStorageKey]: {},
         [voiceSettingsStorageKey]: {}
     };
-    
-    const selectedCloudService = document.querySelector('input[name="cloudSelection"]:checked').value;
+
     const settingsUpdate = keysToUpdate[settingsStorageKey];
-    
+
+    const selectedLocalService = document.querySelector('input[name="localApiModeSelection"]:checked').value;
+    settingsUpdate.localApiMode = selectedLocalService;
+
+    const selectedCloudService = document.querySelector('input[name="cloudSelection"]:checked').value;
     if (selectedCloudService === 'mistral') {
         settingsUpdate.cloudProvider = 'mistral';
     } else if (selectedCloudService === 'gateway') {
@@ -81,9 +84,22 @@ function saveOptions() {
                 currentVoiceSettings = finalData[voiceSettingsStorageKey];
                 currentPrompts = finalData[promptsStorageKey];
                 updateCloudConfigVisibility();
+                updateLocalConfigVisibility();
             }
         });
     });
+}
+
+function updateLocalConfigVisibility() {
+    const modeSelect = document.querySelector('input[name="localApiModeSelection"]:checked');
+    const urlContainer = document.getElementById('local-url-container');
+    if (!modeSelect || !urlContainer) return;
+
+    if (modeSelect.value === 'vllm') {
+        urlContainer.classList.remove('hidden');
+    } else {
+        urlContainer.classList.add('hidden');
+    }
 }
 
 function updateCloudConfigVisibility() {
@@ -216,10 +232,7 @@ function loadOptions() {
         mistralModelSelect: document.getElementById('mistral-model-name-select'),
         systemPromptTextarea: document.getElementById('system_prompt'),
         roleSelect: document.getElementById('role-select'),
-        sttSelect: document.getElementById('stt-language-select'),
-        geminiRadio: document.getElementById('cloud-select-gemini'),
-        gatewayRadio: document.getElementById('cloud-select-gateway'),
-        mistralRadio: document.getElementById('cloud-select-mistral')
+        sttSelect: document.getElementById('stt-language-select')
     };
 
     chrome.storage.local.get([promptsStorageKey, settingsStorageKey, voiceSettingsStorageKey], (result) => {
@@ -245,27 +258,35 @@ function loadOptions() {
             populateVoiceList();
         }
 
+        const savedLocalMode = savedApiSettings.localApiMode ?? defaultApiSettings.localApiMode;
+        const localRadio = document.querySelector(`input[name="localApiModeSelection"][value="${savedLocalMode}"]`);
+        if (localRadio) localRadio.checked = true;
+
         if (elements.localUrlInput) elements.localUrlInput.value = savedApiSettings.localApiUrl ?? defaultApiSettings.localApiUrl;
 
         if (elements.localModelSelect) {
-            const savedLocalModel = savedApiSettings.ollamaMultimodalModel ?? defaultApiSettings.ollamaMultimodalModel;
+            const savedLocalModel = savedApiSettings.localMultimodalModel ?? defaultApiSettings.localMultimodalModel;
             const availableModels = Array.from(elements.localModelSelect.options).map(option => option.value);
-            elements.localModelSelect.value = availableModels.includes(savedLocalModel) ? savedLocalModel : defaultApiSettings.ollamaMultimodalModel;
+            elements.localModelSelect.value = availableModels.includes(savedLocalModel) ? savedLocalModel : defaultApiSettings.localMultimodalModel;
         }
 
-        if (savedApiSettings.cloudProvider === 'mistral') {
-            elements.mistralRadio.checked = true;
-        } else if (savedApiSettings.cloudApiMethod === 'proxy') {
-            elements.gatewayRadio.checked = true;
+        const savedCloudProvider = savedApiSettings.cloudProvider ?? defaultApiSettings.cloudProvider;
+        const savedCloudMethod = savedApiSettings.cloudApiMethod ?? defaultApiSettings.cloudApiMethod;
+        let cloudRadio;
+        if (savedCloudProvider === 'mistral') {
+            cloudRadio = document.getElementById('cloud-select-mistral');
+        } else if (savedCloudMethod === 'proxy') {
+            cloudRadio = document.getElementById('cloud-select-gateway');
         } else {
-            elements.geminiRadio.checked = true;
+            cloudRadio = document.getElementById('cloud-select-gemini');
         }
-        
+        if (cloudRadio) cloudRadio.checked = true;
+
         if (elements.cloudProxyUrlInput) elements.cloudProxyUrlInput.value = savedApiSettings.cloudProxyUrl ?? defaultApiSettings.cloudProxyUrl;
         if (elements.cloudApiKeyInput) elements.cloudApiKeyInput.value = savedApiSettings.cloudApiKey ?? defaultApiSettings.cloudApiKey;
         if (elements.gcpApiKeyInput) elements.gcpApiKeyInput.value = savedApiSettings.gcpApiKey ?? defaultApiSettings.gcpApiKey;
         if (elements.cloudModelNameInput) elements.cloudModelNameInput.value = savedApiSettings.cloudModelName ?? defaultApiSettings.cloudModelName;
-        
+
         if (elements.mistralApiKeyInput) elements.mistralApiKeyInput.value = savedApiSettings.mistralApiKey ?? defaultApiSettings.mistralApiKey;
         if (elements.mistralModelSelect) elements.mistralModelSelect.value = savedApiSettings.mistralModelName ?? defaultApiSettings.mistralModelName;
 
@@ -274,8 +295,9 @@ function loadOptions() {
             elements.roleSelect.value = activeKey;
             elements.systemPromptTextarea.value = currentPrompts.system_prompt[activeKey] || defaultPrompts.system_prompt[activeKey];
         }
-        
+
         updateCloudConfigVisibility();
+        updateLocalConfigVisibility();
     });
 }
 
@@ -338,6 +360,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
+    });
+
+    const localApiModeRadios = document.querySelectorAll('input[name="localApiModeSelection"]');
+    localApiModeRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            updateLocalConfigVisibility();
+            saveOptions();
+        });
     });
 
     const cloudSelectionRadios = document.querySelectorAll('input[name="cloudSelection"]');

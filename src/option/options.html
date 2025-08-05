@@ -17,13 +17,26 @@
         <div class="card">
             <h2>Local AI Settings</h2>
             <div>
-                <label for="local-url-input">Local Server URL</label>
+                <label>Local AI Service</label>
+                <div class="segmented-control">
+                    <input type="radio" id="local-select-ollama" name="localApiModeSelection" value="ollama" checked>
+                    <label for="local-select-ollama">Ollama</label>
+
+                    <input type="radio" id="local-select-lmstudio" name="localApiModeSelection" value="lmstudio">
+                    <label for="local-select-lmstudio">LM Studio (Coming Soon)</label>
+
+                    <input type="radio" id="local-select-vllm" name="localApiModeSelection" value="vllm">
+                    <label for="local-select-vllm">VLLM (Coming Soon)</label>
+                </div>
+            </div>
+            <div id="local-url-container" class="hidden">
+                <label for="local-url-input">VLLM Server URL</label>
                 <input type="text" id="local-url-input" data-storage-key="localApiUrl" data-storage-type="settings"
-                    placeholder="e.g., http://localhost:11434">
+                    placeholder="e.g., http://localhost:8000">
             </div>
             <div>
                 <label for="local-model-name-select">Local Model Name</label>
-                <select id="local-model-name-select" data-storage-key="ollamaMultimodalModel"
+                <select id="local-model-name-select" data-storage-key="localMultimodalModel"
                     data-storage-type="settings">
                     <optgroup label="Gemma">
                         <option value="gemma3:4b">gemma3:4b (3.3GB)</option>
@@ -104,12 +117,12 @@
         <div class="card">
             <h2>Voice Settings</h2>
             <div>
-                <label for="stt-language-select">Speech-to-Text Language</label>
+                <label for="stt-language-select">Voice Input Language</label>
                 <select id="stt-language-select" data-storage-key="sttLanguage" data-storage-type="voice">
                 </select>
             </div>
             <div>
-                <label for="tts-voice-select">Text-to-Speech Voice</label>
+                <label for="tts-voice-select">AI Response Voice</label>
                 <select id="tts-voice-select" data-storage-key="ttsVoiceName" data-storage-type="voice">
                     <option value="">Loading voices...</option>
                 </select>

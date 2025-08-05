@@ -3,8 +3,9 @@ export const settingsStorageKey = 'apiSettings';
 export const defaultApiSettings = {
   activeApiMode: 'cloud',
 
-  localApiUrl: 'http://localhost:11434',
-  ollamaMultimodalModel: 'gemma3:4b',
+  localApiMode: 'ollama',
+  localApiUrl: 'http://localhost:8000',
+  localMultimodalModel: 'gemma3:4b',
 
   cloudProvider: 'gemini',
   cloudApiMethod: 'direct',
@@ -14,6 +15,6 @@ export const defaultApiSettings = {
   cloudProxyUrl: '',
   gcpApiKey: '',
 
-  mistralApiKey: '',
-  mistralModelName: 'mistral-small-latest'
+  mistralModelName: 'mistral-small-latest',
+  mistralApiKey: ''
 };

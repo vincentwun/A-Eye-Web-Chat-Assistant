@@ -1,15 +1,18 @@
+const DEFAULT_OLLAMA_URL = 'http://localhost:11434';
+
 export async function sendOllamaRequest(
   apiConfig,
   standardMessages
 ) {
-  if (!apiConfig.localApiUrl) throw new Error('Local Ollama URL is not configured.');
-  if (!apiConfig.ollamaMultimodalModel) throw new Error('Ollama model name is not set.');
+  const apiUrl = DEFAULT_OLLAMA_URL;
+
+  if (!apiConfig.localMultimodalModel) throw new Error('Ollama model name is not set.');
 
   let endpoint;
   try {
-    endpoint = new URL('/api/chat', apiConfig.localApiUrl).toString();
+    endpoint = new URL('/api/chat', apiUrl).toString();
   } catch (e) {
-    throw new Error(`Invalid Local Ollama URL provided: ${apiConfig.localApiUrl}`);
+    throw new Error(`Invalid Ollama URL provided: ${apiUrl}`);
   }
 
   const headers = { 'Content-Type': 'application/json' };
@@ -27,7 +30,7 @@ export async function sendOllamaRequest(
   });
 
   const ollamaPayload = {
-    model: apiConfig.ollamaMultimodalModel,
+    model: apiConfig.localMultimodalModel,
     messages: ollamaMessages,
     stream: false
   };
