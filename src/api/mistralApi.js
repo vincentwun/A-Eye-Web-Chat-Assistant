@@ -62,7 +62,7 @@ async function _sendConversationsRequest(apiConfig, standardMessages) {
         model: apiConfig.mistralModelName,
         inputs: inputs,
         instructions: systemPrompt,
-        tools: [{ type: "web_search" }],
+        tools: [{ type: "web_search_premium" }],
         completion_args: {
             max_tokens: 4096
         }

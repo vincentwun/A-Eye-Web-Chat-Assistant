@@ -41,6 +41,7 @@ body {
   opacity: 0;
   transition: opacity 0.3s ease-in-out;
   font-weight: 500;
+  font-size: medium;
 }
 
 #notification-bar.show {
