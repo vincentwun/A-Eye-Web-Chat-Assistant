@@ -3,26 +3,14 @@ import { settingsStorageKey, defaultApiSettings } from '../option/apiRoute.js';
 
 export class StateManager {
     constructor(onStateUpdateCallback) {
-        this.state = {
-            activeApiMode: defaultApiSettings.activeApiMode,
-            localApiUrl: defaultApiSettings.localApiUrl,
-            localApiMode: defaultApiSettings.localApiMode,
-            localMultimodalModel: defaultApiSettings.localMultimodalModel,
-            cloudProvider: defaultApiSettings.cloudProvider,
-            cloudApiKey: defaultApiSettings.cloudApiKey,
-            gcpApiKey: defaultApiSettings.gcpApiKey,
-            cloudModelName: defaultApiSettings.cloudModelName,
-            cloudApiMethod: defaultApiSettings.cloudApiMethod,
-            cloudProxyUrl: defaultApiSettings.cloudProxyUrl,
-            mistralApiKey: defaultApiSettings.mistralApiKey,
-            mistralModelName: defaultApiSettings.mistralModelName,
-            isProcessing: false,
-            messages: [],
-            lastCommandTime: 0,
-            commandCooldown: 1000,
-            settingsLoaded: false,
-            lastImageData: { dataUrl: null, mimeType: null }
-        };
+        this.state = { ...defaultApiSettings };
+        this.state.isProcessing = false;
+        this.state.messages = [];
+        this.state.lastCommandTime = 0;
+        this.state.commandCooldown = 1000;
+        this.state.settingsLoaded = false;
+        this.state.lastImageData = { dataUrl: null, mimeType: null };
+
         this.prompts = { ...defaultPrompts };
         this.promptsStorageKey = promptsStorageKey;
         this.settingsStorageKey = settingsStorageKey;
@@ -49,21 +37,11 @@ export class StateManager {
 
             if (changes[this.settingsStorageKey]) {
                 const newSettings = changes[this.settingsStorageKey].newValue || {};
-                this.state = {
-                    ...this.state,
-                    activeApiMode: newSettings.activeApiMode ?? defaultApiSettings.activeApiMode,
-                    localApiUrl: newSettings.localApiUrl ?? defaultApiSettings.localApiUrl,
-                    localApiMode: newSettings.localApiMode ?? defaultApiSettings.localApiMode,
-                    localMultimodalModel: newSettings.localMultimodalModel ?? defaultApiSettings.localMultimodalModel,
-                    cloudProvider: newSettings.cloudProvider ?? defaultApiSettings.cloudProvider,
-                    cloudApiKey: newSettings.cloudApiKey ?? defaultApiSettings.cloudApiKey,
-                    gcpApiKey: newSettings.gcpApiKey ?? defaultApiSettings.gcpApiKey,
-                    cloudModelName: newSettings.cloudModelName ?? defaultApiSettings.cloudModelName,
-                    cloudApiMethod: newSettings.cloudApiMethod ?? defaultApiSettings.cloudApiMethod,
-                    cloudProxyUrl: newSettings.cloudProxyUrl ?? defaultApiSettings.cloudProxyUrl,
-                    mistralApiKey: newSettings.mistralApiKey ?? defaultApiSettings.mistralApiKey,
-                    mistralModelName: newSettings.mistralModelName ?? defaultApiSettings.mistralModelName,
-                };
+                const updatedState = { ...this.state };
+                for (const key in defaultApiSettings) {
+                    updatedState[key] = newSettings[key] ?? defaultApiSettings[key];
+                }
+                this.state = updatedState;
                 updatedKeys.settingsChanged = true;
             }
 
@@ -85,21 +63,12 @@ export class StateManager {
             const savedSettings = result[this.settingsStorageKey] || {};
             const savedPrompts = result[this.promptsStorageKey] || {};
 
-            this.state = {
-                ...this.state,
-                activeApiMode: savedSettings.activeApiMode ?? defaultApiSettings.activeApiMode,
-                localApiUrl: savedSettings.localApiUrl ?? defaultApiSettings.localApiUrl,
-                localApiMode: savedSettings.localApiMode ?? defaultApiSettings.localApiMode,
-                localMultimodalModel: savedSettings.localMultimodalModel ?? defaultApiSettings.localMultimodalModel,
-                cloudProvider: savedSettings.cloudProvider ?? defaultApiSettings.cloudProvider,
-                cloudApiKey: savedSettings.cloudApiKey ?? defaultApiSettings.cloudApiKey,
-                gcpApiKey: savedSettings.gcpApiKey ?? defaultApiSettings.gcpApiKey,
-                cloudModelName: savedSettings.cloudModelName ?? defaultApiSettings.cloudModelName,
-                cloudApiMethod: savedSettings.cloudApiMethod ?? defaultApiSettings.cloudApiMethod,
-                cloudProxyUrl: savedSettings.cloudProxyUrl ?? defaultApiSettings.cloudProxyUrl,
-                mistralApiKey: savedSettings.mistralApiKey ?? defaultApiSettings.mistralApiKey,
-                mistralModelName: savedSettings.mistralModelName ?? defaultApiSettings.mistralModelName,
-            };
+            const loadedState = { ...this.state };
+            for (const key in defaultApiSettings) {
+                loadedState[key] = savedSettings[key] ?? defaultApiSettings[key];
+            }
+            this.state = loadedState;
+
             this.prompts = { ...defaultPrompts, ...savedPrompts };
         } catch (error) {
             console.error('Error loading settings and prompts:', error);
@@ -136,20 +105,11 @@ export class StateManager {
     }
 
     getApiConfig() {
-        return {
-            activeApiMode: this.state.activeApiMode,
-            localApiUrl: this.state.localApiUrl,
-            localApiMode: this.state.localApiMode,
-            localMultimodalModel: this.state.localMultimodalModel,
-            cloudProvider: this.state.cloudProvider,
-            cloudApiKey: this.state.cloudApiKey,
-            gcpApiKey: this.state.gcpApiKey,
-            cloudModelName: this.state.cloudModelName,
-            cloudApiMethod: this.state.cloudApiMethod,
-            cloudProxyUrl: this.state.cloudProxyUrl,
-            mistralApiKey: this.state.mistralApiKey,
-            mistralModelName: this.state.mistralModelName
-        };
+        const config = {};
+        for (const key in defaultApiSettings) {
+            config[key] = this.state[key];
+        }
+        return config;
     }
 
     getHistoryToSend(commandToExclude = null) {

@@ -23,20 +23,22 @@
                     <label for="local-select-ollama">Ollama</label>
 
                     <input type="radio" id="local-select-lmstudio" name="localApiModeSelection" value="lmstudio">
-                    <label for="local-select-lmstudio">LM Studio (Coming Soon)</label>
+                    <label for="local-select-lmstudio">LM Studio</label>
 
                     <input type="radio" id="local-select-vllm" name="localApiModeSelection" value="vllm">
                     <label for="local-select-vllm">VLLM (Coming Soon)</label>
                 </div>
             </div>
-            <div id="local-url-container" class="hidden">
-                <label for="local-url-input">VLLM Server URL</label>
-                <input type="text" id="local-url-input" data-storage-key="localApiUrl" data-storage-type="settings"
+
+            <div id="vllm-url-container" class="hidden">
+                <label for="vllm-url-input">VLLM Server URL</label>
+                <input type="text" id="vllm-url-input" data-storage-key="localApiUrl" data-storage-type="settings"
                     placeholder="e.g., http://localhost:8000">
             </div>
-            <div>
-                <label for="local-model-name-select">Local Model Name</label>
-                <select id="local-model-name-select" data-storage-key="localMultimodalModel"
+
+            <div id="ollama-model-container" class="hidden">
+                <label for="ollama-model-name-select">Ollama Model Name</label>
+                <select id="ollama-model-name-select" data-storage-key="localMultimodalModel"
                     data-storage-type="settings">
                     <optgroup label="Gemma">
                         <option value="gemma3:4b">gemma3:4b (3.3GB)</option>
@@ -56,7 +58,22 @@
                     </optgroup>
                 </select>
             </div>
+
+            <div id="lmstudio-model-container" class="hidden">
+                <label for="lmstudio-model-name-select">LM Studio Model Name</label>
+                <select id="lmstudio-model-name-select" data-storage-key="lmstudioModelName"
+                    data-storage-type="settings">
+                    <option value="google/gemma-3-4b">google/gemma-3-4b</option>
+                </select>
+            </div>
+
+            <div id="vllm-model-container" class="hidden">
+                <label for="vllm-model-name-input">vLLM Model Name</label>
+                <input type="text" id="vllm-model-name-input" data-storage-key="vllmModelName"
+                    data-storage-type="settings" placeholder="Enter vLLM model name">
+            </div>
         </div>
+
 
         <div class="card">
             <h2>Cloud AI Settings</h2>
@@ -153,8 +170,10 @@
             <button id="save-button">Save</button>
             <button id="reset-button">Reset</button>
         </div>
+
     </div>
     <script src="options.js" type="module"></script>
+
 </body>
 
 </html>

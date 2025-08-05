@@ -92,13 +92,25 @@ function saveOptions() {
 
 function updateLocalConfigVisibility() {
     const modeSelect = document.querySelector('input[name="localApiModeSelection"]:checked');
-    const urlContainer = document.getElementById('local-url-container');
-    if (!modeSelect || !urlContainer) return;
+    if (!modeSelect) return;
 
-    if (modeSelect.value === 'vllm') {
-        urlContainer.classList.remove('hidden');
-    } else {
-        urlContainer.classList.add('hidden');
+    const containers = {
+        ollama: document.getElementById('ollama-model-container'),
+        lmstudio: document.getElementById('lmstudio-model-container'),
+        vllmUrl: document.getElementById('vllm-url-container'),
+        vllmModel: document.getElementById('vllm-model-container'),
+    };
+
+    Object.values(containers).forEach(c => c?.classList.add('hidden'));
+
+    const selectedMode = modeSelect.value;
+    if (selectedMode === 'ollama') {
+        containers.ollama?.classList.remove('hidden');
+    } else if (selectedMode === 'lmstudio') {
+        containers.lmstudio?.classList.remove('hidden');
+    } else if (selectedMode === 'vllm') {
+        containers.vllmUrl?.classList.remove('hidden');
+        containers.vllmModel?.classList.remove('hidden');
     }
 }
 
@@ -222,8 +234,11 @@ function loadOptions() {
     populateSttLanguageDropdown();
 
     const elements = {
-        localUrlInput: document.getElementById('local-url-input'),
-        localModelSelect: document.getElementById('local-model-name-select'),
+        vllmUrlInput: document.getElementById('vllm-url-input'),
+        ollamaModelSelect: document.getElementById('ollama-model-name-select'),
+        lmstudioModelSelect: document.getElementById('lmstudio-model-name-select'),
+        vllmModelInput: document.getElementById('vllm-model-name-input'),
+
         cloudProxyUrlInput: document.getElementById('cloud-proxy-url-input'),
         cloudApiKeyInput: document.getElementById('cloud-api-key-input'),
         gcpApiKeyInput: document.getElementById('gcp-api-key-input'),
@@ -262,12 +277,17 @@ function loadOptions() {
         const localRadio = document.querySelector(`input[name="localApiModeSelection"][value="${savedLocalMode}"]`);
         if (localRadio) localRadio.checked = true;
 
-        if (elements.localUrlInput) elements.localUrlInput.value = savedApiSettings.localApiUrl ?? defaultApiSettings.localApiUrl;
+        if (elements.vllmUrlInput) elements.vllmUrlInput.value = savedApiSettings.localApiUrl ?? defaultApiSettings.localApiUrl;
 
-        if (elements.localModelSelect) {
-            const savedLocalModel = savedApiSettings.localMultimodalModel ?? defaultApiSettings.localMultimodalModel;
-            const availableModels = Array.from(elements.localModelSelect.options).map(option => option.value);
-            elements.localModelSelect.value = availableModels.includes(savedLocalModel) ? savedLocalModel : defaultApiSettings.localMultimodalModel;
+        if (elements.ollamaModelSelect) {
+            const savedOllamaModel = savedApiSettings.localMultimodalModel ?? defaultApiSettings.localMultimodalModel;
+            elements.ollamaModelSelect.value = savedOllamaModel;
+        }
+        if (elements.lmstudioModelSelect) {
+            elements.lmstudioModelSelect.value = savedApiSettings.lmstudioModelName ?? defaultApiSettings.lmstudioModelName;
+        }
+        if (elements.vllmModelInput) {
+            elements.vllmModelInput.value = savedApiSettings.vllmModelName ?? defaultApiSettings.vllmModelName;
         }
 
         const savedCloudProvider = savedApiSettings.cloudProvider ?? defaultApiSettings.cloudProvider;
