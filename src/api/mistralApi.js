@@ -1,3 +1,44 @@
+function processConversationResponse(outputs) {
+    let finalContent = "";
+    const references = new Set();
+
+    if (!outputs || !Array.isArray(outputs)) {
+        return "";
+    }
+
+    const messageOutput = outputs.find(o => o.type === 'message.output');
+    if (!messageOutput || !messageOutput.content) {
+        return "";
+    }
+
+    const contentBlock = messageOutput.content;
+
+    if (Array.isArray(contentBlock)) {
+        contentBlock.forEach(chunk => {
+            if (chunk.type === 'text' && chunk.text) {
+                finalContent += chunk.text;
+            } else if (chunk.type === 'tool_reference' && chunk.url) {
+                const title = chunk.title || chunk.url;
+                if (!finalContent.includes(chunk.url)) {
+                    references.add(`[${title}](${chunk.url})`);
+                }
+            }
+        });
+    } else if (typeof contentBlock === 'string') {
+        finalContent = contentBlock;
+    } else {
+        console.warn("Unrecognized Mistral message.output.content format:", contentBlock);
+        return "";
+    }
+
+    if (references.size > 0) {
+        finalContent = finalContent.trim();
+        finalContent += "\n\n**Sources:**\n- " + [...references].join('\n- ');
+    }
+
+    return finalContent.trim();
+}
+
 export async function sendMistralRequest(apiConfig, standardMessages, mimeType) {
     if (!apiConfig.mistralApiKey) {
         throw new Error('Mistral API Key not configured.');
@@ -6,21 +47,21 @@ export async function sendMistralRequest(apiConfig, standardMessages, mimeType) 
         throw new Error('Mistral model name not set.');
     }
 
-    const endpoint = 'https://api.mistral.ai/v1/chat/completions';
-    const apiKey = apiConfig.mistralApiKey;
-    const modelToUse = apiConfig.mistralModelName;
-
+    const endpoint = 'https://api.mistral.ai/v1/conversations';
     const headers = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Authorization': `Bearer ${apiConfig.mistralApiKey}`
     };
 
-    const mistralMessages = [];
-    for (const message of standardMessages) {
-        if (!message.content && !message.images) continue;
+    const systemPrompt = standardMessages.find(m => m.role === 'system')?.content ||
+        "You are a helpful assistant. Use your websearch abilities to find up-to-date information when needed.";
 
-        let contentParts = [];
+    const inputs = [];
+    for (const message of standardMessages) {
+        if (message.role === 'system' || (!message.content && !message.images)) continue;
+
+        const contentParts = [];
         if (message.content) {
             contentParts.push({
                 type: 'text',
@@ -39,20 +80,26 @@ export async function sendMistralRequest(apiConfig, standardMessages, mimeType) 
             }
         }
 
-        mistralMessages.push({
-            role: message.role === 'system' ? 'system' : (message.role === 'assistant' ? 'assistant' : 'user'),
-            content: contentParts
-        });
+        if (contentParts.length > 0) {
+            inputs.push({
+                role: message.role,
+                content: contentParts
+            });
+        }
     }
 
-    if (mistralMessages.length === 0) {
+    if (inputs.length === 0) {
         throw new Error("Cannot send empty request to Mistral.");
     }
 
     const body = JSON.stringify({
-        model: modelToUse,
-        messages: mistralMessages,
-        max_tokens: 4096
+        model: apiConfig.mistralModelName,
+        inputs: inputs,
+        instructions: systemPrompt,
+        tools: [{ type: "web_search" }],
+        completion_args: {
+            max_tokens: 4096
+        }
     });
 
     try {
@@ -74,16 +121,14 @@ export async function sendMistralRequest(apiConfig, standardMessages, mimeType) 
             throw new Error(detail);
         }
 
-        if (data.choices && data.choices[0] && data.choices[0].message) {
-            return data.choices[0].message.content || "";
+        if (data.outputs) {
+            return processConversationResponse(data.outputs);
         } else {
-            throw new Error("Could not parse Mistral response.");
+            throw new Error("Could not parse Mistral conversation response.");
         }
 
     } catch (error) {
-        if (error instanceof Error && error.message.startsWith('API Error')) {
-            throw error;
-        }
-        throw new Error(`Failed to communicate with Mistral endpoint: ${error.message}`);
+        console.error("Failed to communicate with Mistral conversation endpoint:", error);
+        throw error;
     }
 }

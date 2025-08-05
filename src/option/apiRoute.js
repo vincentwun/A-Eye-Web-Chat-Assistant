@@ -15,5 +15,5 @@ export const defaultApiSettings = {
   gcpApiKey: '',
 
   mistralApiKey: '',
-  mistralModelName: 'pixtral-large-latest'
+  mistralModelName: 'mistral-small-latest'
 };
