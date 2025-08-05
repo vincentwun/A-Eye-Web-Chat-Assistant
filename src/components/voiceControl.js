@@ -191,7 +191,7 @@ export class VoiceController {
 
           let hasStarted = false;
           let utteranceTimeout = null;
-          const startTimeoutDuration = 20000;
+          const startTimeoutDuration = 10000;
 
           utteranceTimeout = setTimeout(() => {
             if (!hasStarted) {
