@@ -289,6 +289,7 @@ class AIScreenReader {
         this.uiManager.updateModeUI(newMode);
         const modeName = newMode === 'local' ? 'Local' : 'Cloud';
         this.voiceController.speakText(`Switched to ${modeName} Mode.`);
+        this.elements.userInput?.focus();
     }
 
     async handleSendMessage() {

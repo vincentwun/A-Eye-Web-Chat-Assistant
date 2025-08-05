@@ -202,3 +202,29 @@ button:active {
 .hidden {
   display: none !important;
 }
+
+.resource-links {
+  background-color: var(--card-background-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+  padding: 16px 24px;
+  margin-bottom: 25px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.resource-links a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+  transition: color 0.2s;
+}
+
+.resource-links a:hover {
+  color: var(--primary-color-hover);
+  text-decoration: underline;
+}
