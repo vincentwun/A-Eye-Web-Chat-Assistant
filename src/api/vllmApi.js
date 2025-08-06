@@ -77,14 +77,7 @@ export async function sendVllmRequest(apiConfig, standardMessages) {
         const data = await response.json();
 
         if (data.choices && data.choices.length > 0 && data.choices[0].message && data.choices[0].message.content) {
-            const rawContent = data.choices[0].message.content;
-            const thinkTagEnd = '</think>';
-            const thinkTagIndex = rawContent.lastIndexOf(thinkTagEnd);
-
-            if (thinkTagIndex !== -1) {
-                return rawContent.substring(thinkTagIndex + thinkTagEnd.length).trim();
-            }
-            return rawContent;
+            return data.choices[0].message.content;
         }
 
         return 'Error: Could not parse vLLM response.';

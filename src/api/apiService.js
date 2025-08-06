@@ -19,6 +19,19 @@ function stripBase64Prefix(dataUrl) {
 
 export class ApiService {
 
+    _processResponseContent(rawContent) {
+        if (typeof rawContent !== 'string') {
+            return rawContent;
+        }
+        const thinkTagEnd = '</think>';
+        const thinkTagIndex = rawContent.lastIndexOf(thinkTagEnd);
+
+        if (thinkTagIndex !== -1) {
+            return rawContent.substring(thinkTagIndex + thinkTagEnd.length).trim();
+        }
+        return rawContent;
+    }
+
     _prepareStandardMessages(messagesHistory, currentPayload, rawBase64, systemPrompt, maxHistory) {
         const standardMessages = [];
 
@@ -88,25 +101,31 @@ export class ApiService {
         }
 
         try {
+            let responseContent;
             if (apiConfig.activeApiMode === 'local') {
                 switch (apiConfig.localApiMode) {
                     case 'ollama':
-                        return await sendOllamaRequest(apiConfig, standardMessages);
+                        responseContent = await sendOllamaRequest(apiConfig, standardMessages);
+                        break;
                     case 'lmstudio':
-                        return await sendLmstudioRequest(apiConfig, standardMessages);
+                        responseContent = await sendLmstudioRequest(apiConfig, standardMessages);
+                        break;
                     case 'vllm':
-                        return await sendVllmRequest(apiConfig, standardMessages);
+                        responseContent = await sendVllmRequest(apiConfig, standardMessages);
+                        break;
                     default:
                         throw new Error(`Unsupported local API mode: ${apiConfig.localApiMode}`);
                 }
             } else if (apiConfig.activeApiMode === 'cloud') {
                 if (apiConfig.cloudProvider === 'mistral') {
-                    return await sendMistralRequest(apiConfig, standardMessages, mimeType);
+                    responseContent = await sendMistralRequest(apiConfig, standardMessages, mimeType);
+                } else {
+                    responseContent = await sendGeminiRequest(apiConfig, standardMessages, mimeType);
                 }
-                return await sendGeminiRequest(apiConfig, standardMessages, mimeType);
             } else {
                 throw new Error('Invalid API mode selected.');
             }
+            return this._processResponseContent(responseContent);
         } catch (error) {
             console.error("Error during API request dispatch:", error);
             throw error;
