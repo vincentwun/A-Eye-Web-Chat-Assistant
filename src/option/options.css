@@ -136,7 +136,7 @@ select {
 }
 
 textarea {
-    min-height: 200px;
+    min-height: 300px;
     resize: none;
     line-height: 1.6;
 }
