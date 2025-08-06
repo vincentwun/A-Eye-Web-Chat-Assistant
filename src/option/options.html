@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Options</title>
+    <title>Settings</title>
     <link rel="stylesheet" href="options.css">
 </head>
 
@@ -12,86 +12,15 @@
     <div id="notification-bar"></div>
     <div class="container">
 
-        <div class="resource-links">
-            <a href="https://aistudio.google.com/welcome" target="_blank">Get Gemini API Key</a>
-            <a href="https://mistral.ai/" target="_blank">Get Mistral API Key</a>
-            <a href="https://github.com/vincentwun/A-Eye-Web-Chat-Assistant/blob/main/README.md" target="_blank">User
-                Manual</a>
-        </div>
-
         <div class="card">
-            <h2>Local AI Settings</h2>
-            <div>
-                <label>Local AI Service</label>
-                <div class="segmented-control">
-                    <input type="radio" id="local-select-ollama" name="localApiModeSelection" value="ollama" checked>
-                    <label for="local-select-ollama">Ollama</label>
-
-                    <input type="radio" id="local-select-lmstudio" name="localApiModeSelection" value="lmstudio">
-                    <label for="local-select-lmstudio">LM Studio</label>
-
-                    <input type="radio" id="local-select-vllm" name="localApiModeSelection" value="vllm">
-                    <label for="local-select-vllm">vLLM</label>
-                </div>
-            </div>
-
-            <div id="vllm-url-container" class="hidden">
-                <label for="vllm-url-input">vLLM Server URL</label>
-                <input type="text" id="vllm-url-input" data-storage-key="localApiUrl" data-storage-type="settings"
-                    placeholder="e.g., http://localhost:8000">
-            </div>
-
-            <div id="ollama-model-container" class="hidden">
-                <label for="ollama-model-name-select">Ollama Model Name</label>
-                <select id="ollama-model-name-select" data-storage-key="localMultimodalModel"
-                    data-storage-type="settings">
-                    <optgroup label="Gemma">
-                        <option value="gemma3:4b">gemma3:4b (3.3GB)</option>
-                        <option value="gemma3:12b">gemma3:12b (8.1GB)</option>
-                        <option value="gemma3:27b">gemma3:27b (17GB)</option>
-                    </optgroup>
-                    <optgroup label="Qwen">
-                        <option value="qwen2.5vl:3b">qwen2.5vl:3b (3.2GB)</option>
-                        <option value="qwen2.5vl:7b">qwen2.5vl:7b (6GB)</option>
-                        <option value="qwen2.5vl:32b">qwen2.5vl:32b (21GB)</option>
-                    </optgroup>
-                    <optgroup label="Custom">
-                        <option value="custom">Custom</option>
-                    </optgroup>
-                </select>
-                <div id="custom-ollama-model-container" class="hidden" style="margin-top: 8px;">
-                    <input type="text" id="custom-ollama-model-input" placeholder="Enter custom Ollama model name">
-                </div>
-            </div>
-
-            <div id="lmstudio-model-container" class="hidden">
-                <label for="lmstudio-model-name-select">LM Studio Model Name</label>
-                <select id="lmstudio-model-name-select" data-storage-key="lmstudioModelName"
-                    data-storage-type="settings">
-                    <optgroup label="Google">
-                        <option value="google/gemma-3-4b">google/gemma-3-4b (3.3GB)</option>
-                        <option value="google/gemma-3-12b">google/gemma-3-12b (8.1GB)</option>
-                        <option value="google/gemma-3-27b">google/gemma-3-27b (17GB)</option>
-                    </optgroup>
-                    <optgroup label="Qwen">
-                        <option value="qwen/qwen2.5-vl-7b">qwen/qwen2.5-vl-7b (6GB)</option>
-                    </optgroup>
-                    <optgroup label="Custom">
-                        <option value="custom">Custom</option>
-                    </optgroup>
-                </select>
-                <div id="custom-lmstudio-model-container" class="hidden" style="margin-top: 8px;">
-                    <input type="text" id="custom-lmstudio-model-input" placeholder="Enter custom LM Studio model name">
-                </div>
-            </div>
-
-            <div id="vllm-model-container" class="hidden">
-                <label for="vllm-model-name-input">vLLM Model Name</label>
-                <input type="text" id="vllm-model-name-input" data-storage-key="vllmModelName"
-                    data-storage-type="settings" placeholder="Enter vLLM model name">
+            <h2>Resource</h2>
+            <div class="resource-links">
+                <a href="https://aistudio.google.com/welcome" target="_blank">Get Gemini API Key</a>
+                <a href="https://mistral.ai/" target="_blank">Get Mistral API Key</a>
+                <a href="https://github.com/vincentwun/A-Eye-Web-Chat-Assistant/blob/main/README.md"
+                    target="_blank">User Manual</a>
             </div>
         </div>
-
 
         <div class="card">
             <h2>Cloud AI Settings</h2>
@@ -100,15 +29,12 @@
                 <div class="segmented-control">
                     <input type="radio" id="cloud-select-gemini" name="cloudSelection" value="gemini" checked>
                     <label for="cloud-select-gemini">Gemini</label>
-
                     <input type="radio" id="cloud-select-gateway" name="cloudSelection" value="gateway">
-                    <label for="cloud-select-gateway">Vertex AI (GCP)</label>
-
+                    <label for="cloud-select-gateway">Vertex AI</label>
                     <input type="radio" id="cloud-select-mistral" name="cloudSelection" value="mistral">
                     <label for="cloud-select-mistral">Mistral</label>
                 </div>
             </div>
-
             <div id="cloud-settings-container">
                 <div id="proxy-url-container" class="hidden">
                     <label for="cloud-proxy-url-input">API Gateway Endpoint</label>
@@ -150,22 +76,70 @@
         </div>
 
         <div class="card">
-            <h2>Voice Settings</h2>
+            <h2>Local AI Settings</h2>
             <div>
-                <label for="stt-language-select">Voice Input Language</label>
-                <select id="stt-language-select" data-storage-key="sttLanguage" data-storage-type="voice">
-                </select>
+                <label>Local AI Service</label>
+                <div class="segmented-control">
+                    <input type="radio" id="local-select-ollama" name="localApiModeSelection" value="ollama" checked>
+                    <label for="local-select-ollama">Ollama</label>
+                    <input type="radio" id="local-select-lmstudio" name="localApiModeSelection" value="lmstudio">
+                    <label for="local-select-lmstudio">LM Studio</label>
+                    <input type="radio" id="local-select-vllm" name="localApiModeSelection" value="vllm">
+                    <label for="local-select-vllm">vLLM</label>
+                </div>
             </div>
-            <div>
-                <label for="tts-voice-select">AI Response Voice</label>
-                <select id="tts-voice-select" data-storage-key="ttsVoiceName" data-storage-type="voice">
-                    <option value="">Loading voices...</option>
-                </select>
+            <div id="vllm-url-container" class="hidden">
+                <label for="vllm-url-input">vLLM Server URL</label>
+                <input type="text" id="vllm-url-input" data-storage-key="localApiUrl" data-storage-type="settings"
+                    placeholder="e.g., http://localhost:8000">
             </div>
-            <div style="display: none;">
-                <label for="tts-language-select">(Fallback) Text-to-Speech Language</label>
-                <select id="tts-language-select" data-storage-key="ttsLanguage" data-storage-type="voice">
+            <div id="ollama-model-container" class="hidden">
+                <label for="ollama-model-name-select">Ollama Model Name</label>
+                <select id="ollama-model-name-select" data-storage-key="localMultimodalModel"
+                    data-storage-type="settings">
+                    <optgroup label="Gemma">
+                        <option value="gemma3:4b">gemma3:4b (3.3GB)</option>
+                        <option value="gemma3:12b">gemma3:12b (8.1GB)</option>
+                        <option value="gemma3:27b">gemma3:27b (17GB)</option>
+                    </optgroup>
+                    <optgroup label="Qwen">
+                        <option value="qwen2.5vl:3b">qwen2.5vl:3b (3.2GB)</option>
+                        <option value="qwen2.5vl:7b">qwen2.5vl:7b (6GB)</option>
+                        <option value="qwen2.5vl:32b">qwen2.5vl:32b (21GB)</option>
+                    </optgroup>
+                    <optgroup label="Custom">
+                        <option value="custom">Custom</option>
+                    </optgroup>
                 </select>
+                <div id="custom-ollama-model-container" class="hidden">
+                    <input type="text" id="custom-ollama-model-input" placeholder="Enter custom Ollama model name">
+                </div>
+            </div>
+            <div id="lmstudio-model-container" class="hidden">
+                <label for="lmstudio-model-name-select">LM Studio Model Name</label>
+                <select id="lmstudio-model-name-select" data-storage-key="lmstudioModelName"
+                    data-storage-type="settings">
+                    <optgroup label="Google">
+                        <option value="google/gemma-3-4b">google/gemma-3-4b (3.3GB)</option>
+                        <option value="google/gemma-3-12b">google/gemma-3-12b (8.1GB)</option>
+                        <option value="google/gemma-3-27b">google/gemma-3-27b (17GB)</option>
+                    </optgroup>
+                    <optgroup label="Qwen">
+                        <option value="qwen/qwen2.5-vl-7b">qwen/qwen2.5-vl-7b (6GB)</option>
+                    </optgroup>
+                    <optgroup label="Custom">
+                        <option value="custom">Custom</option>
+                    </optgroup>
+                </select>
+                <div id="custom-lmstudio-model-container" class="hidden">
+                    <input type="text" id="custom-lmstudio-model-input"
+                        placeholder="Enter custom LM Studio model name">
+                </div>
+            </div>
+            <div id="vllm-model-container" class="hidden">
+                <label for="vllm-model-name-input">vLLM Model Name</label>
+                <input type="text" id="vllm-model-name-input" data-storage-key="vllmModelName"
+                    data-storage-type="settings" placeholder="Enter vLLM model name">
             </div>
         </div>
 
@@ -184,14 +158,26 @@
             </div>
         </div>
 
-        <div class="button-container">
-            <button id="save-button">Save</button>
-            <button id="reset-button">Reset</button>
+        <div class="card">
+            <h2>Voice Settings</h2>
+            <div>
+                <label for="stt-language-select">Voice Input Language</label>
+                <select id="stt-language-select" data-storage-key="sttLanguage" data-storage-type="voice">
+                </select>
+            </div>
+            <div>
+                <label for="tts-voice-select">AI Response Voice</label>
+                <select id="tts-voice-select" data-storage-key="ttsVoiceName" data-storage-type="voice">
+                </select>
+            </div>
         </div>
 
+        <div class="button-container">
+            <button id="reset-button">Reset</button>
+            <button id="save-button">Save</button>
+        </div>
     </div>
     <script src="options.js" type="module"></script>
-
 </body>
 
 </html>

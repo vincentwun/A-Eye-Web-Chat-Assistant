@@ -93,7 +93,7 @@ function saveOptions() {
             if (chrome.runtime.lastError) {
                 showNotification(`Error: ${chrome.runtime.lastError.message}`, true);
             } else {
-                showNotification('Settings Saved!');
+                showNotification('Saved!');
                 currentVoiceSettings = finalData[voiceSettingsStorageKey];
                 currentPrompts = finalData[promptsStorageKey];
                 updateCloudConfigVisibility();
