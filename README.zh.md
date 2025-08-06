@@ -41,14 +41,14 @@ A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變
 
 您必須設定至少一種 AI 模式，才能啟用本擴充功能。
 
-### 本地 AI 設定 (Ollama & Gemma 3)
+### 本地 AI 設定
 
 最適合注重隱私的使用者，所有運算皆在您自己的電腦上完成。
 
 <details>
 <summary><strong>點擊此處展開本地 AI 設定說明</strong></summary>
 
-#### 選項一：自動化 PowerShell 指令碼 (Windows)
+#### 選項一：自動化 PowerShell 劇本 (Windows) (Ollama & Gemma 3)
 此為 Windows 使用者最簡單直接的方法。
 
 1.  根據您顯示卡的 VRAM 選擇合適的指令碼：
@@ -60,9 +60,9 @@ A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變
     powershell.exe -ExecutionPolicy Bypass -File "C:\您的指令碼路徑\setup_ollama_gemma3_4b.ps1"
     ```
 3.  指令碼將會自動安裝 Ollama、設定權限，並下載您選擇的模型。
-4.  在擴充功能的 **設定** 頁面，確保「本地模型名稱」與您所安裝的模型一致（例如 `gemma3:4b`）。
+4.  在擴充功能的 **設定** 頁面，確保「Ollama Model Name」與您所安裝的模型一致（例如 `gemma3:4b`）。
 
-#### 選項二：手動設定
+#### 選項二：手動設定 Ollama & Gemma 3
 1.  **安裝 [Ollama](https://ollama.com/)**。
 2.  **設定 CORS 權限**：此步驟是為了讓擴充功能與 Ollama 通訊。
     *   **Windows**: 以系統管理員身分開啟 CMD，然後執行 `setx OLLAMA_ORIGINS "chrome-extension://*" /M`。
@@ -72,11 +72,23 @@ A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變
     *   **>= 6GB VRAM**: `ollama run gemma3:4b`
     *   **>= 10GB VRAM**: `ollama run gemma3:12b`
     *   **>= 20GB VRAM**: `ollama run gemma3:27b`
-5.  在擴充功能的 **設定** 頁面，確保「本地模型名稱」與您所安裝的模型一致。
+5.  在擴充功能的 **設定** 頁面，確保「Ollama Model Name」與您所安裝的模型一致。
+
+#### 選項三：手動設定 LM Studio & Gemma 3
+1.  **安裝 [LM Studio](https://lmstudio.ai/)**。
+2.  **下載模型**：
+    *   在 LM Studio 中，前往「搜尋」頁面。
+    *   搜尋 `google/gemma-3`。
+    *   選擇適合您顯示卡 VRAM 的版本（例如 `google/gemma-3-4b`），然後點擊下載。
+3.  **啟動本地伺服器**：
+    *   前往 LM Studio 的「本地伺服器」頁面。
+    *   選擇您剛剛下載的模型。
+    *   點擊「啟動伺服器」。
+4.  在擴充功能的 **設定** 頁面，確保「LM Studio Model Name」與您在 LM Studio 中使用的模型路徑一致（例如 `google/gemma-3-4b`）。
 
 </details>
 
-### 雲端 AI 設定 (Google Gemini)
+### 雲端 AI 設定
 
 追求極致效能與表現的最佳選擇。
 
@@ -87,10 +99,17 @@ A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變
 1.  前往 [Google AI Studio](https://aistudio.google.com/)。
 2.  點擊 `Get API Key` > `Create API Key`。
 3.  複製您的 API 金鑰。
-4.  在擴充功能的 **設定** 頁面，將其貼上至「雲端 API 金鑰」欄位。
+4.  在擴充功能的 **設定** 頁面，將其貼上至「Gemini API Key」欄位。
 
 #### 選項二：Google Cloud Platform (Vertex AI)
 適合想自行管理 GCP 基礎設施的進階使用者。詳細步驟請參閱 [GCP 設定指南](./gcp/gcloud/README.md)。
+
+#### 選項三：Mistral AI
+1.  前往 [Mistral AI 平台](https://console.mistral.ai/)。
+2.  註冊或登入您的帳號。
+3.  導航至「Try the API」>「API Keys」頁面，建立一個新的 API 金鑰。
+4.  複製您的 API 金鑰。
+5.  在擴充功能的 **設定** 頁面，將其貼上至「Mistral API Key」欄位。
 
 </details>
 

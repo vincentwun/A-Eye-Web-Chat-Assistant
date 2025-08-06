@@ -41,14 +41,14 @@ A-Eye is a free, open-source Chrome extension designed to make web browsing easi
 
 You must configure at least one AI mode to enable the extension.
 
-### Local AI Setup (Ollama & Gemma 3)
+### Local AI Setup
 
 Ideal for privacy. All processing happens on your computer.
 
 <details>
 <summary><strong>Click here for Local AI setup instructions</strong></summary>
 
-#### Option 1: Automated PowerShell Script (Windows)
+#### Option 1: Automated PowerShell Script (Windows) (Ollama & Gemma 3)
 This is the easiest method for Windows users.
 
 1.  Choose the script based on your GPU's VRAM:
@@ -62,7 +62,7 @@ This is the easiest method for Windows users.
 3.  The script will automatically install Ollama, set permissions, and download your chosen model.
 4.  In the extension's **Settings**, ensure "Local Model Name" matches the model you installed (e.g., `gemma3:4b`).
 
-#### Option 2: Manual Setup
+#### Option 2: Manual Setup (Ollama & Gemma 3)
 1.  **Install [Ollama](https://ollama.com/)**.
 2.  **Set CORS Permissions**: This allows the extension to talk to Ollama.
     *   **Windows**: Open CMD as Administrator and run `setx OLLAMA_ORIGINS "chrome-extension://*" /M`.
@@ -74,9 +74,21 @@ This is the easiest method for Windows users.
     *   **>= 20GB VRAM**: `ollama run gemma3:27b`
 5.  In the extension's **Settings**, ensure "Local Model Name" matches the model you installed.
 
+#### Option 3: Manual Setup LM Studio & Gemma 3
+1.  **Install [LM Studio](https://lmstudio.ai/)**.
+2.  **Download a Model**:
+    *   In LM Studio, go to the 'Search' tab.
+    *   Search for `google/gemma-3`.
+    *   Choose the version suitable for your GPU's VRAM (e.g., `google/gemma-3-4b`) and click download.
+3.  **Start the Local Server**:
+    *   Go to LM Studio's 'Local Server' tab.
+    *   Select the model you just downloaded.
+    *   Click 'Start Server'.
+4.  In the extension's **Settings**, ensure "LM Studio Model Name" matches the model path you used in LM Studio (e.g., `google/gemma-3-4b`).
+
 </details>
 
-### Cloud AI Setup (Google Gemini)
+### Cloud AI Setup
 
 Ideal for maximum power and performance.
 
@@ -91,6 +103,13 @@ Ideal for maximum power and performance.
 
 #### Option 2: Google Cloud Platform (Vertex AI)
 For advanced users who want to manage their own GCP infrastructure. See the [GCP Setup Guide](./gcp/gcloud/README.md) for detailed instructions.
+
+#### Option 3: Mistral AI
+1.  Visit [Mistral AI Platform](https://console.mistral.ai/).
+2.  Register or log in to your account.
+3.  Navigate to the 'Try the API' > 'API Keys' and create a new API key.
+4.  Copy your API key.
+5.  In the extension's **Settings**, paste it into the "Mistral API Key" field.
 
 </details>
 
