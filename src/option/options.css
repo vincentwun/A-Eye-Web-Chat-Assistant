@@ -72,7 +72,7 @@ body {
 
 .card h2 {
     font-size: 20px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-color);
     margin: 0;
     padding: 24px;
@@ -234,5 +234,5 @@ button:active {
 }
 
 .resource-links a:hover {
-    color: var(--accent-color);
+    color: #0051ff;
 }
