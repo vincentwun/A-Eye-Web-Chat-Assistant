@@ -1,20 +1,20 @@
 :root {
     --background-color: #FFFFFF;
-    --text-color: #000000;
-    --text-muted-color: #646464;
+    --text-color: #1f1f1f;
+    --text-muted-color: #5f6368;
     --border-color: #EAEAEA;
     --input-background: #FFFFFF;
-    --accent-color: #007AFF;
+    --accent-color: #4285F4;
     --button-primary-bg: #000000;
     --button-primary-text: #FFFFFF;
     --button-primary-hover-bg: #333333;
     --button-secondary-bg: #FFFFFF;
     --button-secondary-text: #000000;
-    --button-secondary-border: #EAEAEA;
-    --button-secondary-hover-bg: #F9F9F9;
+    --button-secondary-border: #DADCE0;
+    --button-secondary-hover-bg: #F8F9FA;
     --border-radius: 8px;
-    --notification-success-bg: #28a745;
-    --notification-error-bg: #dc3545;
+    --notification-success-bg: var(--accent-color);
+    --notification-error-bg: #EA4335;
 }
 
 * {
@@ -22,7 +22,7 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background-color: var(--background-color);
     color: var(--text-color);
     margin: 0;
@@ -50,7 +50,7 @@ body {
     opacity: 0;
     transition: opacity 0.3s ease-in-out;
     font-weight: 500;
-    font-size: 14px;
+    font-size: 18px;
 }
 
 #notification-bar.show {
@@ -76,7 +76,7 @@ body {
     color: var(--text-color);
     margin: 0;
     padding: 24px;
-    background-color: #FAFAFA;
+    background-color: #F8F9FA;
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -97,7 +97,7 @@ label {
     font-weight: 500;
     color: var(--text-color);
     margin-bottom: 12px;
-    font-size: 14px;
+    font-size: 15px;
 }
 
 input[type="text"],
@@ -107,7 +107,7 @@ select {
     width: 100%;
     padding: 10px 12px;
     background-color: var(--input-background);
-    border: 1px solid #DDDDDD;
+    border: 1px solid var(--button-secondary-border);
     border-radius: var(--border-radius);
     font-family: inherit;
     font-size: 14px;
@@ -124,7 +124,7 @@ textarea:focus,
 select:focus {
     outline: none;
     border-color: var(--accent-color);
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+    box-shadow: 0 0 0 2px var(--accent-color);
 }
 
 select {
@@ -137,7 +137,7 @@ select {
 
 textarea {
     min-height: 200px;
-    resize: vertical;
+    resize: none;
     line-height: 1.6;
 }
 
@@ -145,7 +145,7 @@ textarea {
     display: flex;
     border-radius: var(--border-radius);
     overflow: hidden;
-    background-color: #F3F3F3;
+    background-color: #F1F3F4;
     padding: 4px;
     border: 1px solid transparent;
 }
@@ -170,7 +170,7 @@ textarea {
 .segmented-control input[type="radio"]:checked+label {
     background-color: var(--button-secondary-bg);
     color: var(--text-color);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .3), 0 1px 3px 1px rgba(60, 64, 67, .15);
 }
 
 .button-container {
@@ -234,5 +234,5 @@ button:active {
 }
 
 .resource-links a:hover {
-    color: var(--text-color);
+    color: var(--accent-color);
 }
