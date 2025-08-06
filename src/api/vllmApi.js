@@ -15,7 +15,7 @@ function formatMessagesForVllm(standardMessages) {
                 });
             });
         }
-        
+
         return {
             role: msg.role === 'assistant' ? 'assistant' : 'user',
             content: contentParts
@@ -38,9 +38,9 @@ export async function sendVllmRequest(apiConfig, standardMessages) {
     }
 
     const headers = { 'Content-Type': 'application/json' };
-    
+
     const formattedMessages = formatMessagesForVllm(standardMessages);
-    
+
     if (formattedMessages.length === 0) {
         throw new Error("Cannot send an empty request to vLLM.");
     }
@@ -75,9 +75,16 @@ export async function sendVllmRequest(apiConfig, standardMessages) {
         }
 
         const data = await response.json();
-        
-        if (data.choices && data.choices.length > 0 && data.choices[0].message) {
-            return data.choices[0].message.content;
+
+        if (data.choices && data.choices.length > 0 && data.choices[0].message && data.choices[0].message.content) {
+            const rawContent = data.choices[0].message.content;
+            const thinkTagEnd = '</think>';
+            const thinkTagIndex = rawContent.lastIndexOf(thinkTagEnd);
+
+            if (thinkTagIndex !== -1) {
+                return rawContent.substring(thinkTagIndex + thinkTagEnd.length).trim();
+            }
+            return rawContent;
         }
 
         return 'Error: Could not parse vLLM response.';
