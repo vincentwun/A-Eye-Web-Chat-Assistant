@@ -494,7 +494,6 @@ export class VoiceController {
           console.log(`Sending perm request to tab ${tab.id}...`);
           await chrome.tabs.sendMessage(tab.id, { action: "requestMicPermission" });
           console.log("Perm request sent.");
-          this.callbacks.appendMessage?.('system', 'Please allow microphone access.');
           this.speakText('Please allow microphone access.').catch(e => console.error("Speak error:", e));
 
         } catch (error) {
