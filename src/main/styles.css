@@ -21,7 +21,7 @@
 
 body {
   height: 100vh;
-  font-family: Verdana, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background: #fff;
   color: var(--gray-700);
   display: flex;
@@ -74,7 +74,7 @@ body {
   padding: var(--space);
   background: #ffffff;
   border-radius: var(--radius);
-  border: 1px solid var(--input-border-color);
+  border: none;
   display: flex;
   flex-direction: column;
 }
@@ -187,7 +187,7 @@ body {
 #input-section {
   background-color: var(--input-bg);
   border: 1px solid var(--input-border-color);
-  border-radius: var(--radius);
+  border-radius: 24px;
   padding: var(--space);
   margin: 0 var(--space) var(--space);
   display: flex;
@@ -280,11 +280,12 @@ body {
   border: none;
   border-radius: var(--radius);
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, border-radius 0.2s ease;
 }
 
 .action-button:hover {
-  background-color: var(--gray-300);
+  background-color: #e9ecef;
+  border-radius: 50%;
 }
 
 #input-section #voiceInput-button.active-recording {
@@ -298,8 +299,6 @@ body {
 
 .footer {
   padding: 3px var(--common-padding);
-  background: var(--gray-50);
-  border-top: 1px solid var(--input-border-color);
   color: var(--gray-700);
   font-size: 10px;
   text-align: center;
