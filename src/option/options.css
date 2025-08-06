@@ -1,7 +1,7 @@
 :root {
     --background-color: #FFFFFF;
     --text-color: #1f1f1f;
-    --text-muted-color: #5f6368;
+    --text-muted-color: #3c4043;
     --border-color: #EAEAEA;
     --input-background: #FFFFFF;
     --accent-color: #4285F4;
@@ -71,7 +71,7 @@ body {
 }
 
 .card h2 {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 600;
     color: var(--text-color);
     margin: 0;
