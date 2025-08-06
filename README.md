@@ -21,13 +21,13 @@
 
 ---
 
-A-Eye is a free, open-source Chrome extension designed to make web browsing easier and more accessible, especially for users with visual impairments. Through intuitive AI chat, powerful screen analysis, and full voice control, it transforms how you interact with the web. Choose between privacy-first local AI (via Ollama) or the powerful Gemini 2.5 Pro in the cloud.
+A-Eye is a free, open-source Chrome extension designed to make web browsing easier and more accessible, especially for users with visual impairments. Through intuitive AI chat, powerful screen analysis, and comprehensive voice control, it transforms how you interact with the web. You can freely choose between privacy-focused local AI services (Ollama, LM Studio, vLLM) or powerful cloud AI services (Google Gemini, Mistral AI).
 
 ## Key Features
 
 -   **AI Screen Analysis**: Instantly understand webpage content by analyzing screenshots or full-page text with Gemini or local LLMs.
 -   **Full Voice Control**: Use your voice to navigate, ask questions, and control the browser.
--   **Dual AI Modes**: Switch with a single click between powerful Cloud AI (Google Gemini) for top performance and private Local AI (Ollama) for maximum privacy.
+-   **Dual AI Modes**: Switch with a single click between powerful cloud AI and privacy-focused local AI.
 -   **Web Page Interaction**: Tell the AI to click buttons or type text for you (e.g., "click the login button", "type 'hello world' in the search bar").
 -   **Cross-Platform**: Works on any Windows, macOS, or Linux computer with Google Chrome.
 
@@ -119,8 +119,8 @@ For advanced users who want to manage their own GCP infrastructure. See the [GCP
 *   **Web Speech API**: For both `SpeechRecognition` (Speech-to-Text) and `SpeechSynthesis` (Text-to-Speech).
 
 #### Backend & AI
-*   **Local**: Communicates directly with a local [Ollama](https://ollama.com/) instance.
-*   **Cloud**: Uses a secure serverless backend on Google Cloud Platform.
+*   **Local**: Communicates directly with locally running AI services, supporting OpenAI-compatible endpoints like Ollama, LM Studio, and vLLM.
+*   **Cloud**: UUses a secure Google Cloud Platform serverless backend to proxy requests to cloud AI, or connects directly to third-party APIs.
     *   **API Gateway**: Provides a secure endpoint and validates API keys.
     *   **Cloud Functions**: A serverless function that receives requests and calls the AI model.
     *   **Vertex AI**: Hosts the powerful Gemini model for analysis.

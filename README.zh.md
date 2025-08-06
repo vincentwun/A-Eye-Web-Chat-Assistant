@@ -21,13 +21,13 @@
 
 ---
 
-A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變得更輕鬆、更無障礙，尤其適合視障使用者。透過直觀的 AI 聊天、強大的螢幕分析以及全面的語音控制，它將徹底改變您與網路互動的方式。您可以自由選擇注重隱私的本地 AI（透過 Ollama 運行）或功能強大的雲端 Gemini 2.5 Pro。
+A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變得更輕鬆、更無障礙，尤其適合視障使用者。透過直觀的 AI 聊天、強大的螢幕分析以及全面的語音控制，它將徹底改變您與網路互動的方式。您可以自由選擇注重隱私的本地 AI 服務（Ollama, LM Studio, vLLM）或功能強大的雲端 AI 服務 (Google Gemini, Mistral AI)。
 
 ## 主要功能
 
 -   **AI 螢幕分析**：透過分析螢幕截圖或網頁全文，即時理解頁面內容，支援 Gemini 及本地大型語言模型。
 -   **全面語音控制**：使用您的聲音來導航、提問並控制瀏覽器。
--   **雙 AI 模式**：只需一鍵，即可在強大的雲端 AI（Google Gemini）與保障隱私的本地 AI（Ollama）之間輕鬆切換。
+-   **雙 AI 模式**：只需一鍵，即可在強大的雲端 AI 與保障隱私的本地 AI 之間輕鬆切換。
 -   **網頁互動**：直接告訴 AI，讓它幫您點擊按鈕或輸入文字（例如：「點擊登入按鈕」、「在搜尋欄輸入『你好世界』」）。
 -   **跨平台支援**：完美運行於安裝了 Google Chrome 的 Windows、macOS 及 Linux 電腦。
 
@@ -119,8 +119,8 @@ A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變
 *   **Web Speech API**: 同時用於 `SpeechRecognition`（語音轉文字）及 `SpeechSynthesis`（文字轉語音）。
 
 #### 後端與 AI
-*   **本地模式**: 直接與本機的 [Ollama](https://ollama.com/) 實例通訊。
-*   **雲端模式**: 使用一個安全的 Google Cloud Platform 無伺服器後端。
+*   **本地模式**: 直接與本機運行的 AI 服務通訊，支援 Ollama、LM Studio 及 vLLM 等 OpenAI 相容的端點。
+*   **雲端模式**: 使用一個安全的 Google Cloud Platform 無伺服器後端來代理對雲端 AI 的請求，或直接連接到第三方 API。
     *   **API Gateway**: 提供安全的 API 端點，並驗證 API 金鑰。
     *   **Cloud Functions**: 接收請求並呼叫 AI 模型的無伺服器函數。
     *   **Vertex AI**: 託管強大的 Gemini 模型以進行分析。
