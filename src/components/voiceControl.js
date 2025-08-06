@@ -57,19 +57,19 @@ export class VoiceController {
         return reject(new Error("TTS API unavailable."));
       }
 
-      let timeoutId = null;
-      const TIMEOUT_DURATION = 3000;
+      const MAX_WAIT_TIME = 5000;
+      const POLLING_INTERVAL = 100;
+      let pollingId;
+      let timeoutId;
+
+      const cleanup = () => {
+        clearInterval(pollingId);
+        clearTimeout(timeoutId);
+      };
 
       const findAndSetVoice = () => {
-        if (timeoutId) clearTimeout(timeoutId);
-
         this.state.synthesis.voices = this.state.synthesis.instance.getVoices();
         console.log('Available TTS voices:', this.state.synthesis.voices.map(v => ({ name: v.name, lang: v.lang })));
-
-        if (this.state.synthesis.voices.length === 0) {
-          console.warn('No TTS voices found immediately.');
-          return reject(new Error('No TTS voices found.'));
-        }
 
         const targetVoiceName = this.state.settings.ttsVoiceName;
         const targetLang = this.state.settings.ttsLanguage;
@@ -134,49 +134,40 @@ export class VoiceController {
         }
       };
 
-      timeoutId = setTimeout(() => {
-        console.warn(`TTS voice init timeout (${TIMEOUT_DURATION}ms). Checking now.`);
-        timeoutId = null;
-        findAndSetVoice();
-      }, TIMEOUT_DURATION);
-
-      const onVoicesChanged = () => {
-        console.log("'voiceschanged' event fired.");
-        findAndSetVoice();
+      const attemptToInitialize = () => {
+        const voices = this.state.synthesis.instance.getVoices();
+        if (voices.length > 0) {
+          cleanup();
+          console.log("TTS voices found, proceeding with initialization.");
+          findAndSetVoice();
+        }
       };
 
-      const initialVoices = this.state.synthesis.instance.getVoices();
-      if (initialVoices.length > 0) {
-        console.log("TTS voices available immediately.");
-        findAndSetVoice();
-      } else {
-        console.log("TTS voices not immediately available, waiting for event or timeout...");
-        this.state.synthesis.instance.addEventListener('voiceschanged', onVoicesChanged, { once: true });
-      }
+      timeoutId = setTimeout(() => {
+        cleanup();
+        console.error(`TTS voice initialization timed out after ${MAX_WAIT_TIME}ms.`);
+        reject(new Error("TTS initialization timed out."));
+      }, MAX_WAIT_TIME);
+
+      pollingId = setInterval(attemptToInitialize, POLLING_INTERVAL);
+      attemptToInitialize();
     });
   }
 
-  async speakText(text) {
-    try {
-      await this.state.synthesis.initializationPromise;
-    } catch (initError) {
-      console.error("TTS init failed, cannot speak:", initError);
-      return Promise.reject(new Error("TTS not initialized."));
-    }
-
-    if (!this.state.synthesis.instance || !this.state.synthesis.selectedVoice) {
-      console.error("TTS not ready or voice missing.");
-      return Promise.reject(new Error("TTS voice unavailable."));
+  speakText(text) {
+    if (!this.state.synthesis.instance) {
+      console.error("TTS API missing, cannot speak.");
+      return Promise.reject(new Error("TTS API unavailable."));
     }
 
     this.state.synthesis.speakingPromise = this.state.synthesis.speakingPromise
       .catch((prevError) => {
         console.warn("Previous speech ended with error/cancel:", prevError?.message);
       })
+      .then(() => this.state.synthesis.initializationPromise)
       .then(() => {
-        if (!this.state.synthesis.instance || !this.state.synthesis.selectedVoice) {
-          console.error("TTS state invalid before creating speak promise.");
-          throw new Error("TTS state invalid (instance/voice missing).");
+        if (!this.state.synthesis.selectedVoice) {
+          throw new Error("TTS voice unavailable after initialization.");
         }
 
         return new Promise((resolve, reject) => {
@@ -253,6 +244,7 @@ export class VoiceController {
       .catch(error => {
         console.error("speakText promise chain error:", error);
         this.state.synthesis.isSpeaking = false;
+        return Promise.reject(error);
       });
 
     return this.state.synthesis.speakingPromise;

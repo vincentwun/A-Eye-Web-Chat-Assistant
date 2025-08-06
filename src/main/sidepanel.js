@@ -384,7 +384,7 @@ class AIScreenReader {
                 }
             } else {
                 this.appendMessage('assistant', responseText, false);
-                await this._speakResponse(responseText);
+                this._speakResponse(responseText);
                 this.setProcessing(false);
             }
         } catch (processorError) {
