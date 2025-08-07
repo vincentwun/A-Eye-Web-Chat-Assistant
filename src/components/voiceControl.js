@@ -396,30 +396,23 @@ export class VoiceController {
 
     if (context === 'initial check') {
       if (errorMessage.includes('Permission denied by user')) {
-        userMessage = 'Microphone access denied.';
-        speakMessage = 'Access denied.';
+        speakMessage = 'Microphone access denied.';
       } else if (errorMessage.includes('No active tab found')) {
-        userMessage = 'Could not find active tab.';
-        speakMessage = 'No active tab.';
+        speakMessage = 'Could not find active tab.';
       } else if (errorMessage.includes('Permissions API missing')) {
-        userMessage = 'Cannot check permission status.';
-        speakMessage = 'Checking error.';
+        speakMessage = 'Cannot check permission status.';
       } else {
         userMessage = `Error during permission check: ${errorMessage}`;
         speakMessage = 'Check error.';
       }
     } else if (context === 'prompt response') {
-      userMessage = 'Microphone access not granted.';
-      speakMessage = 'Access not granted.';
+      speakMessage = 'Microphone access not granted.';
     } else if (context === 'prompt request attempt') {
       if (errorMessage.includes("Could not establish connection") || errorMessage.includes("Cannot access contents of url") || errorMessage.includes("Frame with ID")) {
-        userMessage = 'Please try turning on Voice Input on a valid website.';
         speakMessage = 'Please try turning on Voice Input on a valid website.';
       } else if (errorMessage.includes("Script inject failed")) {
-        userMessage = `Please try turning on Voice Input on a valid website.`;
         speakMessage = 'Please try turning on Voice Input on a valid website.';
       } else if (errorMessage.includes("Could not find active tab")) {
-        userMessage = 'Could not find active tab.';
         speakMessage = 'No active tab.';
       }
       else {
