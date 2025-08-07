@@ -7,6 +7,7 @@ export class ContentAnalysisAction {
         this.voiceController = dependencies.voiceController;
         this.apiService = dependencies.apiService;
         this.state = dependencies.state;
+        this.stateManager = dependencies.stateManager;
         this.getApiConfig = dependencies.getApiConfig;
         this.getHistoryToSend = dependencies.getHistoryToSend;
         this.handleResponse = dependencies.handleResponse;
@@ -53,7 +54,7 @@ export class ContentAnalysisAction {
                 const payload = { prompt: fullPrompt };
                 const apiConfig = this.getApiConfig();
                 const historyToSend = this.getHistoryToSend('analyzeContent');
-                const systemPromptForTask = null;
+                const systemPromptForTask = this.stateManager.getPrompts().system_prompt[this.stateManager.getPrompts().active_system_prompt_key || 'web_assistant'];
 
                 const responseContent = await this.apiService.sendRequest(
                     apiConfig,

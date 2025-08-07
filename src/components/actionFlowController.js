@@ -44,7 +44,7 @@ export class ActionFlowController {
 
         const payload = { prompt: promptForLLM };
         const apiConfig = this.getApiConfig();
-        const historyToSend = [];
+        const historyToSend = this.getHistoryToSend('jsonGeneration');
         const systemPrompt = null;
 
         const llmResponseContent = await this.apiService.sendRequest(

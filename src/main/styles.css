@@ -88,6 +88,8 @@ body {
   line-height: 2;
   margin: var(--space) 0;
   font-weight: 500;
+  word-break: break-all;
+  overflow-wrap: break-word;
 }
 
 .message-user {

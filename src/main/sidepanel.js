@@ -73,6 +73,7 @@ class AIScreenReader {
             voiceController: this.voiceController,
             screenshotController: this.screenshotController,
             state: this.stateManager.getState(),
+            stateManager: this.stateManager,
             getApiConfig: this.stateManager.getApiConfig.bind(this.stateManager),
             getHistoryToSend: this.stateManager.getHistoryToSend.bind(this.stateManager),
             prompts: this.stateManager.getPrompts(),
@@ -359,7 +360,7 @@ class AIScreenReader {
 
     async _speakResponse(text) {
         if (!text || typeof text !== 'string' || !text.trim()) return;
-        const cleanedText = text.replace(/-{3,}/g, ' ').replace(/\*/g, ' ').replace(/\^/g, ' ');
+        const cleanedText = text.replace(/-{3,}/g, ' ').replace(/\*/g, ' ').replace(/\^/g, ' ').replace(/\|/g, ' ').replace(/～/g, ' ');
         try {
             this.voiceController.speakText(cleanedText);
         } catch (error) {
