@@ -84,11 +84,11 @@ body {
   padding: 10px 14px;
   border-radius: 12px;
   font-size: 14px;
-  word-wrap: break-word;
   line-height: 2;
   margin: var(--space) 0;
   font-weight: 500;
-  word-break: break-all;
+  word-wrap: break-word;
+  word-break: break-word;
   overflow-wrap: break-word;
 }
 

@@ -428,10 +428,9 @@ class AIScreenReader {
         if (lastAIMessage?.content) {
             await this._speakResponse(String(lastAIMessage.content));
         } else {
-            const msg = 'No previous response to repeat.';
-            this.appendMessage('system', msg);
-            this.voiceController.speakText(msg);
+            this.voiceController.speakText('No previous response to repeat.');
         }
+        this.elements.userInput?.focus();
     }
 
     handleOpenOptions() {
