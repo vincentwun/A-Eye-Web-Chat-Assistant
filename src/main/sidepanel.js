@@ -360,7 +360,7 @@ class AIScreenReader {
 
     async _speakResponse(text) {
         if (!text || typeof text !== 'string' || !text.trim()) return;
-        const cleanedText = text.replace(/-{3,}/g, ' ').replace(/\*/g, ' ').replace(/\^/g, ' ').replace(/\|/g, ' ').replace(/～/g, ' ');
+        const cleanedText = text.replace(/```[\s\S]*?```/g, ' ').replace(/-{3,}/g, ' ').replace(/\*/g, ' ').replace(/\^/g, ' ').replace(/\|/g, ' ').replace(/～/g, ' ');
         try {
             this.voiceController.speakText(cleanedText);
         } catch (error) {

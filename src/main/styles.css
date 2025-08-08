@@ -476,3 +476,64 @@ body {
     background-color: rgba(26, 115, 232, 0.4);
   }
 }
+
+.message-assistant .code-block-container {
+    background-color: #282c34;
+    border-radius: 8px;
+    margin: 1em 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.code-block-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #21252b;
+    padding: 8px 12px;
+    color: #abb2bf;
+    font-size: 0.9em;
+    border-bottom: 1px solid #3a4049;
+}
+
+.language-name {
+    text-transform: capitalize;
+    font-weight: 500;
+}
+
+.copy-button {
+    background-color: transparent;
+    border: none;
+    color: #abb2bf;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.copy-button:hover {
+    background-color: #3a4049;
+}
+
+.copy-button .fa-check {
+    color: #98c379;
+}
+
+.message-assistant pre {
+    margin: 0;
+    padding: 16px;
+    background-color: transparent;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: 'Fira Code', 'Courier New', Courier, monospace;
+}
+
+.message-assistant code.hljs {
+    padding: 0;
+    background: none;
+    color: #abb2bf;
+}

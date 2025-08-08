@@ -17,7 +17,53 @@ export class UIManager {
 
         messageDiv.innerHTML = formattedContent;
         this.elements.conversation.appendChild(messageDiv);
+
+        this._enhanceCodeBlocks(messageDiv);
+
         this.elements.conversation.scrollTop = this.elements.conversation.scrollHeight;
+    }
+
+    _enhanceCodeBlocks(container) {
+        const codeBlocks = container.querySelectorAll('pre > code');
+        codeBlocks.forEach(codeBlock => {
+            const preElement = codeBlock.parentElement;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'code-block-container';
+
+            const header = document.createElement('div');
+            header.className = 'code-block-header';
+
+            const langName = document.createElement('span');
+            langName.className = 'language-name';
+            const langClass = Array.from(codeBlock.classList).find(cls => cls.startsWith('language-'));
+            langName.textContent = langClass ? langClass.replace('language-', '') : 'code';
+
+            const copyButton = document.createElement('button');
+            copyButton.className = 'copy-button';
+            copyButton.innerHTML = '<i class="far fa-copy"></i> 複製';
+            copyButton.addEventListener('click', () => {
+                navigator.clipboard.writeText(codeBlock.textContent).then(() => {
+                    copyButton.innerHTML = '<i class="fas fa-check"></i> 已複製';
+                    setTimeout(() => {
+                        copyButton.innerHTML = '<i class="far fa-copy"></i> 複製';
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Failed to copy text: ', err);
+                    copyButton.textContent = '複製失敗';
+                });
+            });
+
+            header.appendChild(langName);
+            header.appendChild(copyButton);
+
+            preElement.parentNode.insertBefore(wrapper, preElement);
+            wrapper.appendChild(header);
+            wrapper.appendChild(preElement);
+
+            if (window.hljs) {
+                window.hljs.highlightElement(codeBlock);
+            }
+        });
     }
 
     async appendUserMessageWithImage({ text, imageUrl }) {
