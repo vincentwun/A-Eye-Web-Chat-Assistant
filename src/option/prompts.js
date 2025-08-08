@@ -8,9 +8,8 @@ RESPONSE RULES (These rules apply to the entire conversation):
 - Responses MUST be under 50 words.
 - Responses MUST be simple, direct, and accurate.
 - Responses MUST use natural language.
-- For all code snippets, you MUST use Markdown code blocks.
-- For all other text, you MUST NOT use any Markdown formatting.
-- You can only break the above rules if the user explicitly requests [Additional Rules].
+- Responses MUST NOT use any Markdown formatting (Except all code snippets, you MUST use Markdown code blocks).
+- You can only break the above rules if the user explicitly requests.
 
 YOUR WORKFLOW:
 1. Analyze the user's input to determine if it is a [CHAT] or a [TASK].
@@ -111,11 +110,11 @@ You MUST respond: 'getElement'`,
 
     active_system_prompt_key: 'web_assistant',
 
-    screenshot_prompt: `Describe the content and main elements of this screenshot. Remember to follow the Response Rules.`,
+    screenshot_prompt: `Describe the content and main elements of the provided screenshot. Remember to follow the Response Rules.`,
 
-    scrollingScreenshot_prompt: `Describe the content and main elements of this scrolling screenshot. Remember to follow the Response Rules.`,
+    scrollingScreenshot_prompt: `Describe the content and main elements of the provided scrolling screenshot. Remember to follow the Response Rules.`,
 
-    analyzeContent_prompt: `Your task is to summarize the provided webpage content. You are already in the analysis step, so your response MUST be the summary itself and not another command. Remember to follow the Response Rules. [Additional Rules]: You may use Markdown formatting in this time.`,
+    analyzeContent_prompt: `Summarize the provided webpage content using point form. You are already in the analysis step, so your response MUST be the summary itself and not another command. Remember to follow the Response Rules.`,
 
     getElement_prompt: `Analyze the structure of this website. Describe its main components and their functions, such as the navigation bar, main content area, forms, and footer.`,
 
