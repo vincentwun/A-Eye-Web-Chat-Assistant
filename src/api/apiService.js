@@ -1,8 +1,9 @@
 import { sendOllamaRequest } from './ollamaApi.js';
-import { sendGeminiRequest } from './geminiApi.js';
-import { sendMistralRequest } from './mistralApi.js';
 import { sendLmstudioRequest } from './lmstudioApi.js';
 import { sendVllmRequest } from './vllmApi.js';
+import { sendGeminiNanoRequest } from './geminiNanoApi.js';
+import { sendGeminiRequest } from './geminiApi.js';
+import { sendMistralRequest } from './mistralApi.js';
 
 const MAX_HISTORY_MESSAGES = 10;
 
@@ -112,6 +113,9 @@ export class ApiService {
                         break;
                     case 'vllm':
                         responseContent = await sendVllmRequest(apiConfig, standardMessages);
+                        break;
+                    case 'gemini-nano':
+                        responseContent = await sendGeminiNanoRequest(apiConfig, standardMessages);
                         break;
                     default:
                         throw new Error(`Unsupported local API mode: ${apiConfig.localApiMode}`);

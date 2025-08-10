@@ -124,6 +124,7 @@ function updateLocalConfigVisibility() {
     } else if (selectedMode === 'vllm') {
         containers.vllmUrl?.classList.remove('hidden');
         containers.vllmModel?.classList.remove('hidden');
+    } else if (selectedMode === 'gemini-nano') {
     }
 }
 

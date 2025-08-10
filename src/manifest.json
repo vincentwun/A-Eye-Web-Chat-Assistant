@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "A-Eye Web Chat Assistant",
-  "version": "2.0.11",
+  "version": "2.0.12",
   "description": "Analyzes screen content using local AI (Ollama, LM Studio, vLLM) and cloud AI (Gemini, Mistral).",
   "icons": {
     "16": "icons/icon-16.png",
@@ -16,7 +16,9 @@
     "audioCapture",
     "commands",
     "storage",
-    "tabs"
+    "tabs",
+    "activeTab",
+    "windows"
   ],
   "host_permissions": [
     "<all_urls>"

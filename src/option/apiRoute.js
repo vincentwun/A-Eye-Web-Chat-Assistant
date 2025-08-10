@@ -30,40 +30,47 @@ export const serviceConfigurations = {
             messageTemplate: '[FIELD_LABEL] is missing. Please configure in Options page.',
             speechTemplate: 'Local API settings missing.'
         },
+        'gemini-nano': {
+            serviceName: 'Gemini Nano',
+            requiredFields: [],
+            labels: { },
+            messageTemplate: 'Gemini Nano is selected and requires no further configuration.',
+            speechTemplate: 'Gemini Nano selected.'
+        }
     },
-    cloud: {
-        'gemini-direct': {
-            serviceName: 'Gemini',
+cloud: {
+    'gemini-direct': {
+        serviceName: 'Gemini',
             requiredFields: ['cloudApiKey', 'cloudModelName'],
-            labels: {
-                cloudApiKey: 'Gemini API Key',
+                labels: {
+            cloudApiKey: 'Gemini API Key',
                 cloudModelName: 'Gemini Model Name',
             },
-            messageTemplate: '[FIELD_LABEL] is missing. Please configure in Options page.',
+        messageTemplate: '[FIELD_LABEL] is missing. Please configure in Options page.',
             speechTemplate: '[SERVICE_NAME] settings missing: [FIELD_LABEL].'
-        },
-        'gemini-proxy': {
-            serviceName: 'Vertex AI (GCP)',
+    },
+    'gemini-proxy': {
+        serviceName: 'Vertex AI (GCP)',
             requiredFields: ['cloudProxyUrl', 'gcpApiKey', 'cloudModelName'],
-            labels: {
-                cloudProxyUrl: 'API Gateway Endpoint',
+                labels: {
+            cloudProxyUrl: 'API Gateway Endpoint',
                 gcpApiKey: 'GCP API Key',
-                cloudModelName: 'Gemini Model Name',
+                    cloudModelName: 'Gemini Model Name',
             },
-            messageTemplate: '[FIELD_LABEL] is missing. Please configure in Options page.',
+        messageTemplate: '[FIELD_LABEL] is missing. Please configure in Options page.',
             speechTemplate: '[SERVICE_NAME] settings missing: [FIELD_LABEL].'
-        },
-        mistral: {
-            serviceName: 'Mistral',
+    },
+    mistral: {
+        serviceName: 'Mistral',
             requiredFields: ['mistralApiKey', 'mistralModelName'],
-            labels: {
-                mistralApiKey: 'Mistral API Key',
+                labels: {
+            mistralApiKey: 'Mistral API Key',
                 mistralModelName: 'Mistral Model Name',
             },
-            messageTemplate: '[FIELD_LABEL] is missing. Please configure in Options page.',
+        messageTemplate: '[FIELD_LABEL] is missing. Please configure in Options page.',
             speechTemplate: '[SERVICE_NAME] settings missing: [FIELD_LABEL].'
-        }
     }
+}
 };
 
 export const defaultApiSettings = {

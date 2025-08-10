@@ -86,6 +86,8 @@
                     <label for="local-select-lmstudio">LM Studio</label>
                     <input type="radio" id="local-select-vllm" name="localApiModeSelection" value="vllm">
                     <label for="local-select-vllm">vLLM</label>
+                    <input type="radio" id="local-select-gemini-nano" name="localApiModeSelection" value="gemini-nano">
+                    <label for="local-select-gemini-nano">Gemini Nano</label>
                 </div>
             </div>
             <div id="vllm-url-container" class="hidden">
@@ -132,8 +134,7 @@
                     </optgroup>
                 </select>
                 <div id="custom-lmstudio-model-container" class="hidden">
-                    <input type="text" id="custom-lmstudio-model-input"
-                        placeholder="Enter custom LM Studio model name">
+                    <input type="text" id="custom-lmstudio-model-input" placeholder="Enter custom LM Studio model name">
                 </div>
             </div>
             <div id="vllm-model-container" class="hidden">
