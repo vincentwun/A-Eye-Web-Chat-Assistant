@@ -86,6 +86,28 @@ This is the easiest method for Windows users.
     *   Click 'Start Server'.
 4.  In the extension's **Settings**, ensure "LM Studio Model Name" matches the model path you used in LM Studio (e.g., `google/gemma-3-4b`).
 
+#### Option 4: Manual Setup Gemini Nano
+1.  **Open [chrome://flags](chrome://flags) and enable:**
+    | Flag | Value to set |
+    | :--- | :--- |
+    | Prompt API for Gemini Nano | Enabled |
+    | Optimization guide on device model | Enabled BypassPerfRequirement |
+2.  **Restart Chrome**
+3.  **Open Console and trigger download with progress**:
+    ```javascript
+    const session = await LanguageModel.create({
+      monitor(m) {
+        m.addEventListener("downloadprogress", (e) => {
+          console.log(`Downloaded ${Math.round(e.loaded * 100)}%`);
+        });
+      },
+    });
+    ```
+4.  **Check API availability**
+    ```javascript
+    await LanguageModel.availability();
+    ```
+
 </details>
 
 ### Cloud AI Setup

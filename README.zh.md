@@ -86,6 +86,28 @@ A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變
     *   點擊「啟動伺服器」。
 4.  在擴充功能的 **設定** 頁面，確保「LM Studio Model Name」與您在 LM Studio 中使用的模型路徑一致（例如 `google/gemma-3-4b`）。
 
+#### 選項 4：手動設定 Gemini Nano
+1.  **開啟 [chrome://flags](chrome://flags) 並啟用：**
+    | 標記 | 設定值 |
+    | :--- | :--- |
+    | Prompt API for Gemini Nano | Enabled |
+    | Optimization guide on device model | Enabled BypassPerfRequirement |
+2.  **重新啟動 Chrome**
+3.  **開啟主控台並以進度觸發下載：**
+    ```javascript
+    const session = await LanguageModel.create({
+      monitor(m) {
+        m.addEventListener("downloadprogress", (e) => {
+          console.log(`Downloaded ${Math.round(e.loaded * 100)}%`);
+        });
+      },
+    });
+    ```
+4.  **檢查 API 可用性**
+    ```javascript
+    await LanguageModel.availability();
+    ```
+
 </details>
 
 ### 雲端 AI 設定
