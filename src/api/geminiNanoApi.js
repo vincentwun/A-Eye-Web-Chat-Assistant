@@ -6,44 +6,12 @@ async function base64ToBlob(dataUrl, mimeType = 'image/png') {
     return await res.blob();
 }
 
-async function waitTabComplete(tabId, timeoutMs = 5000) {
-    const done = new Promise(resolve => {
-        const listener = (id, info) => {
-            if (id === tabId && info.status === 'complete') {
-                chrome.tabs.onUpdated.removeListener(listener);
-                resolve(true);
-            }
-        };
-        chrome.tabs.onUpdated.addListener(listener);
-    });
-    const timeout = new Promise(resolve => setTimeout(() => resolve(false), timeoutMs));
-    return Promise.race([done, timeout]);
-}
-
-async function createEphemeralHiddenTarget() {
-    const win = await chrome.windows.create({
-        url: 'https://example.com/',
-        type: 'popup',
-        focused: false,
-        left: -10000,
-        top: 0,
-        width: 1,
-        height: 1
-    });
-    const tabId = win.tabs?.[0]?.id ?? (await chrome.tabs.query({ windowId: win.id }))[0]?.id;
-    if (!tabId) {
-        try { await chrome.windows.remove(win.id); } catch { }
-        throw new Error('Failed to create hidden window.');
-    }
-    await waitTabComplete(tabId).catch(() => { });
-    const cleanup = async () => { try { await chrome.windows.remove(win.id); } catch { } };
-    return { tabId, cleanup };
-}
-
 async function resolveInjectionTarget() {
     const [active] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (active?.id && /^https?:/i.test(active.url || '')) return { tabId: active.id, cleanup: null };
-    return await createEphemeralHiddenTarget();
+    if (active?.id && /^https?:/i.test(active.url || '')) {
+        return { tabId: active.id, cleanup: null };
+    }
+    throw new Error('No suitable page found for Gemini Nano injection. Please switch to a regular web page (http/https).');
 }
 
 async function buildPromptPayload(messages, forInjection = false) {

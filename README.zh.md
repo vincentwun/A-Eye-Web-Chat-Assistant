@@ -62,6 +62,8 @@ A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變
 3.  指令碼將會自動安裝 Ollama、設定權限，並下載您選擇的模型。
 4.  在擴充功能的 **設定** 頁面，確保「Ollama Model Name」與您所安裝的模型一致（例如 `gemma3:4b`）。
 
+---
+
 #### 選項二：手動設定 Ollama & Gemma 3
 1.  **安裝 [Ollama](https://ollama.com/)**。
 2.  **設定 CORS 權限**：此步驟是為了讓擴充功能與 Ollama 通訊。
@@ -73,6 +75,8 @@ A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變
     *   **>= 10GB VRAM**: `ollama run gemma3:12b`
     *   **>= 20GB VRAM**: `ollama run gemma3:27b`
 5.  在擴充功能的 **設定** 頁面，確保「Ollama Model Name」與您所安裝的模型一致。
+
+---
 
 #### 選項三：手動設定 LM Studio & Gemma 3
 1.  **安裝 [LM Studio](https://lmstudio.ai/)**。
@@ -86,14 +90,21 @@ A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變
     *   點擊「啟動伺服器」。
 4.  在擴充功能的 **設定** 頁面，確保「LM Studio Model Name」與您在 LM Studio 中使用的模型路徑一致（例如 `google/gemma-3-4b`）。
 
+---
+
 #### 選項 4：手動設定 Gemini Nano
-1.  **開啟 [chrome://flags](chrome://flags) 並啟用：**
+
+更多細節請參考 [官方 Chrome Prompt API 文件](https://developer.chrome.com/docs/ai/prompt-api)。
+注意：Gemini Nano 的 Multimodal 功能目前僅支援於 Chrome Canary (https://www.google.com/chrome/canary/)。
+
+1.  **開啟 `chrome://flags` 並啟用：**
     | 標記 | 設定值 |
     | :--- | :--- |
     | Prompt API for Gemini Nano | Enabled |
-    | Optimization guide on device model | Enabled BypassPerfRequirement |
+    | Prompt API for Gemini Nano with Multimodal Input | Enabled |
+    | Enables optimization guide on device | Enabled BypassPerfRequirement |
 2.  **重新啟動 Chrome**
-3.  **開啟主控台並以進度觸發下載：**
+3.  **開啟主控台(F12)並以進度觸發下載：**
     ```javascript
     const session = await LanguageModel.create({
       monitor(m) {
@@ -107,6 +118,7 @@ A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變
     ```javascript
     await LanguageModel.availability();
     ```
+    當狀態從 `'downloading'` 變為 `'available'`，即代表 Gemini Nano 已可使用。
 
 </details>
 
@@ -123,8 +135,12 @@ A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變
 3.  複製您的 API 金鑰。
 4.  在擴充功能的 **設定** 頁面，將其貼上至「Gemini API Key」欄位。
 
+---
+
 #### 選項二：Google Cloud Platform (Vertex AI)
 適合想自行管理 GCP 基礎設施的進階使用者。詳細步驟請參閱 [GCP 設定指南](./gcp/gcloud/README.md)。
+
+---
 
 #### 選項三：Mistral AI
 1.  前往 [Mistral AI 平台](https://console.mistral.ai/)。

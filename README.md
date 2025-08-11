@@ -51,6 +51,8 @@ Ideal for privacy. All processing happens on your computer.
 #### Option 1: Automated PowerShell Script (Windows) (Ollama & Gemma 3)
 This is the easiest method for Windows users.
 
+---
+
 1.  Choose the script based on your GPU's VRAM:
     *   **>= 6GB VRAM**: `setup_ollama_gemma3_4b.ps1`
     *   **>= 10GB VRAM**: `setup_ollama_gemma3_12b.ps1`
@@ -61,6 +63,8 @@ This is the easiest method for Windows users.
     ```
 3.  The script will automatically install Ollama, set permissions, and download your chosen model.
 4.  In the extension's **Settings**, ensure "Local Model Name" matches the model you installed (e.g., `gemma3:4b`).
+
+---
 
 #### Option 2: Manual Setup (Ollama & Gemma 3)
 1.  **Install [Ollama](https://ollama.com/)**.
@@ -74,6 +78,8 @@ This is the easiest method for Windows users.
     *   **>= 20GB VRAM**: `ollama run gemma3:27b`
 5.  In the extension's **Settings**, ensure "Local Model Name" matches the model you installed.
 
+---
+
 #### Option 3: Manual Setup LM Studio & Gemma 3
 1.  **Install [LM Studio](https://lmstudio.ai/)**.
 2.  **Download a Model**:
@@ -86,14 +92,22 @@ This is the easiest method for Windows users.
     *   Click 'Start Server'.
 4.  In the extension's **Settings**, ensure "LM Studio Model Name" matches the model path you used in LM Studio (e.g., `google/gemma-3-4b`).
 
+---
+
 #### Option 4: Manual Setup Gemini Nano
-1.  **Open [chrome://flags](chrome://flags) and enable:**
+
+For more details, see the [Official Chrome Prompt API documentation](https://developer.chrome.com/docs/ai/prompt-api).
+Note: Gemini Nano's Multimodal capabilities are currently only supported in Chrome Canary (https://www.google.com/chrome/canary/).
+
+1.  **Open `chrome://flags` and enable:**
     | Flag | Value to set |
     | :--- | :--- |
     | Prompt API for Gemini Nano | Enabled |
-    | Optimization guide on device model | Enabled BypassPerfRequirement |
+    | Prompt API for Gemini Nano with Multimodal Input | Enabled |
+    | Enables optimization guide on device | Enabled BypassPerfRequirement |
+
 2.  **Restart Chrome**
-3.  **Open Console and trigger download with progress**:
+3.  **Open Console (F12) and trigger download with progress**:
     ```javascript
     const session = await LanguageModel.create({
       monitor(m) {
@@ -107,6 +121,7 @@ This is the easiest method for Windows users.
     ```javascript
     await LanguageModel.availability();
     ```
+    Once the status changes from `'downloading'` to `'available'`, Gemini Nano is ready to use.
 
 </details>
 
@@ -123,8 +138,12 @@ Ideal for maximum power and performance.
 3.  Copy the key.
 4.  In the extension's **Settings**, paste it into the "Cloud API Key" field.
 
+---
+
 #### Option 2: Google Cloud Platform (Vertex AI)
 For advanced users who want to manage their own GCP infrastructure. See the [GCP Setup Guide](./gcp/gcloud/README.md) for detailed instructions.
+
+---
 
 #### Option 3: Mistral AI
 1.  Visit [Mistral AI Platform](https://console.mistral.ai/).
