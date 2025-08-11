@@ -21,7 +21,7 @@
 
 ---
 
-A-Eye is a free, open-source Chrome extension designed to make web browsing easier and more accessible, especially for users with visual impairments. Through intuitive AI chat, powerful screen analysis, and comprehensive voice control, it transforms how you interact with the web. You can freely choose between privacy-focused local AI services (Ollama, LM Studio and vLLM) or powerful cloud AI services (Google Gemini and Mistral AI).
+A-Eye is a free, open-source Chrome extension designed to make web browsing easier and more accessible, especially for users with visual impairments. Through intuitive AI chat, powerful screen analysis, and comprehensive voice control, it transforms how you interact with the web. You can freely choose between privacy-focused local AI services (Gemini Nano, Ollama, LM Studio and vLLM) or powerful cloud AI services (Google Gemini and Mistral AI).
 
 ## Key Features
 
