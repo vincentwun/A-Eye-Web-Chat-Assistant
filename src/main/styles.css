@@ -243,7 +243,8 @@ body {
   outline: none;
   padding: 4px 2px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
+  letter-spacing: 0.5px;
   line-height: 2;
   background-color: transparent;
   resize: none;
