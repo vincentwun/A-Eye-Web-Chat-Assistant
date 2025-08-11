@@ -2,187 +2,102 @@ import { defaultPrompts, promptsStorageKey } from './prompts.js';
 import { settingsStorageKey, defaultApiSettings } from './apiRoute.js';
 import { voiceSettingsStorageKey, defaultVoiceSettings, availableLanguages } from './voiceSettings.js';
 
-const notificationBar = document.getElementById('notification-bar');
+const $ = (id) => document.getElementById(id);
+const q = (sel) => document.querySelector(sel);
+const qa = (sel) => document.querySelectorAll(sel);
+
+const notificationBar = $('notification-bar');
 let notificationTimeout;
 let currentVoiceSettings = null;
 let currentPrompts = null;
-
-function saveOptions() {
-    const elementsToSave = document.querySelectorAll('[data-storage-key]');
-    const keysToUpdate = {
-        [settingsStorageKey]: {},
-        [promptsStorageKey]: {},
-        [voiceSettingsStorageKey]: {}
-    };
-
-    const settingsUpdate = keysToUpdate[settingsStorageKey];
-
-    const selectedLocalService = document.querySelector('input[name="localApiModeSelection"]:checked').value;
-    settingsUpdate.localApiMode = selectedLocalService;
-
-    const selectedCloudService = document.querySelector('input[name="cloudSelection"]:checked').value;
-    if (selectedCloudService === 'mistral') {
-        settingsUpdate.cloudProvider = 'mistral';
-    } else if (selectedCloudService === 'gateway') {
-        settingsUpdate.cloudProvider = 'gemini';
-        settingsUpdate.cloudApiMethod = 'proxy';
-    } else {
-        settingsUpdate.cloudProvider = 'gemini';
-        settingsUpdate.cloudApiMethod = 'direct';
-    }
-
-    elementsToSave.forEach(el => {
-        const storageKey = el.dataset.storageKey;
-        const storageType = el.dataset.storageType;
-        let storageAreaKey;
-        let value;
-
-        if (storageType === 'settings') storageAreaKey = settingsStorageKey;
-        else if (storageType === 'prompts') storageAreaKey = promptsStorageKey;
-        else if (storageType === 'voice') storageAreaKey = voiceSettingsStorageKey;
-        else return;
-
-        value = el.type === 'checkbox' ? el.checked : el.value;
-        keysToUpdate[storageAreaKey][storageKey] = value;
-    });
-
-    const ollamaModelSelect = document.getElementById('ollama-model-name-select');
-    if (ollamaModelSelect && ollamaModelSelect.value === 'custom') {
-        const customInput = document.getElementById('custom-ollama-model-input');
-        keysToUpdate[settingsStorageKey].localMultimodalModel = customInput.value;
-    }
-
-    const lmstudioModelSelect = document.getElementById('lmstudio-model-name-select');
-    if (lmstudioModelSelect && lmstudioModelSelect.value === 'custom') {
-        const customInput = document.getElementById('custom-lmstudio-model-input');
-        keysToUpdate[settingsStorageKey].lmstudioModelName = customInput.value;
-    }
-
-
-    chrome.storage.local.get(Object.keys(keysToUpdate), (result) => {
-        if (chrome.runtime.lastError) {
-            return showNotification("Error preparing to save.", true);
-        }
-
-        const roleSelect = document.getElementById('role-select');
-        const systemPromptTextarea = document.getElementById('system_prompt');
-        const activeRoleKey = roleSelect ? roleSelect.value : defaultPrompts.active_system_prompt_key;
-        const promptText = systemPromptTextarea ? systemPromptTextarea.value : '';
-
-        const promptsUpdate = keysToUpdate[promptsStorageKey] || {};
-        const existingPrompts = result[promptsStorageKey] || defaultPrompts;
-
-        const newSystemPrompts = {
-            ...(existingPrompts.system_prompt || defaultPrompts.system_prompt),
-            [activeRoleKey]: promptText
-        };
-
-        const finalPrompts = {
-            ...existingPrompts,
-            ...promptsUpdate,
-            system_prompt: newSystemPrompts
-        };
-
-        const finalData = {
-            [settingsStorageKey]: { ...result[settingsStorageKey], ...keysToUpdate[settingsStorageKey] },
-            [promptsStorageKey]: finalPrompts,
-            [voiceSettingsStorageKey]: { ...result[voiceSettingsStorageKey], ...keysToUpdate[voiceSettingsStorageKey] }
-        };
-
-        chrome.storage.local.set(finalData, () => {
-            if (chrome.runtime.lastError) {
-                showNotification(`Error: ${chrome.runtime.lastError.message}`, true);
-            } else {
-                showNotification('Saved successfully.');
-                currentVoiceSettings = finalData[voiceSettingsStorageKey];
-                currentPrompts = finalData[promptsStorageKey];
-                updateCloudConfigVisibility();
-                updateLocalConfigVisibility();
-            }
-        });
-    });
-}
-
-function updateLocalConfigVisibility() {
-    const modeSelect = document.querySelector('input[name="localApiModeSelection"]:checked');
-    if (!modeSelect) return;
-
-    const containers = {
-        ollama: document.getElementById('ollama-model-container'),
-        lmstudio: document.getElementById('lmstudio-model-container'),
-        vllmUrl: document.getElementById('vllm-url-container'),
-        vllmModel: document.getElementById('vllm-model-container'),
-    };
-
-    Object.values(containers).forEach(c => c?.classList.add('hidden'));
-
-    const selectedMode = modeSelect.value;
-    if (selectedMode === 'ollama') {
-        containers.ollama?.classList.remove('hidden');
-    } else if (selectedMode === 'lmstudio') {
-        containers.lmstudio?.classList.remove('hidden');
-    } else if (selectedMode === 'vllm') {
-        containers.vllmUrl?.classList.remove('hidden');
-        containers.vllmModel?.classList.remove('hidden');
-    } else if (selectedMode === 'gemini-nano') {
-    }
-}
-
-function updateCloudConfigVisibility() {
-    const selectedService = document.querySelector('input[name="cloudSelection"]:checked').value;
-
-    const containers = {
-        proxyUrl: document.getElementById('proxy-url-container'),
-        gcpApiKey: document.getElementById('gcp-api-key-container'),
-        geminiApiKey: document.getElementById('gemini-api-key-container'),
-        geminiModel: document.getElementById('gemini-model-container'),
-        mistralApiKey: document.getElementById('mistral-api-key-container'),
-        mistralModel: document.getElementById('mistral-model-container')
-    };
-
-    Object.values(containers).forEach(c => c.classList.add('hidden'));
-
-    if (selectedService === 'gemini') {
-        containers.geminiApiKey.classList.remove('hidden');
-        containers.geminiModel.classList.remove('hidden');
-    } else if (selectedService === 'gateway') {
-        containers.proxyUrl.classList.remove('hidden');
-        containers.gcpApiKey.classList.remove('hidden');
-        containers.geminiModel.classList.remove('hidden');
-    } else if (selectedService === 'mistral') {
-        containers.mistralApiKey.classList.remove('hidden');
-        containers.mistralModel.classList.remove('hidden');
-    }
-}
 
 function showNotification(message, isError = false) {
     if (!notificationBar) return;
     clearTimeout(notificationTimeout);
     notificationBar.textContent = message;
     notificationBar.classList.remove('error', 'show');
-    if (isError) {
-        notificationBar.classList.add('error');
-    }
+    if (isError) notificationBar.classList.add('error');
     notificationBar.classList.add('show');
-    notificationTimeout = setTimeout(() => {
-        notificationBar.classList.remove('show');
-    }, 2500);
+    notificationTimeout = setTimeout(() => notificationBar.classList.remove('show'), 2500);
+}
+
+function getSelectedRadioValue(name) {
+    const el = q(`input[name="${name}"]:checked`);
+    return el ? el.value : null;
+}
+
+function toggleHidden(el, hidden = true) {
+    if (!el) return;
+    el.classList.toggle('hidden', hidden);
+}
+
+function getCloudContainers() {
+    return {
+        proxyUrl: $('proxy-url-container'),
+        gcpApiKey: $('gcp-api-key-container'),
+        geminiApiKey: $('gemini-api-key-container'),
+        geminiModel: $('gemini-model-container'),
+        mistralApiKey: $('mistral-api-key-container'),
+        mistralModel: $('mistral-model-container')
+    };
+}
+
+function getLocalContainers() {
+    return {
+        ollama: $('ollama-model-container'),
+        lmstudio: $('lmstudio-model-container'),
+        vllmUrl: $('vllm-url-container'),
+        vllmModel: $('vllm-model-container')
+    };
+}
+
+function updateLocalConfigVisibility() {
+    const selectedMode = getSelectedRadioValue('localApiModeSelection');
+    const containers = getLocalContainers();
+    Object.values(containers).forEach(c => c?.classList.add('hidden'));
+    if (selectedMode === 'ollama') {
+        toggleHidden(containers.ollama, false);
+    } else if (selectedMode === 'lmstudio') {
+        toggleHidden(containers.lmstudio, false);
+    } else if (selectedMode === 'vllm') {
+        toggleHidden(containers.vllmUrl, false);
+        toggleHidden(containers.vllmModel, false);
+    } else if (selectedMode === 'gemini-nano') {
+    }
+}
+
+function updateCloudConfigVisibility() {
+    const selectedService = getSelectedRadioValue('cloudSelection');
+    const containers = getCloudContainers();
+    Object.values(containers).forEach(c => c?.classList.add('hidden'));
+
+    if (selectedService === 'gemini') {
+        toggleHidden(containers.geminiApiKey, false);
+        toggleHidden(containers.geminiModel, false);
+    } else if (selectedService === 'gateway') {
+        toggleHidden(containers.proxyUrl, false);
+        toggleHidden(containers.gcpApiKey, false);
+        toggleHidden(containers.geminiModel, false);
+    } else if (selectedService === 'mistral') {
+        toggleHidden(containers.mistralApiKey, false);
+        toggleHidden(containers.mistralModel, false);
+    }
 }
 
 function populateSttLanguageDropdown() {
-    const sttSelect = document.getElementById('stt-language-select');
+    const sttSelect = $('stt-language-select');
     if (!sttSelect) return;
     sttSelect.innerHTML = '';
     for (const [code, name] of Object.entries(availableLanguages)) {
-        const sttOption = document.createElement('option');
-        sttOption.value = code;
-        sttOption.textContent = name;
-        sttSelect.appendChild(sttOption);
+        const opt = document.createElement('option');
+        opt.value = code;
+        opt.textContent = name;
+        sttSelect.appendChild(opt);
     }
 }
 
 function populateVoiceList() {
-    const ttsVoiceSelect = document.getElementById('tts-voice-select');
+    const ttsVoiceSelect = $('tts-voice-select');
     if (!ttsVoiceSelect || !currentVoiceSettings) return;
     const synth = window.speechSynthesis;
 
@@ -193,8 +108,8 @@ function populateVoiceList() {
 
         if (voices.length === 0) {
             const defaultOption = document.createElement('option');
-            defaultOption.value = "";
-            defaultOption.textContent = "No voices available";
+            defaultOption.value = '';
+            defaultOption.textContent = 'No voices available';
             ttsVoiceSelect.appendChild(defaultOption);
             ttsVoiceSelect.disabled = true;
             return;
@@ -202,37 +117,35 @@ function populateVoiceList() {
 
         ttsVoiceSelect.disabled = false;
         const placeholderOption = document.createElement('option');
-        placeholderOption.value = "";
-        placeholderOption.textContent = "-- Select a Voice --";
+        placeholderOption.value = '';
+        placeholderOption.textContent = '-- Select a Voice --';
         ttsVoiceSelect.appendChild(placeholderOption);
 
         voices.forEach(voice => {
             const option = document.createElement('option');
             option.value = voice.name;
-            option.textContent = `${voice.name} (${voice.lang})`;
-            if (voice.default) option.textContent += ' [Default]';
+            option.textContent = `${voice.name} (${voice.lang})${voice.default ? ' [Default]' : ''}`;
             ttsVoiceSelect.appendChild(option);
         });
 
         const targetVoiceName = currentVoiceSettings.ttsVoiceName;
+        const hasTarget = targetVoiceName && ttsVoiceSelect.querySelector(`option[value="${CSS.escape(targetVoiceName)}"]`);
+        const hasPrev = previousValue && ttsVoiceSelect.querySelector(`option[value="${CSS.escape(previousValue)}"]`);
 
-        if (targetVoiceName && ttsVoiceSelect.querySelector(`option[value="${CSS.escape(targetVoiceName)}"]`)) {
+        if (hasTarget) {
             ttsVoiceSelect.value = targetVoiceName;
-        } else if (previousValue && ttsVoiceSelect.querySelector(`option[value="${CSS.escape(previousValue)}"]`)) {
+        } else if (hasPrev) {
             ttsVoiceSelect.value = previousValue;
         } else {
-            let defaultEnUsVoice = voices.find(voice => voice.lang === 'en-US' && voice.default) || voices.find(voice => voice.lang === 'en-US');
+            const defaultEnUsVoice = voices.find(v => v.lang === 'en-US' && v.default) || voices.find(v => v.lang === 'en-US');
             if (defaultEnUsVoice) {
                 ttsVoiceSelect.value = defaultEnUsVoice.name;
                 if (!targetVoiceName) {
                     currentVoiceSettings.ttsVoiceName = defaultEnUsVoice.name;
-                    const dataToStore = {
-                        [voiceSettingsStorageKey]: currentVoiceSettings
-                    };
-                    chrome.storage.local.set(dataToStore);
+                    chrome.storage.local.set({ [voiceSettingsStorageKey]: currentVoiceSettings });
                 }
             } else {
-                ttsVoiceSelect.value = "";
+                ttsVoiceSelect.value = '';
             }
         }
     };
@@ -258,67 +171,149 @@ function handleCustomModelSelection(selectElement, customContainer, customInput,
     }
 }
 
+function mergePrompts(existingPrompts, promptsUpdate, activeRoleKey, promptText) {
+    const newSystemPrompts = {
+        ...(existingPrompts.system_prompt || defaultPrompts.system_prompt),
+        [activeRoleKey]: promptText
+    };
+    return {
+        ...existingPrompts,
+        ...promptsUpdate,
+        system_prompt: newSystemPrompts
+    };
+}
+
+function readDataAttributesToUpdates(keysToUpdate) {
+    const elementsToSave = qa('[data-storage-key]');
+    elementsToSave.forEach(el => {
+        const storageKey = el.dataset.storageKey;
+        const storageType = el.dataset.storageType;
+        let storageAreaKey;
+        if (storageType === 'settings') storageAreaKey = settingsStorageKey;
+        else if (storageType === 'prompts') storageAreaKey = promptsStorageKey;
+        else if (storageType === 'voice') storageAreaKey = voiceSettingsStorageKey;
+        else return;
+
+        const value = el.type === 'checkbox' ? el.checked : el.value;
+        keysToUpdate[storageAreaKey][storageKey] = value;
+    });
+}
+
+function saveOptions() {
+    const keysToUpdate = {
+        [settingsStorageKey]: {},
+        [promptsStorageKey]: {},
+        [voiceSettingsStorageKey]: {}
+    };
+
+    const settingsUpdate = keysToUpdate[settingsStorageKey];
+    const selectedLocalService = getSelectedRadioValue('localApiModeSelection');
+    if (selectedLocalService) settingsUpdate.localApiMode = selectedLocalService;
+
+    const selectedCloudService = getSelectedRadioValue('cloudSelection');
+    if (selectedCloudService === 'mistral') {
+        settingsUpdate.cloudProvider = 'mistral';
+    } else if (selectedCloudService === 'gateway') {
+        settingsUpdate.cloudProvider = 'gemini';
+        settingsUpdate.cloudApiMethod = 'proxy';
+    } else {
+        settingsUpdate.cloudProvider = 'gemini';
+        settingsUpdate.cloudApiMethod = 'direct';
+    }
+
+    readDataAttributesToUpdates(keysToUpdate);
+
+    const ollamaModelSelect = $('ollama-model-name-select');
+    if (ollamaModelSelect && ollamaModelSelect.value === 'custom') {
+        const customInput = $('custom-ollama-model-input');
+        keysToUpdate[settingsStorageKey].localMultimodalModel = customInput.value;
+    }
+
+    const lmstudioModelSelect = $('lmstudio-model-name-select');
+    if (lmstudioModelSelect && lmstudioModelSelect.value === 'custom') {
+        const customInput = $('custom-lmstudio-model-input');
+        keysToUpdate[settingsStorageKey].lmstudioModelName = customInput.value;
+    }
+
+    chrome.storage.local.get(Object.keys(keysToUpdate), (result) => {
+        if (chrome.runtime.lastError) return showNotification('Error preparing to save.', true);
+
+        const roleSelect = $('role-select');
+        const systemPromptTextarea = $('system_prompt');
+        const activeRoleKey = roleSelect ? roleSelect.value : defaultPrompts.active_system_prompt_key;
+        const promptText = systemPromptTextarea ? systemPromptTextarea.value : '';
+
+        const promptsUpdate = keysToUpdate[promptsStorageKey] || {};
+        const existingPrompts = result[promptsStorageKey] || defaultPrompts;
+        const finalPrompts = mergePrompts(existingPrompts, promptsUpdate, activeRoleKey, promptText);
+
+        const finalData = {
+            [settingsStorageKey]: { ...(result[settingsStorageKey] || {}), ...keysToUpdate[settingsStorageKey] },
+            [promptsStorageKey]: finalPrompts,
+            [voiceSettingsStorageKey]: { ...(result[voiceSettingsStorageKey] || {}), ...keysToUpdate[voiceSettingsStorageKey] }
+        };
+
+        chrome.storage.local.set(finalData, () => {
+            if (chrome.runtime.lastError) {
+                showNotification(`Error: ${chrome.runtime.lastError.message}`, true);
+            } else {
+                showNotification('Saved successfully.');
+                currentVoiceSettings = finalData[voiceSettingsStorageKey];
+                currentPrompts = finalData[promptsStorageKey];
+                updateCloudConfigVisibility();
+                updateLocalConfigVisibility();
+            }
+        });
+    });
+}
+
 function loadOptions() {
     populateSttLanguageDropdown();
 
     const elements = {
-        vllmUrlInput: document.getElementById('vllm-url-input'),
-        ollamaModelSelect: document.getElementById('ollama-model-name-select'),
-        customOllamaModelContainer: document.getElementById('custom-ollama-model-container'),
-        customOllamaModelInput: document.getElementById('custom-ollama-model-input'),
-        lmstudioModelSelect: document.getElementById('lmstudio-model-name-select'),
-        customLmstudioModelContainer: document.getElementById('custom-lmstudio-model-container'),
-        customLmstudioModelInput: document.getElementById('custom-lmstudio-model-input'),
-        vllmModelInput: document.getElementById('vllm-model-name-input'),
+        vllmUrlInput: $('vllm-url-input'),
+        ollamaModelSelect: $('ollama-model-name-select'),
+        customOllamaModelContainer: $('custom-ollama-model-container'),
+        customOllamaModelInput: $('custom-ollama-model-input'),
+        lmstudioModelSelect: $('lmstudio-model-name-select'),
+        customLmstudioModelContainer: $('custom-lmstudio-model-container'),
+        customLmstudioModelInput: $('custom-lmstudio-model-input'),
+        vllmModelInput: $('vllm-model-name-input'),
 
-        cloudProxyUrlInput: document.getElementById('cloud-proxy-url-input'),
-        cloudApiKeyInput: document.getElementById('cloud-api-key-input'),
-        gcpApiKeyInput: document.getElementById('gcp-api-key-input'),
-        cloudModelNameInput: document.getElementById('cloud-model-name-input'),
-        mistralApiKeyInput: document.getElementById('mistral-api-key-input'),
-        mistralModelSelect: document.getElementById('mistral-model-name-select'),
-        systemPromptTextarea: document.getElementById('system_prompt'),
-        roleSelect: document.getElementById('role-select'),
-        sttSelect: document.getElementById('stt-language-select')
+        cloudProxyUrlInput: $('cloud-proxy-url-input'),
+        cloudApiKeyInput: $('cloud-api-key-input'),
+        gcpApiKeyInput: $('gcp-api-key-input'),
+        cloudModelNameInput: $('cloud-model-name-input'),
+        mistralApiKeyInput: $('mistral-api-key-input'),
+        mistralModelSelect: $('mistral-model-name-select'),
+        systemPromptTextarea: $('system_prompt'),
+        roleSelect: $('role-select'),
+        sttSelect: $('stt-language-select')
     };
 
     chrome.storage.local.get([promptsStorageKey, settingsStorageKey, voiceSettingsStorageKey], (result) => {
-        if (chrome.runtime.lastError) {
-            return showNotification("Error loading settings: " + chrome.runtime.lastError.message, true);
-        }
+        if (chrome.runtime.lastError) return showNotification('Error loading settings: ' + chrome.runtime.lastError.message, true);
 
-        const savedApiSettings = result[settingsStorageKey] || {
-            ...defaultApiSettings
-        };
-        let savedVoiceSettings = result[voiceSettingsStorageKey];
-        currentPrompts = result[promptsStorageKey] || {
-            ...defaultPrompts
-        };
+        const savedApiSettings = result[settingsStorageKey] || { ...defaultApiSettings };
+        const savedVoiceSettings = result[voiceSettingsStorageKey];
+        currentPrompts = result[promptsStorageKey] || { ...defaultPrompts };
 
         if (!savedVoiceSettings || typeof savedVoiceSettings.sttLanguage === 'undefined' || typeof savedVoiceSettings.ttsVoiceName === 'undefined') {
-            currentVoiceSettings = {
-                sttLanguage: 'en-US',
-                ttsVoiceName: '',
-                ttsLanguage: 'en-US'
-            };
-            chrome.storage.local.set({
-                [voiceSettingsStorageKey]: currentVoiceSettings
-            }, () => {
+            currentVoiceSettings = { sttLanguage: 'en-US', ttsVoiceName: '', ttsLanguage: 'en-US' };
+            chrome.storage.local.set({ [voiceSettingsStorageKey]: currentVoiceSettings }, () => {
                 if (!chrome.runtime.lastError) {
                     if (elements.sttSelect) elements.sttSelect.value = currentVoiceSettings.sttLanguage;
                     populateVoiceList();
                 }
             });
         } else {
-            currentVoiceSettings = {
-                ...savedVoiceSettings
-            };
+            currentVoiceSettings = { ...savedVoiceSettings };
             if (elements.sttSelect) elements.sttSelect.value = currentVoiceSettings.sttLanguage;
             populateVoiceList();
         }
 
         const savedLocalMode = savedApiSettings.localApiMode ?? defaultApiSettings.localApiMode;
-        const localRadio = document.querySelector(`input[name="localApiModeSelection"][value="${savedLocalMode}"]`);
+        const localRadio = q(`input[name="localApiModeSelection"][value="${savedLocalMode}"]`);
         if (localRadio) localRadio.checked = true;
 
         if (elements.vllmUrlInput) elements.vllmUrlInput.value = savedApiSettings.localApiUrl ?? defaultApiSettings.localApiUrl;
@@ -337,19 +332,17 @@ function loadOptions() {
             savedApiSettings.lmstudioModelName ?? defaultApiSettings.lmstudioModelName
         );
 
-        if (elements.vllmModelInput) {
-            elements.vllmModelInput.value = savedApiSettings.vllmModelName ?? defaultApiSettings.vllmModelName;
-        }
+        if (elements.vllmModelInput) elements.vllmModelInput.value = savedApiSettings.vllmModelName ?? defaultApiSettings.vllmModelName;
 
         const savedCloudProvider = savedApiSettings.cloudProvider ?? defaultApiSettings.cloudProvider;
         const savedCloudMethod = savedApiSettings.cloudApiMethod ?? defaultApiSettings.cloudApiMethod;
         let cloudRadio;
         if (savedCloudProvider === 'mistral') {
-            cloudRadio = document.getElementById('cloud-select-mistral');
+            cloudRadio = $('cloud-select-mistral');
         } else if (savedCloudMethod === 'proxy') {
-            cloudRadio = document.getElementById('cloud-select-gateway');
+            cloudRadio = $('cloud-select-gateway');
         } else {
-            cloudRadio = document.getElementById('cloud-select-gemini');
+            cloudRadio = $('cloud-select-gemini');
         }
         if (cloudRadio) cloudRadio.checked = true;
 
@@ -384,10 +377,9 @@ function resetToDefaults() {
 }
 
 function handleRoleChange() {
-    const roleSelect = document.getElementById('role-select');
-    const systemPromptTextarea = document.getElementById('system_prompt');
+    const roleSelect = $('role-select');
+    const systemPromptTextarea = $('system_prompt');
     if (!roleSelect || !systemPromptTextarea || !currentPrompts) return;
-
     const selectedRole = roleSelect.value;
     systemPromptTextarea.value = currentPrompts.system_prompt[selectedRole] || defaultPrompts.system_prompt[selectedRole];
 }
@@ -395,7 +387,7 @@ function handleRoleChange() {
 document.addEventListener('DOMContentLoaded', () => {
     loadOptions();
 
-    const elementsToSave = document.querySelectorAll('input[data-storage-key], select[data-storage-key]');
+    const elementsToSave = qa('input[data-storage-key], select[data-storage-key]');
     elementsToSave.forEach(el => {
         const eventType = (el.tagName === 'SELECT' || el.type === 'radio' || el.type === 'checkbox') ? 'change' : 'blur';
         el.addEventListener(eventType, saveOptions);
@@ -411,25 +403,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    const ollamaModelSelect = document.getElementById('ollama-model-name-select');
-    const customOllamaContainer = document.getElementById('custom-ollama-model-container');
-    ollamaModelSelect.addEventListener('change', () => {
-        customOllamaContainer.classList.toggle('hidden', ollamaModelSelect.value !== 'custom');
-    });
+    const ollamaModelSelect = $('ollama-model-name-select');
+    const customOllamaContainer = $('custom-ollama-model-container');
+    if (ollamaModelSelect && customOllamaContainer) {
+        ollamaModelSelect.addEventListener('change', () => {
+            customOllamaContainer.classList.toggle('hidden', ollamaModelSelect.value !== 'custom');
+        });
+    }
 
-    const lmstudioModelSelect = document.getElementById('lmstudio-model-name-select');
-    const customLmstudioContainer = document.getElementById('custom-lmstudio-model-container');
-    lmstudioModelSelect.addEventListener('change', () => {
-        customLmstudioContainer.classList.toggle('hidden', lmstudioModelSelect.value !== 'custom');
-    });
+    const lmstudioModelSelect = $('lmstudio-model-name-select');
+    const customLmstudioContainer = $('custom-lmstudio-model-container');
+    if (lmstudioModelSelect && customLmstudioContainer) {
+        lmstudioModelSelect.addEventListener('change', () => {
+            customLmstudioContainer.classList.toggle('hidden', lmstudioModelSelect.value !== 'custom');
+        });
+    }
 
-    const customOllamaInput = document.getElementById('custom-ollama-model-input');
-    customOllamaInput.addEventListener('blur', saveOptions);
-    const customLmstudioInput = document.getElementById('custom-lmstudio-model-input');
-    customLmstudioInput.addEventListener('blur', saveOptions);
+    const customOllamaInput = $('custom-ollama-model-input');
+    if (customOllamaInput) customOllamaInput.addEventListener('blur', saveOptions);
+    const customLmstudioInput = $('custom-lmstudio-model-input');
+    if (customLmstudioInput) customLmstudioInput.addEventListener('blur', saveOptions);
 
-
-    const localApiModeRadios = document.querySelectorAll('input[name="localApiModeSelection"]');
+    const localApiModeRadios = qa('input[name="localApiModeSelection"]');
     localApiModeRadios.forEach(radio => {
         radio.addEventListener('change', () => {
             updateLocalConfigVisibility();
@@ -437,7 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    const cloudSelectionRadios = document.querySelectorAll('input[name="cloudSelection"]');
+    const cloudSelectionRadios = qa('input[name="cloudSelection"]');
     cloudSelectionRadios.forEach(radio => {
         radio.addEventListener('change', () => {
             updateCloudConfigVisibility();
@@ -445,20 +440,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    const systemPromptTextarea = document.getElementById('system_prompt');
-    if (systemPromptTextarea) {
-        systemPromptTextarea.addEventListener('blur', saveOptions);
-    }
+    const systemPromptTextarea = $('system_prompt');
+    if (systemPromptTextarea) systemPromptTextarea.addEventListener('blur', saveOptions);
 
-    const roleSelect = document.getElementById('role-select');
-    if (roleSelect) {
-        roleSelect.addEventListener('change', handleRoleChange);
-    }
+    const roleSelect = $('role-select');
+    if (roleSelect) roleSelect.addEventListener('change', handleRoleChange);
 
-    const saveButton = document.getElementById('save-button');
+    const saveButton = $('save-button');
     if (saveButton) saveButton.addEventListener('click', saveOptions);
 
-    const resetButton = document.getElementById('reset-button');
+    const resetButton = $('reset-button');
     if (resetButton) resetButton.addEventListener('click', resetToDefaults);
 });
 
