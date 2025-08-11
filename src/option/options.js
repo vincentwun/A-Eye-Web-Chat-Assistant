@@ -373,37 +373,13 @@ function loadOptions() {
 }
 
 function resetToDefaults() {
-    chrome.storage.local.get(settingsStorageKey, (result) => {
+    chrome.storage.local.set({ [promptsStorageKey]: { ...defaultPrompts } }, () => {
         if (chrome.runtime.lastError) {
-            return showNotification("Error resetting: could not read current settings", true);
+            showNotification(`Error resetting prompts: ${chrome.runtime.lastError.message}`, true);
+        } else {
+            loadOptions();
+            showNotification('Prompts have been reset.');
         }
-        const currentSettings = result[settingsStorageKey] || {};
-        const preservedGeminiApiKey = currentSettings.cloudApiKey || defaultApiSettings.cloudApiKey;
-        const preservedGcpApiKey = currentSettings.gcpApiKey || defaultApiSettings.gcpApiKey;
-        const preservedProxyUrl = currentSettings.cloudProxyUrl || defaultApiSettings.cloudProxyUrl;
-        const preservedMistralApiKey = currentSettings.mistralApiKey || defaultApiSettings.mistralApiKey;
-
-        const settingsToReset = {
-            [settingsStorageKey]: {
-                ...defaultApiSettings,
-                cloudApiKey: preservedGeminiApiKey,
-                gcpApiKey: preservedGcpApiKey,
-                cloudProxyUrl: preservedProxyUrl,
-                mistralApiKey: preservedMistralApiKey,
-            },
-            [promptsStorageKey]: {
-                ...defaultPrompts
-            }
-        };
-
-        chrome.storage.local.set(settingsToReset, () => {
-            if (chrome.runtime.lastError) {
-                showNotification(`Error resetting settings: ${chrome.runtime.lastError.message}`, true);
-            } else {
-                loadOptions();
-                showNotification('Settings have been reset.');
-            }
-        });
     });
 }
 
