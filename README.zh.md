@@ -94,8 +94,8 @@ A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變
 
 #### 選項 4：手動設定 Gemini Nano
 
-更多細節請參考 [官方 Chrome Prompt API 文件](https://developer.chrome.com/docs/ai/prompt-api)。
-注意：Gemini Nano 的 Multimodal 功能目前僅支援於 Chrome Canary (https://www.google.com/chrome/canary/)。
+更多細節請參考 [Gemini Nano API](https://developer.chrome.com/docs/ai/prompt-api)。
+注意：Gemini Nano 的 Multimodal 功能目前僅支援於 [Chrome Canary](https://www.google.com/chrome/canary/)。
 
 1.  **開啟 `chrome://flags` 並啟用：**
     | 標記 | 設定值 |

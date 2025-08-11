@@ -96,8 +96,9 @@ This is the easiest method for Windows users.
 
 #### Option 4: Manual Setup Gemini Nano
 
-For more details, see the [Official Chrome Prompt API documentation](https://developer.chrome.com/docs/ai/prompt-api).
-Note: Gemini Nano's Multimodal capabilities are currently only supported in Chrome Canary (https://www.google.com/chrome/canary/).
+For more details, see the [Gemini Nano API](https://developer.chrome.com/docs/ai/prompt-api).
+
+Note: Gemini Nano's Multimodal capabilities are currently only supported in [Chrome Canary](https://www.google.com/chrome/canary/).
 
 1.  **Open `chrome://flags` and enable:**
     | Flag | Value to set |
