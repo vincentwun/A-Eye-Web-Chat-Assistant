@@ -186,7 +186,7 @@ For advanced users who want to manage their own GCP infrastructure. See the [GCP
     *   **Cloud Functions**: A serverless function that receives requests and calls the AI model.
     *   **Vertex AI**: Hosts the powerful Gemini model for analysis.
 
-![architecture](images/architecture_v2.png)
+![architecture](images/architecture_v3.png)
 
 </details>
 

@@ -182,7 +182,7 @@ A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變
     *   **Cloud Functions**: 接收請求並呼叫 AI 模型的無伺服器函數。
     *   **Vertex AI**: 託管強大的 Gemini 模型以進行分析。
 
-![architecture](images/architecture_v2.png)
+![architecture](images/architecture_v3.png)
 
 </details>
 
