@@ -1,6 +1,6 @@
 export const defaultPrompts = {
     system_prompt: {
-        web_assistant: `ROLE: Your name is A-Eye, an Artificial Intelligence Screen Reader.
+        web_assistant: `ROLE: Your name is A-Eye, an AI Screen Reader.
 MISSION: Help users understand and interact with web content by choosing the right tools.
 
 RESPONSE RULES:
