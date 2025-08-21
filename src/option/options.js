@@ -62,7 +62,6 @@ function updateLocalConfigVisibility() {
     } else if (selectedMode === 'vllm') {
         toggleHidden(containers.vllmUrl, false);
         toggleHidden(containers.vllmModel, false);
-    } else if (selectedMode === 'gemini-nano') {
     }
 }
 
@@ -171,18 +170,6 @@ function handleCustomModelSelection(selectElement, customContainer, customInput,
     }
 }
 
-function mergePrompts(existingPrompts, promptsUpdate, activeRoleKey, promptText) {
-    const newSystemPrompts = {
-        ...(existingPrompts.system_prompt || defaultPrompts.system_prompt),
-        [activeRoleKey]: promptText
-    };
-    return {
-        ...existingPrompts,
-        ...promptsUpdate,
-        system_prompt: newSystemPrompts
-    };
-}
-
 function readDataAttributesToUpdates(keysToUpdate) {
     const elementsToSave = qa('[data-storage-key]');
     elementsToSave.forEach(el => {
@@ -241,14 +228,11 @@ function saveOptions() {
     chrome.storage.local.get(Object.keys(keysToUpdate), (result) => {
         if (chrome.runtime.lastError) return showNotification('Error preparing to save.', true);
 
-        const roleSelect = $('role-select');
-        const systemPromptTextarea = $('system_prompt');
-        const activeRoleKey = roleSelect ? roleSelect.value : defaultPrompts.active_system_prompt_key;
-        const promptText = systemPromptTextarea ? systemPromptTextarea.value : '';
-
         const promptsUpdate = keysToUpdate[promptsStorageKey] || {};
-        const existingPrompts = result[promptsStorageKey] || defaultPrompts;
-        const finalPrompts = mergePrompts(existingPrompts, promptsUpdate, activeRoleKey, promptText);
+        const existingPrompts = result[promptsStorageKey] || {};
+        const finalPrompts = {
+            active_system_prompt_key: promptsUpdate.active_system_prompt_key ?? existingPrompts.active_system_prompt_key ?? defaultPrompts.active_system_prompt_key
+        };
 
         const finalData = {
             [settingsStorageKey]: { ...(result[settingsStorageKey] || {}), ...keysToUpdate[settingsStorageKey] },
@@ -262,9 +246,7 @@ function saveOptions() {
             } else {
                 showNotification('Saved successfully.');
                 currentVoiceSettings = finalData[voiceSettingsStorageKey];
-                currentPrompts = finalData[promptsStorageKey];
-                updateCloudConfigVisibility();
-                updateLocalConfigVisibility();
+                loadOptions();
             }
         });
     });
@@ -301,7 +283,10 @@ function loadOptions() {
 
         const savedApiSettings = result[settingsStorageKey] || { ...defaultApiSettings };
         const savedVoiceSettings = result[voiceSettingsStorageKey];
-        currentPrompts = result[promptsStorageKey] || { ...defaultPrompts };
+
+        const savedPrompts = result[promptsStorageKey] || {};
+        currentPrompts = { ...defaultPrompts, ...savedPrompts };
+
 
         if (!savedVoiceSettings || typeof savedVoiceSettings.sttLanguage === 'undefined' || typeof savedVoiceSettings.ttsVoiceName === 'undefined') {
             currentVoiceSettings = { sttLanguage: 'en-US', ttsVoiceName: '', ttsLanguage: 'en-US' };
@@ -367,7 +352,7 @@ function loadOptions() {
         if (elements.roleSelect && elements.systemPromptTextarea) {
             const activeKey = currentPrompts.active_system_prompt_key || 'web_assistant';
             elements.roleSelect.value = activeKey;
-            elements.systemPromptTextarea.value = currentPrompts.system_prompt[activeKey] || defaultPrompts.system_prompt[activeKey];
+            elements.systemPromptTextarea.value = defaultPrompts.system_prompt[activeKey] || '';
         }
 
         updateCloudConfigVisibility();
@@ -385,8 +370,10 @@ function resetToDefaults() {
         const currentSettings = result[settingsStorageKey] || { ...defaultApiSettings };
         currentSettings.uiScale = 100;
 
+        const { system_prompt, ...promptsToReset } = defaultPrompts;
+
         const dataToReset = {
-            [promptsStorageKey]: { ...defaultPrompts },
+            [promptsStorageKey]: promptsToReset,
             [settingsStorageKey]: currentSettings
         };
 
@@ -403,9 +390,9 @@ function resetToDefaults() {
 function handleRoleChange() {
     const roleSelect = $('role-select');
     const systemPromptTextarea = $('system_prompt');
-    if (!roleSelect || !systemPromptTextarea || !currentPrompts) return;
+    if (!roleSelect || !systemPromptTextarea) return;
     const selectedRole = roleSelect.value;
-    systemPromptTextarea.value = currentPrompts.system_prompt[selectedRole] || defaultPrompts.system_prompt[selectedRole];
+    systemPromptTextarea.value = defaultPrompts.system_prompt[selectedRole] || '';
 }
 
 document.addEventListener('DOMContentLoaded', () => {
