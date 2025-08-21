@@ -15,7 +15,8 @@ export class VoiceController {
         voices: [],
         isSpeaking: false,
         speakingPromise: Promise.resolve(),
-        initializationPromise: null
+        initializationPromise: null,
+        thinkingSoundInterval: null
       },
       settings: { ...defaultVoiceSettings }
     };
@@ -657,9 +658,47 @@ export class VoiceController {
     }
   }
 
+  _playThinkingSound() {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01);
+      gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.15);
+
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(220, audioContext.currentTime);
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.15);
+    } catch (error) {
+      console.error("Failed to play thinking sound:", error);
+    }
+  }
+
+  startThinkingSoundLoop() {
+    this.stopThinkingSoundLoop();
+    this.state.synthesis.thinkingSoundInterval = setInterval(() => {
+      this._playThinkingSound();
+    }, 3000);
+  }
+
+  stopThinkingSoundLoop() {
+    if (this.state.synthesis.thinkingSoundInterval) {
+      clearInterval(this.state.synthesis.thinkingSoundInterval);
+      this.state.synthesis.thinkingSoundInterval = null;
+    }
+  }
+
   cleanup() {
     console.log("Cleaning up VoiceController...");
     this.stopSpeaking();
+    this.stopThinkingSoundLoop();
     this.stopVoiceInput();
     if (this.state.input.recognition) {
       this.state.input.recognition.onstart = null;

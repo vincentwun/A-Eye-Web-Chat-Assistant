@@ -45,9 +45,9 @@ class AIScreenReader {
 
     _initializeComponents() {
         this.stateManager = new StateManager(this.onStateChange.bind(this));
-        this.uiManager = new UIManager(this.elements);
         this.apiService = new ApiService();
         this.voiceController = new VoiceController();
+        this.uiManager = new UIManager(this.elements, this.voiceController);
         this.screenshotController = new ScreenshotController();
         this.configValidator = new ConfigValidator({
             stateManager: this.stateManager,

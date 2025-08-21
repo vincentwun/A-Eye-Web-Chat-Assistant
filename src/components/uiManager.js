@@ -1,6 +1,7 @@
 export class UIManager {
-    constructor(elements) {
+    constructor(elements, voiceController) {
         this.elements = elements;
+        this.voiceController = voiceController;
         if (!this.elements || !this.elements.conversation || !this.elements.localModeButton || !this.elements.cloudModeButton) {
             console.error("UIManager initialized with missing essential elements (conversation or mode buttons).");
         }
@@ -155,9 +156,16 @@ export class UIManager {
 
         this.elements.conversation.appendChild(indicatorDiv);
         this.elements.conversation.scrollTop = this.elements.conversation.scrollHeight;
+
+        if (this.voiceController) {
+            this.voiceController.startThinkingSoundLoop();
+        }
     }
 
     hideThinkingIndicator() {
+        if (this.voiceController) {
+            this.voiceController.stopThinkingSoundLoop();
+        }
         const indicator = document.getElementById('thinking-indicator');
         if (indicator) {
             indicator.remove();
