@@ -271,7 +271,6 @@ function loadOptions() {
         cloudModelNameInput: $('cloud-model-name-input'),
         mistralApiKeyInput: $('mistral-api-key-input'),
         mistralModelSelect: $('mistral-model-name-select'),
-        systemPromptTextarea: $('system_prompt'),
         roleSelect: $('role-select'),
         sttSelect: $('stt-language-select'),
         uiScaleSlider: $('ui-scale-slider'),
@@ -349,10 +348,9 @@ function loadOptions() {
         if (elements.mistralApiKeyInput) elements.mistralApiKeyInput.value = savedApiSettings.mistralApiKey ?? defaultApiSettings.mistralApiKey;
         if (elements.mistralModelSelect) elements.mistralModelSelect.value = savedApiSettings.mistralModelName ?? defaultApiSettings.mistralModelName;
 
-        if (elements.roleSelect && elements.systemPromptTextarea) {
+        if (elements.roleSelect) {
             const activeKey = currentPrompts.active_system_prompt_key || 'web_assistant';
             elements.roleSelect.value = activeKey;
-            elements.systemPromptTextarea.value = defaultPrompts.system_prompt[activeKey] || '';
         }
 
         updateCloudConfigVisibility();
@@ -361,38 +359,31 @@ function loadOptions() {
 }
 
 function resetToDefaults() {
-    chrome.storage.local.get(settingsStorageKey, (result) => {
+    chrome.storage.local.get([settingsStorageKey], (result) => {
         if (chrome.runtime.lastError) {
-            console.error(`Error reading settings for reset: ${chrome.runtime.lastError.message}`);
+            showNotification(`Error reading settings: ${chrome.runtime.lastError.message}`, true);
             return;
         }
 
-        const currentSettings = result[settingsStorageKey] || { ...defaultApiSettings };
-        currentSettings.uiScale = 100;
+        const settings = result[settingsStorageKey] || {};
+        settings.uiScale = 100;
 
-        const { system_prompt, ...promptsToReset } = defaultPrompts;
-
-        const dataToReset = {
-            [promptsStorageKey]: promptsToReset,
-            [settingsStorageKey]: currentSettings
-        };
-
-        chrome.storage.local.set(dataToReset, () => {
+        chrome.storage.local.set({ [settingsStorageKey]: settings }, () => {
             if (chrome.runtime.lastError) {
-                console.error(`Error resetting settings: ${chrome.runtime.lastError.message}`);
+                showNotification(`Error resetting settings: ${chrome.runtime.lastError.message}`, true);
             } else {
+                showNotification('UI scale has been reset.');
                 loadOptions();
             }
         });
     });
 }
 
+
 function handleRoleChange() {
     const roleSelect = $('role-select');
-    const systemPromptTextarea = $('system_prompt');
-    if (!roleSelect || !systemPromptTextarea) return;
+    if (!roleSelect) return;
     const selectedRole = roleSelect.value;
-    systemPromptTextarea.value = defaultPrompts.system_prompt[selectedRole] || '';
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -462,9 +453,6 @@ document.addEventListener('DOMContentLoaded', () => {
             saveOptions();
         });
     });
-
-    const systemPromptTextarea = $('system_prompt');
-    if (systemPromptTextarea) systemPromptTextarea.addEventListener('blur', saveOptions);
 
     const roleSelect = $('role-select');
     if (roleSelect) roleSelect.addEventListener('change', handleRoleChange);
