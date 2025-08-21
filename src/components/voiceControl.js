@@ -668,11 +668,11 @@ export class VoiceController {
       gainNode.connect(audioContext.destination);
 
       gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01);
+      gainNode.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + 0.01);
       gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.15);
 
       oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(220, audioContext.currentTime);
+      oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
 
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.15);
