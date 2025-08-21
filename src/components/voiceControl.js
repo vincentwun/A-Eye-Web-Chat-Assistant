@@ -69,7 +69,24 @@ export class VoiceController {
     }
 
     speakText(text) {
+        if (!text || typeof text !== 'string' || !text.trim()) return Promise.resolve();
         return this.tts.speakText(text);
+    }
+
+    speakResponse(text) {
+        if (!text || typeof text !== 'string' || !text.trim()) return Promise.resolve();
+        const cleanedText = text
+            .replace(/```[\s\S]*?```/g, ' ')
+            .replace(/`([^`]+)`/g, '$1')
+            .replace(/`+/g, '')
+            .replace(/-{3,}/g, ' ')
+            .replace(/\*/g, ' ')
+            .replace(/\^/g, ' ')
+            .replace(/\|/g, ' ')
+            .replace(/～/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+        return this.speakText(cleanedText);
     }
 
     stopSpeaking() {

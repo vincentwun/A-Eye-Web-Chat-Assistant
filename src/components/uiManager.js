@@ -41,16 +41,16 @@ export class UIManager {
 
             const copyButton = document.createElement('button');
             copyButton.className = 'copy-button';
-            copyButton.innerHTML = '<i class="far fa-copy"></i> 複製';
+            copyButton.innerHTML = '<i class="far fa-copy"></i> Copy';
             copyButton.addEventListener('click', () => {
                 navigator.clipboard.writeText(codeBlock.textContent).then(() => {
-                    copyButton.innerHTML = '<i class="fas fa-check"></i> 已複製';
+                    copyButton.innerHTML = '<i class="fas fa-check"></i> Copied';
                     setTimeout(() => {
-                        copyButton.innerHTML = '<i class="far fa-copy"></i> 複製';
+                        copyButton.innerHTML = '<i class="far fa-copy"></i> Copy';
                     }, 2000);
                 }).catch(err => {
                     console.error('Failed to copy text: ', err);
-                    copyButton.textContent = '複製失敗';
+                    copyButton.textContent = 'Copy Failed';
                 });
             });
 
@@ -203,7 +203,6 @@ export class UIManager {
     }
 
     setProcessingState(isProcessing) {
-        this.elements.userInput.disabled = isProcessing;
         this.elements.sendButton.disabled = isProcessing || !this.elements.userInput.value.trim();
 
         this.elements.screenshotButton.disabled = isProcessing;
@@ -237,6 +236,8 @@ export class UIManager {
         this.elements.conversation.innerHTML = '';
         this.hidePastedImagePreview();
     }
+
+
 
     clearUserInput() {
         if (!this.elements.userInput) return;

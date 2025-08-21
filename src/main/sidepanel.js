@@ -380,27 +380,6 @@ class AIScreenReader {
         }
     }
 
-    async _speakResponse(text) {
-        if (!text || typeof text !== 'string' || !text.trim()) return;
-        const cleanedText = text
-            .replace(/```[\s\S]*?```/g, ' ')
-            .replace(/`([^`]+)`/g, '$1')
-            .replace(/`+/g, '')
-            .replace(/-{3,}/g, ' ')
-            .replace(/\*/g, ' ')
-            .replace(/\^/g, ' ')
-            .replace(/\|/g, ' ')
-            .replace(/～/g, ' ')
-            .replace(/\s+/g, ' ')
-            .trim();
-        try {
-            this.voiceController.speakText(cleanedText);
-        } catch (error) {
-            console.error("Error during speech synthesis:", error);
-            this.appendMessage('system', `Error speaking: ${error.message}`);
-        }
-    }
-
     async handleResponse(responseContent) {
         this.uiManager.hideThinkingIndicator();
         const responseText = (typeof responseContent === 'string') ? responseContent : JSON.stringify(responseContent);
@@ -417,8 +396,13 @@ class AIScreenReader {
                 }
             } else {
                 this.appendMessage('assistant', responseText, false);
-                this._speakResponse(responseText);
                 this.setProcessing(false);
+                try {
+                    this.voiceController.speakResponse(responseText);
+                } catch (error) {
+                    console.error("Error during speech synthesis:", error);
+                    this.appendMessage('system', `Error speaking: ${error.message}`);
+                }
             }
         } catch (processorError) {
             this.handleError('Failed to process command from response', processorError);
@@ -458,7 +442,7 @@ class AIScreenReader {
         this.voiceController.stopSpeaking();
         const lastAIMessage = [...this.stateManager.getState().messages].reverse().find(m => m.role === 'assistant');
         if (lastAIMessage?.content) {
-            await this._speakResponse(String(lastAIMessage.content));
+            await this.voiceController.speakResponse(String(lastAIMessage.content));
         } else {
             this.voiceController.speakText('No previous response to repeat.');
         }
