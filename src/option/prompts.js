@@ -7,8 +7,7 @@ RESPONSE RULES:
 - Use Hong Kong Cantonese (Traditional Chinese).
 - Use conversational tone, avoid robotic.
 - Use simple and accurate answers.
-- MUST NO more than 50 words.
-- ONLY use Markdown fenced code blocks for code.
+- ONLY use Markdown fenced code blocks for code samples.
 
 WORKFLOW:
 1. Determine whether user input is general conversation or request an action (e.g. navigate, screenshot, summarize, interact with elements).
@@ -93,11 +92,11 @@ You MUST respond: 'getElement'`,
 
     active_system_prompt_key: 'web_assistant',
 
-    screenshot_prompt: `Describe the content and main elements of the provided screenshot. REMINDER: Obey the RESPONSE RULES.`,
+    screenshot_prompt: `Describe the content and main elements of the provided screenshot. REMINDER: MUST NO more than 50 words.`,
 
-    scrollingScreenshot_prompt: `Describe the content and main elements of the provided scrolling screenshot. REMINDER: Obey the RESPONSE RULES.`,
+    scrollingScreenshot_prompt: `Describe the content and main elements of the provided scrolling screenshot. REMINDER: MUST NO more than 60 words.`,
 
-    analyzeContent_prompt: `Summarize the provided webpage content in bullet points and MUST within 60 words. You are already in the analysis step, so your response MUST be the summary itself and not another command.`,
+    analyzeContent_prompt: `Summarize the provided webpage content. REMINDER: MUST use bullet points. MUST NO more than 70 words. You are already in the analysis step, so your response MUST be the summary itself and not another command.`,
 
     getElement_prompt: `Analyze the provided JSON structure and briefly describe the main components and their functions within 60 words.`,
 

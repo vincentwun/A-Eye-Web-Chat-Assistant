@@ -8,7 +8,7 @@ import { ContentAnalysisAction } from '../action/contentAnalysisAction.js';
 import { GetElementAction } from '../action/getElementAction.js';
 import { ActionFlowController } from '../components/actionFlowController.js';
 import { StateManager } from '../components/stateManager.js';
-import { defaultApiSettings } from '../option/apiRoute.js';
+import { defaultApiSettings, settingsStorageKey } from '../option/apiRoute.js';
 import { ConfigValidator } from '../components/configValidator.js';
 
 class AIScreenReader {
@@ -102,6 +102,7 @@ class AIScreenReader {
 
     async initializeAll() {
         try {
+            await this._applyInitialSettings();
             await this.stateManager.initialize();
             this.uiManager.updateModeUI(this.stateManager.getState().activeApiMode);
             this._setupEventListeners();
@@ -113,6 +114,17 @@ class AIScreenReader {
             const currentState = this.stateManager.getState();
             this.uiManager.updateModeUI(currentState.activeApiMode ?? defaultApiSettings.activeApiMode);
         }
+    }
+
+    async _applyUIScale(scale) {
+        document.documentElement.style.fontSize = `${scale}%`;
+    }
+
+    async _applyInitialSettings() {
+        const result = await chrome.storage.local.get(settingsStorageKey);
+        const settings = result[settingsStorageKey] || {};
+        const uiScale = settings.uiScale ?? 100;
+        await this._applyUIScale(uiScale);
     }
 
     _canPerformAction({ checkConfig = true } = {}) {
@@ -224,6 +236,16 @@ class AIScreenReader {
                 return true;
             }
             return false;
+        });
+
+        chrome.storage.onChanged.addListener((changes, namespace) => {
+            if (namespace === 'local' && changes[settingsStorageKey]) {
+                const newSettings = changes[settingsStorageKey].newValue;
+                const oldSettings = changes[settingsStorageKey].oldValue || {};
+                if (newSettings && newSettings.uiScale !== oldSettings.uiScale) {
+                    this._applyUIScale(newSettings.uiScale ?? 100);
+                }
+            }
         });
     }
 

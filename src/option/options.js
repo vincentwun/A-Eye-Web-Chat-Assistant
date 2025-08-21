@@ -194,7 +194,10 @@ function readDataAttributesToUpdates(keysToUpdate) {
         else if (storageType === 'voice') storageAreaKey = voiceSettingsStorageKey;
         else return;
 
-        const value = el.type === 'checkbox' ? el.checked : el.value;
+        let value = el.type === 'checkbox' ? el.checked : el.value;
+        if (el.type === 'range') {
+            value = parseInt(value, 10);
+        }
         keysToUpdate[storageAreaKey][storageKey] = value;
     });
 }
@@ -288,7 +291,9 @@ function loadOptions() {
         mistralModelSelect: $('mistral-model-name-select'),
         systemPromptTextarea: $('system_prompt'),
         roleSelect: $('role-select'),
-        sttSelect: $('stt-language-select')
+        sttSelect: $('stt-language-select'),
+        uiScaleSlider: $('ui-scale-slider'),
+        uiScaleValue: $('ui-scale-value')
     };
 
     chrome.storage.local.get([promptsStorageKey, settingsStorageKey, voiceSettingsStorageKey], (result) => {
@@ -311,6 +316,11 @@ function loadOptions() {
             if (elements.sttSelect) elements.sttSelect.value = currentVoiceSettings.sttLanguage;
             populateVoiceList();
         }
+
+        const uiScale = savedApiSettings.uiScale ?? 100;
+        if (elements.uiScaleSlider) elements.uiScaleSlider.value = uiScale;
+        if (elements.uiScaleValue) elements.uiScaleValue.textContent = `${uiScale}%`;
+        document.documentElement.style.fontSize = `${uiScale}%`;
 
         const savedLocalMode = savedApiSettings.localApiMode ?? defaultApiSettings.localApiMode;
         const localRadio = q(`input[name="localApiModeSelection"][value="${savedLocalMode}"]`);
@@ -366,13 +376,27 @@ function loadOptions() {
 }
 
 function resetToDefaults() {
-    chrome.storage.local.set({ [promptsStorageKey]: { ...defaultPrompts } }, () => {
+    chrome.storage.local.get(settingsStorageKey, (result) => {
         if (chrome.runtime.lastError) {
-            showNotification(`Error resetting prompts: ${chrome.runtime.lastError.message}`, true);
-        } else {
-            loadOptions();
-            showNotification('Prompts have been reset.');
+            console.error(`Error reading settings for reset: ${chrome.runtime.lastError.message}`);
+            return;
         }
+
+        const currentSettings = result[settingsStorageKey] || { ...defaultApiSettings };
+        currentSettings.uiScale = 100;
+
+        const dataToReset = {
+            [promptsStorageKey]: { ...defaultPrompts },
+            [settingsStorageKey]: currentSettings
+        };
+
+        chrome.storage.local.set(dataToReset, () => {
+            if (chrome.runtime.lastError) {
+                console.error(`Error resetting settings: ${chrome.runtime.lastError.message}`);
+            } else {
+                loadOptions();
+            }
+        });
     });
 }
 
@@ -389,7 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const elementsToSave = qa('input[data-storage-key], select[data-storage-key]');
     elementsToSave.forEach(el => {
-        const eventType = (el.tagName === 'SELECT' || el.type === 'radio' || el.type === 'checkbox') ? 'change' : 'blur';
+        const eventType = (el.tagName === 'SELECT' || el.type === 'radio' || el.type === 'checkbox' || el.type === 'range') ? 'change' : 'blur';
         el.addEventListener(eventType, saveOptions);
 
         if (el.type === 'text' || el.type === 'password') {
@@ -402,6 +426,18 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     });
+
+    const uiScaleSlider = $('ui-scale-slider');
+    const uiScaleValue = $('ui-scale-value');
+    if (uiScaleSlider && uiScaleValue) {
+        uiScaleSlider.addEventListener('input', () => {
+            uiScaleValue.textContent = `${uiScaleSlider.value}%`;
+        });
+
+        uiScaleSlider.addEventListener('change', () => {
+            document.documentElement.style.fontSize = `${uiScaleSlider.value}%`;
+        });
+    }
 
     const ollamaModelSelect = $('ollama-model-name-select');
     const customOllamaContainer = $('custom-ollama-model-container');
