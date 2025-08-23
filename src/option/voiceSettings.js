@@ -6,6 +6,27 @@ export const defaultVoiceSettings = {
     ttsVoiceName: null
 };
 
+export const availableResponseLanguages = {
+    'de-DE': 'German (Deutschland)',
+    'en-US': 'English (US)',
+    'en-GB': 'English (UK)',
+    'es-ES': 'Spanish (España)',
+    'es-US': 'Spanish (US)',
+    'fr-FR': 'French (France)',
+    'hi-IN': 'Hindi (India)',
+    'id-ID': 'Indonesian (Indonesia)',
+    'it-IT': 'Italian (Italia)',
+    'ja-JP': 'Japanese (Japan)',
+    'ko-KR': 'Korean (Korea)',
+    'nl-NL': 'Dutch (Nederland)',
+    'pl-PL': 'Polish (Poland)',
+    'pt-BR': 'Portuguese (Brasil)',
+    'ru-RU': 'Russian (Russia)',
+    'zh-CN': '简体中文 (中国)',
+    'zh-HK': '繁體中文 (粵語)',
+    'zh-TW': '繁體中文 (台灣)',
+};
+
 export const availableLanguages = {
     'af': 'Afrikaans',
     'ar-AE': 'Arabic (UAE)',

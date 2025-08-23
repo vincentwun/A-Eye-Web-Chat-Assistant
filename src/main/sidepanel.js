@@ -9,6 +9,7 @@ import { GetElementAction } from '../action/getElementAction.js';
 import { ActionFlowController } from '../components/actionFlowController.js';
 import { StateManager } from '../components/stateManager.js';
 import { defaultApiSettings, settingsStorageKey } from '../option/apiRoute.js';
+import { availableResponseLanguages } from '../option/voiceSettings.js';
 import { ConfigValidator } from '../components/configValidator.js';
 
 class AIScreenReader {
@@ -56,6 +57,13 @@ class AIScreenReader {
         });
     }
 
+    _getProcessedSystemPrompt(systemPromptTemplate) {
+        const prompts = this.stateManager.getPrompts();
+        const responseLangCode = prompts.responseLanguage || 'zh-HK';
+        const languageName = availableResponseLanguages[responseLangCode] || 'English (US)';
+        return systemPromptTemplate.replace(/{languageName}/g, languageName);
+    }
+
     _setupDependencies() {
         this.voiceController.setCallbacks({
             appendMessage: this.appendMessage.bind(this),
@@ -67,8 +75,19 @@ class AIScreenReader {
             onStart: () => this.voiceController.speakText("Taking scrolling screenshot.")
         });
 
+        const originalApiService = this.apiService;
+        const proxiedApiService = {
+            sendRequest: (config, history, prompt, image, systemPrompt) => {
+                const specificInstruction = prompt.prompt || '';
+                const combinedSystemPromptTemplate = `${systemPrompt}\n\nIMMEDIATE TASK:\n${specificInstruction}`;
+                const finalSystemPrompt = this._getProcessedSystemPrompt(combinedSystemPromptTemplate);
+                const genericPrompt = { prompt: "Analyze the provided information and follow the system prompt's immediate task." };
+                return originalApiService.sendRequest(config, history, genericPrompt, image, finalSystemPrompt);
+            }
+        };
+
         this.actionDependencies = {
-            apiService: this.apiService,
+            apiService: proxiedApiService,
             uiManager: this.uiManager,
             voiceController: this.voiceController,
             screenshotController: this.screenshotController,
@@ -345,12 +364,17 @@ class AIScreenReader {
         this.uiManager.showThinkingIndicator();
 
         try {
+            const prompts = this.stateManager.getPrompts();
+            const activePromptKey = prompts.active_system_prompt_key || 'web_assistant';
+            const systemPromptTemplate = prompts.system_prompt[activePromptKey];
+            const systemPrompt = this._getProcessedSystemPrompt(systemPromptTemplate);
+
             const responseContent = await this.apiService.sendRequest(
                 this.stateManager.getApiConfig(),
                 this.stateManager.getHistoryToSend(),
                 { prompt: userInput || "Analyze the image." },
                 hasImageContext ? state.lastImageData.dataUrl : null,
-                this.stateManager.getPrompts().system_prompt[this.stateManager.getPrompts().active_system_prompt_key || 'web_assistant']
+                systemPrompt
             );
 
             if (isPastedImageActive) {

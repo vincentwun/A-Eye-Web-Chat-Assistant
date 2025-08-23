@@ -1,6 +1,6 @@
 import { defaultPrompts, promptsStorageKey } from './prompts.js';
 import { settingsStorageKey, defaultApiSettings } from './apiRoute.js';
-import { voiceSettingsStorageKey, defaultVoiceSettings, availableLanguages } from './voiceSettings.js';
+import { voiceSettingsStorageKey, defaultVoiceSettings, availableLanguages, availableResponseLanguages } from './voiceSettings.js';
 
 const $ = (id) => document.getElementById(id);
 const q = (sel) => document.querySelector(sel);
@@ -92,6 +92,18 @@ function populateSttLanguageDropdown() {
         opt.value = code;
         opt.textContent = name;
         sttSelect.appendChild(opt);
+    }
+}
+
+function populateResponseLanguageDropdown() {
+    const select = $('response-language-select');
+    if (!select) return;
+    select.innerHTML = '';
+    for (const [code, name] of Object.entries(availableResponseLanguages)) {
+        const opt = document.createElement('option');
+        opt.value = code;
+        opt.textContent = name;
+        select.appendChild(opt);
     }
 }
 
@@ -228,11 +240,9 @@ function saveOptions() {
     chrome.storage.local.get(Object.keys(keysToUpdate), (result) => {
         if (chrome.runtime.lastError) return showNotification('Error preparing to save.', true);
 
-        const promptsUpdate = keysToUpdate[promptsStorageKey] || {};
         const existingPrompts = result[promptsStorageKey] || {};
-        const finalPrompts = {
-            active_system_prompt_key: promptsUpdate.active_system_prompt_key ?? existingPrompts.active_system_prompt_key ?? defaultPrompts.active_system_prompt_key
-        };
+        const promptsUpdate = keysToUpdate[promptsStorageKey] || {};
+        const finalPrompts = { ...existingPrompts, ...promptsUpdate };
 
         const finalData = {
             [settingsStorageKey]: { ...(result[settingsStorageKey] || {}), ...keysToUpdate[settingsStorageKey] },
@@ -254,6 +264,7 @@ function saveOptions() {
 
 function loadOptions() {
     populateSttLanguageDropdown();
+    populateResponseLanguageDropdown();
 
     const elements = {
         vllmUrlInput: $('vllm-url-input'),
@@ -272,6 +283,7 @@ function loadOptions() {
         mistralApiKeyInput: $('mistral-api-key-input'),
         mistralModelSelect: $('mistral-model-name-select'),
         roleSelect: $('role-select'),
+        responseLanguageSelect: $('response-language-select'),
         sttSelect: $('stt-language-select'),
         uiScaleSlider: $('ui-scale-slider'),
         uiScaleValue: $('ui-scale-value')
@@ -351,6 +363,10 @@ function loadOptions() {
         if (elements.roleSelect) {
             const activeKey = currentPrompts.active_system_prompt_key || 'web_assistant';
             elements.roleSelect.value = activeKey;
+        }
+
+        if (elements.responseLanguageSelect) {
+            elements.responseLanguageSelect.value = currentPrompts.responseLanguage || defaultPrompts.responseLanguage;
         }
 
         updateCloudConfigVisibility();

@@ -156,7 +156,7 @@
         </div>
 
         <div class="card">
-            <h2>Prompt Settings</h2>
+            <h2>Preferences</h2>
             <div>
                 <label for="role-select">Role</label>
                 <select id="role-select" data-storage-key="active_system_prompt_key" data-storage-type="prompts">
@@ -164,24 +164,25 @@
                     <option value="teacher">Study Mode</option>
                 </select>
             </div>
-        </div>
+            <div>
+                <label for="response-language-select">AI Response Language</label>
+                <select id="response-language-select" data-storage-key="responseLanguage" data-storage-type="prompts">
+                </select>
+            </div>
 
-        <div class="card">
-            <h2>Voice Settings</h2>
             <div>
                 <label for="stt-language-select">Voice Input Language</label>
                 <select id="stt-language-select" data-storage-key="sttLanguage" data-storage-type="voice">
                 </select>
             </div>
             <div>
-                <label for="tts-voice-select">AI Response Voice</label>
+                <label for="tts-voice-select">Voice Output Language</label>
                 <select id="tts-voice-select" data-storage-key="ttsVoiceName" data-storage-type="voice">
                 </select>
             </div>
         </div>
 
         <div class="button-container">
-            <button id="reset-button">Reset</button>
             <button id="save-button">Save</button>
         </div>
     </div>
