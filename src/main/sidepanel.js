@@ -163,7 +163,7 @@ class AIScreenReader {
             onAnalyzeContent: this._withActionGuards(this.handleContentAnalysis),
             onGetElements: this._withActionGuards(this.handleGetElements),
             onSendMessage: this._withActionGuards(this.handleSendMessage),
-            onToggleVoice: this._withActionGuards(this.voiceController.toggleVoiceInput.bind(this.voiceController)),
+            onToggleVoice: this._withActionGuards(this.voiceController.toggleVoiceInput.bind(this.voiceController), { checkConfig: false }),
             onRepeat: this._withActionGuards(this.handleRepeat, { checkConfig: false }),
             onModeChangeLocal: this._withActionGuards(() => this.handleModeChange('local'), { checkConfig: false }),
             onModeChangeCloud: this._withActionGuards(() => this.handleModeChange('cloud'), { checkConfig: false }),
@@ -195,7 +195,7 @@ class AIScreenReader {
 
             const handler = messageHandlers[request.type];
             if (handler) {
-                const needsConfigCheck = request.type !== 'toggleApiMode' && request.type !== 'toggleRepeat';
+                const needsConfigCheck = request.type !== 'toggleApiMode' && request.type !== 'toggleRepeat' && request.type !== 'toggleVoiceInput';
                 if (!this._canPerformAction({ checkConfig: needsConfigCheck })) {
                     sendResponse({ success: false, error: 'Cannot perform action right now' });
                     return true;
@@ -400,7 +400,7 @@ class AIScreenReader {
         const userFriendlyMessage = message || "An unexpected error occurred";
         const errorMessage = detail ? `${userFriendlyMessage}: ${detail}` : userFriendlyMessage;
         this.appendMessage('system', `Error: ${errorMessage}`);
-        this.voiceController.speakText(`Error occurred. ${userFriendlyMessage}.`);
+        this.voiceController.speakText(`Error. ${errorMessage}`);
         this.resetStateAfterError();
     }
 
