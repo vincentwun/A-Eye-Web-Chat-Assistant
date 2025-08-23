@@ -1,8 +1,8 @@
-import { VoiceController } from '../components/voiceControl.js';
-import { ScreenshotController } from '../components/screenShot.js';
+import { VoiceController } from '../voice/voiceControl.js';
+import { ScreenshotController } from '../action/screenShot.js';
 import { ApiService } from '../api/apiService.js';
 import { UIManager } from '../components/uiManager.js';
-import { CommandProcessor } from '../action/commandMap.js';
+import { CommandProcessor } from '../components/commandMap.js';
 import { ScreenshotAction } from '../action/screenshotAction.js';
 import { ContentAnalysisAction } from '../action/contentAnalysisAction.js';
 import { GetElementAction } from '../action/getElementAction.js';

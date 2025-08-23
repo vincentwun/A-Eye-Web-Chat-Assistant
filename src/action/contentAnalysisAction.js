@@ -1,4 +1,4 @@
-import { ContentExtractor } from '../components/contentExtractor.js';
+import { ContentExtractor } from './contentExtractor.js';
 
 export class ContentAnalysisAction {
     constructor(dependencies) {

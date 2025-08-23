@@ -17,8 +17,7 @@
     "commands",
     "storage",
     "tabs",
-    "activeTab",
-    "windows"
+    "activeTab"
   ],
   "host_permissions": [
     "<all_urls>"
