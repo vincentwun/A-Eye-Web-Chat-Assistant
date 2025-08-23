@@ -1,8 +1,8 @@
 import { defaultApiSettings, settingsStorageKey } from '../option/apiRoute.js';
 import { defaultPrompts, promptsStorageKey } from '../option/prompts.js';
 import { defaultVoiceSettings, voiceSettingsStorageKey } from '../option/voiceSettings.js';
-import { executeJSON } from './jsonExecutor.js';
-import { findElementsOnPage } from './elementFinder.js';
+import { executeJSON } from '../action/pageAction.js';
+import { findElementsOnPage } from '../action/getElement.js';
 import { getPageDimensions } from './backgroundUtils.js';
 
 async function initializeDefaultSettings() {

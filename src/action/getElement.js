@@ -1,4 +1,4 @@
-import { getCurrentTab, executeScriptOnTab } from './backgroundUtils.js';
+import { getCurrentTab, executeScriptOnTab } from '../background/backgroundUtils.js';
 
 function findAllInteractableElements() {
   function isVisible(element) {
