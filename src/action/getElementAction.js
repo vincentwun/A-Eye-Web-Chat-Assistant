@@ -1,11 +1,8 @@
-import { defaultPrompts, promptsStorageKey } from '../option/prompts.js';
-
 export class GetElementAction {
   constructor(dependencies) {
     this.uiManager = dependencies.uiManager;
     this.voiceController = dependencies.voiceController;
     this.apiService = dependencies.apiService;
-    this.state = dependencies.state;
     this.stateManager = dependencies.stateManager;
     this.getApiConfig = dependencies.getApiConfig;
     this.getHistoryToSend = dependencies.getHistoryToSend;
@@ -14,7 +11,7 @@ export class GetElementAction {
     this.setProcessing = dependencies.setProcessing;
     this.appendMessage = dependencies.appendMessage;
 
-    if (!this.uiManager || !this.voiceController || !this.apiService || !this.state || !this.getApiConfig || !this.getHistoryToSend || !this.handleResponse || !this.handleError || !this.setProcessing || !this.appendMessage) {
+    if (!this.uiManager || !this.voiceController || !this.apiService || !this.stateManager || !this.getApiConfig || !this.getHistoryToSend || !this.handleResponse || !this.handleError || !this.setProcessing || !this.appendMessage) {
       console.error("GetElementAction missing dependencies:", dependencies);
       throw new Error("GetElementAction initialized with missing dependencies.");
     }
@@ -47,16 +44,16 @@ export class GetElementAction {
       this.uiManager.showThinkingIndicator();
       await this.voiceController.speakText("Analyzing...");
 
-      const result = await chrome.storage.local.get(promptsStorageKey);
-      const currentPrompts = result[promptsStorageKey] || { ...defaultPrompts };
-      const getElementPromptText = currentPrompts.getElement_prompt ?? defaultPrompts.getElement_prompt;
+      const allPrompts = this.stateManager.getPrompts();
+      const getElementPromptText = allPrompts.getElement_prompt;
       console.log("Using get element prompt:", getElementPromptText);
 
       const fullPrompt = `${getElementPromptText}\n\n---\n\n${elementsJsonString}`;
       const payload = { prompt: fullPrompt };
       const apiConfig = this.getApiConfig();
       const historyToSend = this.getHistoryToSend();
-      const systemPromptForTask = this.stateManager.getPrompts().system_prompt[this.stateManager.getPrompts().active_system_prompt_key || 'web_assistant'];
+      const activeSystemPromptKey = allPrompts.active_system_prompt_key || 'web_assistant';
+      const systemPromptForTask = allPrompts.system_prompt[activeSystemPromptKey];
 
       const responseContent = await this.apiService.sendRequest(
         apiConfig,
@@ -70,7 +67,9 @@ export class GetElementAction {
     } catch (error) {
       this.handleError('Element analysis failed', error);
     } finally {
-      this.setProcessing(false);
+      if (this.stateManager.isProcessing()) {
+        this.setProcessing(false);
+      }
       console.log("GetElementAction execute finished.");
     }
   }

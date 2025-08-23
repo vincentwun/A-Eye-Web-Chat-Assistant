@@ -1,12 +1,10 @@
 import { ContentExtractor } from '../components/contentExtractor.js';
-import { defaultPrompts, promptsStorageKey } from '../option/prompts.js';
 
 export class ContentAnalysisAction {
     constructor(dependencies) {
         this.uiManager = dependencies.uiManager;
         this.voiceController = dependencies.voiceController;
         this.apiService = dependencies.apiService;
-        this.state = dependencies.state;
         this.stateManager = dependencies.stateManager;
         this.getApiConfig = dependencies.getApiConfig;
         this.getHistoryToSend = dependencies.getHistoryToSend;
@@ -15,7 +13,7 @@ export class ContentAnalysisAction {
         this.setProcessing = dependencies.setProcessing;
         this.appendMessage = dependencies.appendMessage;
 
-        if (!this.uiManager || !this.voiceController || !this.apiService || !this.state || !this.getApiConfig || !this.getHistoryToSend || !this.handleResponse || !this.handleError || !this.setProcessing || !this.appendMessage) {
+        if (!this.uiManager || !this.voiceController || !this.apiService || !this.stateManager || !this.getApiConfig || !this.getHistoryToSend || !this.handleResponse || !this.handleError || !this.setProcessing || !this.appendMessage) {
             console.error("ContentAnalysisAction missing dependencies:", dependencies);
             throw new Error("ContentAnalysisAction initialized with missing dependencies.");
         }
@@ -45,16 +43,17 @@ export class ContentAnalysisAction {
                 this.uiManager.showThinkingIndicator();
                 await this.voiceController.speakText("Analyzing...");
 
-                const result = await chrome.storage.local.get(promptsStorageKey);
-                const currentPrompts = result[promptsStorageKey] || { ...defaultPrompts };
-                const analyzeContentPromptText = currentPrompts.analyzeContent_prompt ?? defaultPrompts.analyzeContent;
+                const allPrompts = this.stateManager.getPrompts();
+                const analyzeContentPromptText = allPrompts.analyzeContent_prompt || '';
+                const activeSystemPromptKey = allPrompts.active_system_prompt_key || 'web_assistant';
+                const systemPromptForTask = allPrompts.system_prompt[activeSystemPromptKey];
+
                 console.log("Using content analysis prompt:", analyzeContentPromptText);
 
                 const fullPrompt = `${analyzeContentPromptText}\n\n---\n\n${extractedText}`;
                 const payload = { prompt: fullPrompt };
                 const apiConfig = this.getApiConfig();
                 const historyToSend = this.getHistoryToSend('analyzeContent');
-                const systemPromptForTask = this.stateManager.getPrompts().system_prompt[this.stateManager.getPrompts().active_system_prompt_key || 'web_assistant'];
 
                 const responseContent = await this.apiService.sendRequest(
                     apiConfig,
@@ -73,7 +72,9 @@ export class ContentAnalysisAction {
         } catch (error) {
             this.handleError('Content analysis failed', error);
         } finally {
-            this.setProcessing(false);
+            if (this.stateManager.isProcessing()) {
+                this.setProcessing(false);
+            }
             console.log("ContentAnalysisAction execute finished trigger");
         }
     }
