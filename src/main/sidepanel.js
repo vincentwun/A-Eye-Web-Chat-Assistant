@@ -241,21 +241,25 @@ class AIScreenReader {
 
     async handleScreenshot() {
         this.voiceController.stopSpeaking();
+        this.voiceController.playSendSound();
         await this.screenshotAction.execute('visible');
     }
 
     async handleScrollingScreenshot() {
         this.voiceController.stopSpeaking();
+        this.voiceController.playSendSound();
         await this.screenshotAction.execute('scrolling');
     }
 
     async handleContentAnalysis() {
         this.voiceController.stopSpeaking();
+        this.voiceController.playSendSound();
         await this.contentAnalysisAction.execute();
     }
 
     async handleGetElements() {
         this.voiceController.stopSpeaking();
+        this.voiceController.playSendSound();
         await this.getElementAction.execute();
     }
 
