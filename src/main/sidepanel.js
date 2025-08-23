@@ -14,7 +14,6 @@ import { ConfigValidator } from '../components/configValidator.js';
 
 class AIScreenReader {
     constructor() {
-        this._getElements();
         this._initializeComponents();
         this._setupDependencies();
         this._setupActions();
@@ -22,33 +21,11 @@ class AIScreenReader {
         this.initializeAll();
     }
 
-    _getElements() {
-        this.elements = {
-            screenshotButton: document.getElementById('screenshot-button'),
-            scrollingScreenshotButton: document.getElementById('scrolling-screenshot-button'),
-            analyzeContentButton: document.getElementById('analyze-content-button'),
-            getElementButton: document.getElementById('get-element-button'),
-            openOptionsButton: document.getElementById('options-button'),
-            conversation: document.getElementById('conversation'),
-            userInput: document.getElementById('user-input'),
-            sendButton: document.getElementById('send-button'),
-            voiceButton: document.getElementById('voiceInput-button'),
-            repeatButton: document.getElementById('repeat-button'),
-            clearButton: document.getElementById('clear-button'),
-            localModeButton: document.getElementById('local-mode-button'),
-            cloudModeButton: document.getElementById('cloud-mode-button'),
-            currentModeIndicator: document.getElementById('current-mode-indicator'),
-            pastedImagePreviewContainer: document.getElementById('pasted-image-preview-container'),
-            pastedImagePreview: document.getElementById('pasted-image-preview'),
-            removePastedImageButton: document.getElementById('remove-pasted-image-button')
-        };
-    }
-
     _initializeComponents() {
         this.stateManager = new StateManager(this.onStateChange.bind(this));
         this.apiService = new ApiService();
         this.voiceController = new VoiceController();
-        this.uiManager = new UIManager(this.elements, this.voiceController);
+        this.uiManager = new UIManager(this.voiceController);
         this.screenshotController = new ScreenshotController();
         this.configValidator = new ConfigValidator({
             stateManager: this.stateManager,
@@ -123,7 +100,7 @@ class AIScreenReader {
             this._setupEventListeners();
             await this.voiceController.initializeAll();
             this.voiceController.speakText('A-Eye Ready');
-            this.uiManager.updateInputState(this.elements.userInput.value);
+            this.uiManager.updateInputState();
         } catch (error) {
             this.handleError('Initialization failed', error);
             const currentState = this.stateManager.getState();
@@ -131,15 +108,11 @@ class AIScreenReader {
         }
     }
 
-    async _applyUIScale(scale) {
-        document.documentElement.style.fontSize = `${scale}%`;
-    }
-
     async _applyInitialSettings() {
         const result = await chrome.storage.local.get(settingsStorageKey);
         const settings = result[settingsStorageKey] || {};
         const uiScale = settings.uiScale ?? 100;
-        await this._applyUIScale(uiScale);
+        this.uiManager.applyUIScale(uiScale);
     }
 
     _canPerformAction({ checkConfig = true } = {}) {
@@ -184,43 +157,29 @@ class AIScreenReader {
     }
 
     _setupEventListeners() {
-        const eventHandlers = {
-            'screenshotButton': this._withActionGuards(this.handleScreenshot),
-            'scrollingScreenshotButton': this._withActionGuards(this.handleScrollingScreenshot),
-            'analyzeContentButton': this._withActionGuards(this.handleContentAnalysis),
-            'getElementButton': this._withActionGuards(this.handleGetElements),
-            'sendButton': this._withActionGuards(this.handleSendMessage),
-            'voiceButton': this._withActionGuards(this.voiceController.toggleVoiceInput.bind(this.voiceController)),
-            'repeatButton': this._withActionGuards(this.handleRepeat, { checkConfig: false }),
-            'localModeButton': this._withActionGuards(() => this.handleModeChange('local'), { checkConfig: false }),
-            'cloudModeButton': this._withActionGuards(() => this.handleModeChange('cloud'), { checkConfig: false }),
-            'clearButton': this._withActionGuards(this.handleClear, { ignoreProcessing: true, checkConfig: false }),
-            'removePastedImageButton': (event) => this.handleRemovePastedImage(event),
-            'openOptionsButton': () => this.handleOpenOptions()
-        };
-
-        for (const [elementId, handler] of Object.entries(eventHandlers)) {
-            const element = this.elements[elementId];
-            if (element) {
-                element.addEventListener('click', handler);
-            } else {
-                console.warn(`Element with ID '${elementId}' not found for event listener.`);
-            }
-        }
-
-        if (this.elements.userInput) {
-            this.elements.userInput.addEventListener('paste', this.handlePaste.bind(this));
-            this.elements.userInput.addEventListener('input', () => this.uiManager.updateInputState(this.elements.userInput.value));
-            this.elements.userInput.addEventListener('keypress', (e) => {
+        const handlers = {
+            onScreenshot: this._withActionGuards(this.handleScreenshot),
+            onScrollingScreenshot: this._withActionGuards(this.handleScrollingScreenshot),
+            onAnalyzeContent: this._withActionGuards(this.handleContentAnalysis),
+            onGetElements: this._withActionGuards(this.handleGetElements),
+            onSendMessage: this._withActionGuards(this.handleSendMessage),
+            onToggleVoice: this._withActionGuards(this.voiceController.toggleVoiceInput.bind(this.voiceController)),
+            onRepeat: this._withActionGuards(this.handleRepeat, { checkConfig: false }),
+            onModeChangeLocal: this._withActionGuards(() => this.handleModeChange('local'), { checkConfig: false }),
+            onModeChangeCloud: this._withActionGuards(() => this.handleModeChange('cloud'), { checkConfig: false }),
+            onClear: this._withActionGuards(this.handleClear, { ignoreProcessing: true, checkConfig: false }),
+            onRemovePastedImage: (event) => this.handleRemovePastedImage(event),
+            onOpenOptions: () => this.handleOpenOptions(),
+            onPaste: this.handlePaste.bind(this),
+            onUserInputKeypress: (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     this.voiceController.stopSpeaking();
                     this.handleSendMessage();
                 }
-            });
-        } else {
-            console.error("User input element not found!");
-        }
+            }
+        };
+        this.uiManager.bindEventListeners(handlers);
     }
 
     _setupMessageListener() {
@@ -258,7 +217,7 @@ class AIScreenReader {
                 const newSettings = changes[settingsStorageKey].newValue;
                 const oldSettings = changes[settingsStorageKey].oldValue || {};
                 if (newSettings && newSettings.uiScale !== oldSettings.uiScale) {
-                    this._applyUIScale(newSettings.uiScale ?? 100);
+                    this.uiManager.applyUIScale(newSettings.uiScale ?? 100);
                 }
             }
         });
@@ -327,15 +286,15 @@ class AIScreenReader {
         this.uiManager.updateModeUI(newMode);
         const modeName = newMode === 'local' ? 'Local' : 'Cloud';
         this.voiceController.speakText(`Switched to ${modeName} Mode.`);
-        this.elements.userInput?.focus();
+        this.uiManager.focusUserInput();
     }
 
     async handleSendMessage() {
         this.voiceController.stopSpeaking();
-        const userInput = this.elements.userInput.value.trim();
+        const userInput = this.uiManager.getUserInput();
         const state = this.stateManager.getState();
         const hasImageContext = !!state.lastImageData.dataUrl;
-        const isPastedImageActive = this.elements.pastedImagePreviewContainer.style.display !== 'none';
+        const isPastedImageActive = this.uiManager.isPastedImageVisible();
 
         if (userInput.toLowerCase() === 'clear') {
             this.handleClear();
@@ -358,6 +317,7 @@ class AIScreenReader {
         this.uiManager.clearUserInput();
         this.uiManager.hidePastedImagePreview();
         this.uiManager.showThinkingIndicator();
+        this.voiceController.startThinkingSoundLoop();
 
         try {
             const prompts = this.stateManager.getPrompts();
@@ -402,6 +362,7 @@ class AIScreenReader {
 
     async handleResponse(responseContent) {
         this.uiManager.hideThinkingIndicator();
+        this.voiceController.stopThinkingSoundLoop();
         const responseText = (typeof responseContent === 'string') ? responseContent : JSON.stringify(responseContent);
         try {
             const commandResult = this.commandProcessor.processResponse(responseText);
@@ -432,6 +393,7 @@ class AIScreenReader {
 
     handleError(message, error) {
         this.uiManager.hideThinkingIndicator();
+        this.voiceController.stopThinkingSoundLoop();
         console.error(message, error);
         let detail = (error instanceof Error) ? error.message : (typeof error === 'string' ? error : JSON.stringify(error));
         detail = detail.replace(/API Error (\d+\.?):\s/, '').replace(/^Error:\s*/, '');
@@ -450,12 +412,13 @@ class AIScreenReader {
         this.voiceController.stopSpeaking();
         this.voiceController.speakText('Conversation cleared.');
         this.uiManager.hideThinkingIndicator();
+        this.voiceController.stopThinkingSoundLoop();
         this.uiManager.clearConversation();
         this.uiManager.clearUserInput();
         this.stateManager.clearMessages();
         this.handleRemovePastedImage();
         this.setProcessing(false);
-        this.elements.userInput?.focus();
+        this.uiManager.focusUserInput();
     }
 
     async handleRepeat() {
@@ -466,7 +429,7 @@ class AIScreenReader {
         } else {
             this.voiceController.speakText('No previous response to repeat.');
         }
-        this.elements.userInput?.focus();
+        this.uiManager.focusUserInput();
     }
 
     handleOpenOptions() {
@@ -482,7 +445,7 @@ class AIScreenReader {
         this.stateManager.setProcessing(isProcessing);
         this.uiManager.setProcessingState(isProcessing);
         if (!isProcessing) {
-            this.elements.userInput?.focus();
+            this.uiManager.focusUserInput();
         }
     }
 }

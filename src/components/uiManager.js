@@ -1,13 +1,86 @@
 export class UIManager {
-    constructor(elements, voiceController) {
-        this.elements = elements;
+    constructor(voiceController) {
+        this._getElements();
         this.voiceController = voiceController;
-        if (!this.elements || !this.elements.conversation || !this.elements.localModeButton || !this.elements.cloudModeButton) {
+
+        if (!this.elements.conversation || !this.elements.localModeButton || !this.elements.cloudModeButton) {
             console.error("UIManager initialized with missing essential elements (conversation or mode buttons).");
         }
         if (!this.elements.currentModeIndicator) {
             console.warn("UIManager initialized without currentModeIndicator element.");
         }
+    }
+
+    _getElements() {
+        this.elements = {
+            screenshotButton: document.getElementById('screenshot-button'),
+            scrollingScreenshotButton: document.getElementById('scrolling-screenshot-button'),
+            analyzeContentButton: document.getElementById('analyze-content-button'),
+            getElementButton: document.getElementById('get-element-button'),
+            openOptionsButton: document.getElementById('options-button'),
+            conversation: document.getElementById('conversation'),
+            userInput: document.getElementById('user-input'),
+            sendButton: document.getElementById('send-button'),
+            voiceButton: document.getElementById('voiceInput-button'),
+            repeatButton: document.getElementById('repeat-button'),
+            clearButton: document.getElementById('clear-button'),
+            localModeButton: document.getElementById('local-mode-button'),
+            cloudModeButton: document.getElementById('cloud-mode-button'),
+            currentModeIndicator: document.getElementById('current-mode-indicator'),
+            pastedImagePreviewContainer: document.getElementById('pasted-image-preview-container'),
+            pastedImagePreview: document.getElementById('pasted-image-preview'),
+            removePastedImageButton: document.getElementById('remove-pasted-image-button')
+        };
+    }
+
+    bindEventListeners(handlers) {
+        const eventMap = {
+            'screenshotButton': { event: 'click', handler: handlers.onScreenshot },
+            'scrollingScreenshotButton': { event: 'click', handler: handlers.onScrollingScreenshot },
+            'analyzeContentButton': { event: 'click', handler: handlers.onAnalyzeContent },
+            'getElementButton': { event: 'click', handler: handlers.onGetElements },
+            'sendButton': { event: 'click', handler: handlers.onSendMessage },
+            'voiceButton': { event: 'click', handler: handlers.onToggleVoice },
+            'repeatButton': { event: 'click', handler: handlers.onRepeat },
+            'localModeButton': { event: 'click', handler: handlers.onModeChangeLocal },
+            'cloudModeButton': { event: 'click', handler: handlers.onModeChangeCloud },
+            'clearButton': { event: 'click', handler: handlers.onClear },
+            'removePastedImageButton': { event: 'click', handler: handlers.onRemovePastedImage },
+            'openOptionsButton': { event: 'click', handler: handlers.onOpenOptions },
+            'userInput': [
+                { event: 'paste', handler: handlers.onPaste },
+                { event: 'input', handler: () => this.updateInputState() },
+                { event: 'keypress', handler: handlers.onUserInputKeypress }
+            ]
+        };
+
+        for (const elementId in eventMap) {
+            const element = this.elements[elementId];
+            if (element) {
+                const events = Array.isArray(eventMap[elementId]) ? eventMap[elementId] : [eventMap[elementId]];
+                events.forEach(({ event, handler }) => {
+                    element.addEventListener(event, handler);
+                });
+            } else {
+                console.warn(`Element with ID '${elementId}' not found for event listener.`);
+            }
+        }
+    }
+
+    getUserInput() {
+        return this.elements.userInput.value.trim();
+    }
+
+    isPastedImageVisible() {
+        return this.elements.pastedImagePreviewContainer.style.display !== 'none';
+    }
+
+    applyUIScale(scale) {
+        document.documentElement.style.fontSize = `${scale}%`;
+    }
+
+    focusUserInput() {
+        this.elements.userInput?.focus();
     }
 
     appendMessage(role, formattedContent) {
@@ -196,14 +269,16 @@ export class UIManager {
         this.elements.currentModeIndicator.textContent = `Mode: ${modeText}`;
     }
 
-    updateInputState(inputValue) {
+    updateInputState() {
         if (!this.elements.sendButton) return;
-        const hasImage = this.elements.pastedImagePreviewContainer.style.display !== 'none';
+        const inputValue = this.elements.userInput.value;
+        const hasImage = this.isPastedImageVisible();
         this.elements.sendButton.disabled = (!inputValue || inputValue.trim().length === 0) && !hasImage;
     }
 
     setProcessingState(isProcessing) {
-        this.elements.sendButton.disabled = isProcessing || !this.elements.userInput.value.trim();
+        this.elements.userInput.disabled = isProcessing;
+        this.elements.sendButton.disabled = isProcessing || !this.getUserInput();
 
         this.elements.screenshotButton.disabled = isProcessing;
         this.elements.scrollingScreenshotButton.disabled = isProcessing;
@@ -237,15 +312,11 @@ export class UIManager {
         this.hidePastedImagePreview();
     }
 
-
-
     clearUserInput() {
         if (!this.elements.userInput) return;
         this.elements.userInput.value = '';
-        this.updateInputState('');
+        this.updateInputState();
     }
-
-
 
     escapeHTML(str) {
         if (!str) return '';
@@ -258,13 +329,13 @@ export class UIManager {
         if (!this.elements.pastedImagePreviewContainer || !this.elements.pastedImagePreview) return;
         this.elements.pastedImagePreview.src = dataUrl;
         this.elements.pastedImagePreviewContainer.style.display = 'block';
-        this.updateInputState(this.elements.userInput.value);
+        this.updateInputState();
     }
 
     hidePastedImagePreview() {
         if (!this.elements.pastedImagePreviewContainer || !this.elements.pastedImagePreview) return;
         this.elements.pastedImagePreview.src = '';
         this.elements.pastedImagePreviewContainer.style.display = 'none';
-        this.updateInputState(this.elements.userInput.value);
+        this.updateInputState();
     }
 }

@@ -101,7 +101,7 @@ export class VoiceController {
         this.stopThinkingSoundLoop();
         this.thinkingSoundInterval = setInterval(() => {
             playThinkingSound();
-        }, 3000);
+        }, 2000);
     }
 
     stopThinkingSoundLoop() {
