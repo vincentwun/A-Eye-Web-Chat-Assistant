@@ -36,7 +36,7 @@ class AIScreenReader {
 
     _getProcessedSystemPrompt(systemPromptTemplate) {
         const prompts = this.stateManager.getPrompts();
-        const responseLangCode = prompts.responseLanguage || 'zh-HK';
+        const responseLangCode = prompts.responseLanguage || 'en-US';
         const languageName = availableResponseLanguages[responseLangCode] || 'English (US)';
         return systemPromptTemplate.replace(/{languageName}/g, languageName);
     }

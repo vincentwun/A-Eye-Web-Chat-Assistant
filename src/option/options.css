@@ -251,16 +251,6 @@ button:active {
     background-color: var(--button-primary-hover-bg);
 }
 
-#reset-button {
-    background-color: var(--button-secondary-bg);
-    color: var(--button-secondary-text);
-    border-color: var(--button-secondary-border);
-}
-
-#reset-button:hover {
-    background-color: var(--button-secondary-hover-bg);
-}
-
 .hidden {
     display: none !important;
 }

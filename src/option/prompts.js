@@ -94,7 +94,7 @@ You MUST respond: 'getElement'`,
 
         active_system_prompt_key: 'web_assistant',
 
-        responseLanguage: 'zh-HK',
+        responseLanguage: 'en-US',
 
         screenshot_prompt: `Describe the content and main elements of the provided screenshot. REMINDER: MUST NO more than 50 words.`,
 
