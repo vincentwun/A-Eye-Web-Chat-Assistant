@@ -167,10 +167,16 @@ select {
     border-radius: 0.375rem;
 }
 
-.segmented-control input[type="radio"]:checked+label {
-    background-color: var(--button-secondary-bg);
-    color: var(--text-color);
-    box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .3), 0 1px 3px 1px rgba(60, 64, 67, .15);
+.segmented-control input[name="cloudSelection"]:checked+label {
+    background-color: #135ac4;
+    color: #FFFFFF;
+    box-shadow: none;
+}
+
+.segmented-control input[name="localApiModeSelection"]:checked+label {
+    background-color: #1f9427;
+    color: #FFFFFF;
+    box-shadow: none;
 }
 
 .slider-container {
