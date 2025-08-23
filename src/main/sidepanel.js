@@ -71,10 +71,6 @@ class AIScreenReader {
             handleSendMessage: this.handleSendMessage.bind(this)
         });
 
-        this.screenshotController.setCallbacks({
-            onStart: () => this.voiceController.speakText("Taking scrolling screenshot.")
-        });
-
         const originalApiService = this.apiService;
         const proxiedApiService = {
             sendRequest: (config, history, prompt, image, systemPrompt) => {

@@ -1,13 +1,6 @@
 export class ScreenshotController {
     constructor() {
         this.scrollingScreenshotImages = [];
-        this.callbacks = {
-            onStart: null
-        };
-    }
-
-    setCallbacks(callbacks) {
-        this.callbacks = { ...this.callbacks, ...callbacks };
     }
 
     async captureVisibleTab() {
@@ -78,11 +71,6 @@ export class ScreenshotController {
                     throw new Error("Failed to capture single visible tab for non-scrolling page.");
                 }
                 return singleShot;
-            }
-
-
-            if (this.callbacks.onStart) {
-                this.callbacks.onStart();
             }
 
             await this.captureScreenshots(tab, pageDimensions);

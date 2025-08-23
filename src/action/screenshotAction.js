@@ -37,6 +37,7 @@ export class ScreenshotAction {
         promptKey = 'screenshot_prompt';
         commandName = 'takeScreenshot';
       } else if (type === 'scrolling') {
+        this.voiceController.speakText("Taking scrolling screenshot.");
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (!tab || !tab.id) throw new Error('No active tab found or tab ID missing for scrolling screenshot.');
         imageDataUrl = await this.screenshotController.handleScrollingScreenshot(tab);
