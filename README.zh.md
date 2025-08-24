@@ -48,6 +48,8 @@ A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變
 <details>
 <summary><strong>點擊此處展開本地 AI 設定說明</strong></summary>
 
+---
+
 #### Ollama
 1.  **安裝 [Ollama](https://ollama.com/)**。
 2.  **設定 CORS 權限**：此步驟是為了讓擴充功能與 Ollama 通訊。
@@ -104,6 +106,8 @@ A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變
     ```
     當狀態從 `'downloading'` 變為 `'available'`，即代表 Gemini Nano 已可使用。
 
+---
+
 </details>
 
 ### 雲端 AI 設定
@@ -112,6 +116,8 @@ A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變
 
 <details>
 <summary><strong>點擊此處展開雲端 AI 設定說明</strong></summary>
+
+---
 
 #### Google AI Studio API Key
 1.  前往 [Google AI Studio](https://aistudio.google.com/)。
@@ -132,6 +138,8 @@ A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變
 
 #### 雲端平台：Google Cloud Platform (Vertex AI)
 適合想自行管理 GCP 基礎設施的進階使用者。詳細步驟請參閱 [A-Eye Cloud Infra](https://github.com/vincentwun/A-Eye-Cloud-Infra)。
+
+---
 
 </details>
 

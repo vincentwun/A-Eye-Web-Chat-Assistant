@@ -48,6 +48,8 @@ Ideal for privacy. All processing happens on your computer.
 <details>
 <summary><strong>Click here for Local AI setup instructions</strong></summary>
 
+---
+
 #### Ollama
 1.  **Install [Ollama](https://ollama.com/)**.
 2.  **Set CORS Permissions**: This allows the extension to talk to Ollama.
@@ -106,6 +108,8 @@ Note: Gemini Nano's Multimodal capabilities are currently only supported in [Chr
     ```
     Once the status changes from `'downloading'` to `'available'`, Gemini Nano is ready to use.
 
+---
+
 </details>
 
 ### Cloud AI Setup
@@ -114,6 +118,8 @@ Ideal for maximum power and performance.
 
 <details>
 <summary><strong>Click here for Cloud AI setup instructions</strong></summary>
+
+---
 
 #### Google AI Studio API Key
 1.  Visit [Google AI Studio](https://aistudio.google.com/).
@@ -133,6 +139,8 @@ Ideal for maximum power and performance.
 ---
 #### Cloud Platform: Google Cloud Platform (Vertex AI)
 For advanced users who want to manage their own GCP infrastructure. See the [A-Eye Cloud Infra](https://github.com/vincentwun/A-Eye-Cloud-Infra) for detailed instructions.
+
+---
 
 </details>
 
