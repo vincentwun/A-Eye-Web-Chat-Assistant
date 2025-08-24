@@ -282,11 +282,11 @@ button:active {
 }
 
 .bg-light-green {
-    background-color: #E8F5E9;
+    background-color: #ffffff;
 }
 
 .bg-light-blue {
-    background-color: #E3F2FD;
+    background-color: #ffffff;
 }
 
 .bg-light-green + .bg-light-blue {
