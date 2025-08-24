@@ -288,3 +288,7 @@ button:active {
 .bg-light-blue {
     background-color: #E3F2FD;
 }
+
+.bg-light-green + .bg-light-blue {
+    border-top: 1px solid #000000;
+}
