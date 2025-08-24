@@ -1,4 +1,4 @@
-import { voiceSettingsStorageKey, defaultVoiceSettings } from '../option/voiceSettings.js';
+import { voiceSettingsStorageKey, defaultVoiceSettings } from '../option/languagesSettings.js';
 import { TTSController } from './ttsController.js';
 import { STTController } from './sttController.js';
 import { playSendSound, playThinkingSound } from './soundEffects.js';

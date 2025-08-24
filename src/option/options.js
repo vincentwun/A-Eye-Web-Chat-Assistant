@@ -1,6 +1,6 @@
 import { defaultPrompts, promptsStorageKey } from './prompts.js';
 import { settingsStorageKey, defaultApiSettings } from './apiRoute.js';
-import { voiceSettingsStorageKey, defaultVoiceSettings, availableLanguages, availableResponseLanguages } from './voiceSettings.js';
+import { voiceSettingsStorageKey, defaultVoiceSettings, availableLanguages, availableResponseLanguages } from './languagesSettings.js';
 
 const $ = (id) => document.getElementById(id);
 const q = (sel) => document.querySelector(sel);

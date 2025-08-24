@@ -9,7 +9,7 @@ import { GetElementAction } from '../action/getElementAction.js';
 import { ActionFlowController } from '../components/actionFlowController.js';
 import { StateManager } from '../components/stateManager.js';
 import { defaultApiSettings, settingsStorageKey } from '../option/apiRoute.js';
-import { availableResponseLanguages } from '../option/voiceSettings.js';
+import { availableResponseLanguages } from '../option/languagesSettings.js';
 import { ConfigValidator } from '../components/configValidator.js';
 
 class AIScreenReader {
