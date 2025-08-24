@@ -280,3 +280,11 @@ button:active {
 .resource-links a:hover {
     color: #0051ff;
 }
+
+.bg-light-green {
+    background-color: #E8F5E9;
+}
+
+.bg-light-blue {
+    background-color: #E3F2FD;
+}
