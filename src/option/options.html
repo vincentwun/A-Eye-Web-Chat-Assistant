@@ -157,19 +157,29 @@
 
         <div class="card">
             <h2>Preferences</h2>
-            <div>
+            <div class="llm-preferences">
                 <label for="role-select">Role</label>
                 <select id="role-select" data-storage-key="active_system_prompt_key" data-storage-type="prompts">
                     <option value="web_assistant">Web Assistant</option>
                     <option value="teacher">Study Mode</option>
                 </select>
             </div>
+<<<<<<< HEAD
             <div>
+=======
+            <div class="llm-preferences">
+                <label for="response-language-select">AI Response Language</label>
+                <select id="response-language-select" data-storage-key="responseLanguage" data-storage-type="prompts">
+                </select>
+            </div>
+
+            <div class="voice-preferences">
+>>>>>>> 2.0.18
                 <label for="stt-language-select">Voice Input Language</label>
                 <select id="stt-language-select" data-storage-key="sttLanguage" data-storage-type="voice">
                 </select>
             </div>
-            <div>
+            <div class="voice-preferences">
                 <label for="tts-voice-select">Voice Output Language</label>
                 <select id="tts-voice-select" data-storage-key="ttsVoiceName" data-storage-type="voice">
                 </select>

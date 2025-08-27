@@ -48,25 +48,9 @@ Ideal for privacy. All processing happens on your computer.
 <details>
 <summary><strong>Click here for Local AI setup instructions</strong></summary>
 
-#### Option 1: Automated PowerShell Script (Windows) (Ollama & Gemma 3)
-This is the easiest method for Windows users.
-
 ---
 
-1.  Choose the script based on your GPU's VRAM:
-    *   **>= 6GB VRAM**: `setup_ollama_gemma3_4b.ps1`
-    *   **>= 10GB VRAM**: `setup_ollama_gemma3_12b.ps1`
-    *   **>= 20GB VRAM**: `setup_ollama_gemma3_27b.ps1`
-2.  Open PowerShell and run the script (replace the path with your actual file path):
-    ```powershell
-    powershell.exe -ExecutionPolicy Bypass -File "C:\Path\To\Your\Script\setup_ollama_gemma3_4b.ps1"
-    ```
-3.  The script will automatically install Ollama, set permissions, and download your chosen model.
-4.  In the extension's **Settings**, ensure "Local Model Name" matches the model you installed (e.g., `gemma3:4b`).
-
----
-
-#### Option 2: Manual Setup (Ollama & Gemma 3)
+#### Ollama
 1.  **Install [Ollama](https://ollama.com/)**.
 2.  **Set CORS Permissions**: This allows the extension to talk to Ollama.
     *   **Windows**: Open CMD as Administrator and run `setx OLLAMA_ORIGINS "chrome-extension://*" /M`.
@@ -80,7 +64,7 @@ This is the easiest method for Windows users.
 
 ---
 
-#### Option 3: Manual Setup LM Studio & Gemma 3
+#### LM Studio
 1.  **Install [LM Studio](https://lmstudio.ai/)**.
 2.  **Download a Model**:
     *   In LM Studio, go to the 'Search' tab.
@@ -94,7 +78,7 @@ This is the easiest method for Windows users.
 
 ---
 
-#### Option 4: Manual Setup Gemini Nano
+#### Gemini Nano
 
 For more details, see the [Gemini Nano API](https://developer.chrome.com/docs/ai/prompt-api).
 
@@ -124,6 +108,8 @@ Note: Gemini Nano's Multimodal capabilities are currently only supported in [Chr
     ```
     Once the status changes from `'downloading'` to `'available'`, Gemini Nano is ready to use.
 
+---
+
 </details>
 
 ### Cloud AI Setup
@@ -133,7 +119,9 @@ Ideal for maximum power and performance.
 <details>
 <summary><strong>Click here for Cloud AI setup instructions</strong></summary>
 
-#### Option 1: Google AI Studio (Easiest)
+---
+
+#### Google AI Studio API Key
 1.  Visit [Google AI Studio](https://aistudio.google.com/).
 2.  Click `Get API Key` > `Create API Key`.
 3.  Copy the key.
@@ -141,17 +129,18 @@ Ideal for maximum power and performance.
 
 ---
 
-#### Option 2: Google Cloud Platform (Vertex AI)
-For advanced users who want to manage their own GCP infrastructure. See the [GCP Setup Guide](./gcp/gcloud/README.md) for detailed instructions.
-
----
-
-#### Option 3: Mistral AI
+#### Mistral AI API Key
 1.  Visit [Mistral AI Platform](https://console.mistral.ai/).
 2.  Register or log in to your account.
 3.  Navigate to the 'Try the API' > 'API Keys' and create a new API key.
 4.  Copy your API key.
 5.  In the extension's **Settings**, paste it into the "Mistral API Key" field.
+
+---
+#### Cloud Platform: Google Cloud Platform (Vertex AI)
+For advanced users who want to manage their own GCP infrastructure. See the [A-Eye Cloud Infra](https://github.com/vincentwun/A-Eye-Cloud-Infra) for detailed instructions.
+
+---
 
 </details>
 

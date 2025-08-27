@@ -280,3 +280,15 @@ button:active {
 .resource-links a:hover {
     color: #0051ff;
 }
+
+.llm-preferences {
+    background-color: #ffffff;
+}
+
+.voice-preferences {
+    background-color: #ffffff;
+}
+
+.llm-preferences + .voice-preferences {
+    border-top: 1px solid #000000;
+}

@@ -48,23 +48,9 @@ A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變
 <details>
 <summary><strong>點擊此處展開本地 AI 設定說明</strong></summary>
 
-#### 選項一：自動化 PowerShell 劇本 (Windows) (Ollama & Gemma 3)
-此為 Windows 使用者最簡單直接的方法。
-
-1.  根據您顯示卡的 VRAM 選擇合適的指令碼：
-    *   **>= 6GB VRAM**: `setup_ollama_gemma3_4b.ps1`
-    *   **>= 10GB VRAM**: `setup_ollama_gemma3_12b.ps1`
-    *   **>= 20GB VRAM**: `setup_ollama_gemma3_27b.ps1`
-2.  開啟 PowerShell 並執行指令碼（請將路徑替換為您的檔案實際路徑）：
-    ```powershell
-    powershell.exe -ExecutionPolicy Bypass -File "C:\您的指令碼路徑\setup_ollama_gemma3_4b.ps1"
-    ```
-3.  指令碼將會自動安裝 Ollama、設定權限，並下載您選擇的模型。
-4.  在擴充功能的 **設定** 頁面，確保「Ollama Model Name」與您所安裝的模型一致（例如 `gemma3:4b`）。
-
 ---
 
-#### 選項二：手動設定 Ollama & Gemma 3
+#### Ollama
 1.  **安裝 [Ollama](https://ollama.com/)**。
 2.  **設定 CORS 權限**：此步驟是為了讓擴充功能與 Ollama 通訊。
     *   **Windows**: 以系統管理員身分開啟 CMD，然後執行 `setx OLLAMA_ORIGINS "chrome-extension://*" /M`。
@@ -78,7 +64,7 @@ A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變
 
 ---
 
-#### 選項三：手動設定 LM Studio & Gemma 3
+#### LM Studio
 1.  **安裝 [LM Studio](https://lmstudio.ai/)**。
 2.  **下載模型**：
     *   在 LM Studio 中，前往「搜尋」頁面。
@@ -92,7 +78,7 @@ A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變
 
 ---
 
-#### 選項 4：手動設定 Gemini Nano
+#### Gemini Nano
 
 更多細節請參考 [Gemini Nano API](https://developer.chrome.com/docs/ai/prompt-api)。
 注意：Gemini Nano 的 Multimodal 功能目前僅支援於 [Chrome Canary](https://www.google.com/chrome/canary/)。
@@ -120,6 +106,8 @@ A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變
     ```
     當狀態從 `'downloading'` 變為 `'available'`，即代表 Gemini Nano 已可使用。
 
+---
+
 </details>
 
 ### 雲端 AI 設定
@@ -129,7 +117,9 @@ A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變
 <details>
 <summary><strong>點擊此處展開雲端 AI 設定說明</strong></summary>
 
-#### 選項一：Google AI Studio (最簡單)
+---
+
+#### Google AI Studio API Key
 1.  前往 [Google AI Studio](https://aistudio.google.com/)。
 2.  點擊 `Get API Key` > `Create API Key`。
 3.  複製您的 API 金鑰。
@@ -137,17 +127,19 @@ A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變
 
 ---
 
-#### 選項二：Google Cloud Platform (Vertex AI)
-適合想自行管理 GCP 基礎設施的進階使用者。詳細步驟請參閱 [GCP 設定指南](./gcp/gcloud/README.md)。
-
----
-
-#### 選項三：Mistral AI
+#### Mistral AI API Key
 1.  前往 [Mistral AI 平台](https://console.mistral.ai/)。
 2.  註冊或登入您的帳號。
 3.  導航至「Try the API」>「API Keys」頁面，建立一個新的 API 金鑰。
 4.  複製您的 API 金鑰。
 5.  在擴充功能的 **設定** 頁面，將其貼上至「Mistral API Key」欄位。
+
+---
+
+#### 雲端平台：Google Cloud Platform (Vertex AI)
+適合想自行管理 GCP 基礎設施的進階使用者。詳細步驟請參閱 [A-Eye Cloud Infra](https://github.com/vincentwun/A-Eye-Cloud-Infra)。
+
+---
 
 </details>
 

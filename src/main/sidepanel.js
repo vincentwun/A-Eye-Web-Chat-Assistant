@@ -9,7 +9,7 @@ import { GetElementAction } from '../action/getElementAction.js';
 import { ActionFlowController } from '../components/actionFlowController.js';
 import { StateManager } from '../components/stateManager.js';
 import { defaultApiSettings, settingsStorageKey } from '../option/apiRoute.js';
-import { availableResponseLanguages } from '../option/voiceSettings.js';
+import { availableResponseLanguages } from '../option/languagesSettings.js';
 import { ConfigValidator } from '../components/configValidator.js';
 
 class AIScreenReader {
@@ -241,21 +241,25 @@ class AIScreenReader {
 
     async handleScreenshot() {
         this.voiceController.stopSpeaking();
+        this.voiceController.playSendSound();
         await this.screenshotAction.execute('visible');
     }
 
     async handleScrollingScreenshot() {
         this.voiceController.stopSpeaking();
+        this.voiceController.playSendSound();
         await this.screenshotAction.execute('scrolling');
     }
 
     async handleContentAnalysis() {
         this.voiceController.stopSpeaking();
+        this.voiceController.playSendSound();
         await this.contentAnalysisAction.execute();
     }
 
     async handleGetElements() {
         this.voiceController.stopSpeaking();
+        this.voiceController.playSendSound();
         await this.getElementAction.execute();
     }
 
