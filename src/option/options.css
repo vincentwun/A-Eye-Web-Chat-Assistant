@@ -281,14 +281,14 @@ button:active {
     color: #0051ff;
 }
 
-.bg-light-green {
+.llm-preferences {
     background-color: #ffffff;
 }
 
-.bg-light-blue {
+.voice-preferences {
     background-color: #ffffff;
 }
 
-.bg-light-green + .bg-light-blue {
+.llm-preferences + .voice-preferences {
     border-top: 1px solid #000000;
 }
