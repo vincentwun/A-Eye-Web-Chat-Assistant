@@ -94,7 +94,7 @@ body {
     border-bottom: 1px solid var(--border-color);
 }
 
-.card>div>div:not(:last-child) {
+.form-group:not(:last-child) {
     margin-bottom: 1.5rem;
 }
 
@@ -281,14 +281,13 @@ button:active {
     color: #0051ff;
 }
 
-.llm-preferences {
-    background-color: #ffffff;
-}
-
+.llm-preferences,
 .voice-preferences {
     background-color: #ffffff;
 }
 
-.llm-preferences + .voice-preferences {
-    border-top: 1px solid #000000;
+.llm-preferences+.voice-preferences {
+    padding-top: 1.5rem;
+    margin-top: -1.5rem;
+    border-top: 1px solid var(--border-color);
 }
