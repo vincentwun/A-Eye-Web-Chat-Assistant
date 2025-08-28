@@ -194,11 +194,6 @@ input[type="range"] {
     background: #ddd;
     border-radius: 0.25rem;
     outline: none;
-    opacity: 0.7;
-    transition: opacity .2s;
-}
-
-input[type="range"]:hover {
     opacity: 1;
 }
 
@@ -286,8 +281,8 @@ button:active {
     background-color: #ffffff;
 }
 
-.llm-preferences+.voice-preferences {
-    padding-top: 1.5rem;
-    margin-top: -1.5rem;
-    border-top: 1px solid var(--border-color);
+.preferences-divider {
+    border: none;
+    border-top: 1px solid #000000;
+    margin: 1.5rem 0;
 }
