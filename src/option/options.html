@@ -24,7 +24,7 @@
 
         <div class="card">
             <h2>Display Size</h2>
-            <div>
+            <div class="form-group">
                 <div class="slider-container">
                     <input type="range" id="ui-scale-slider" min="80" max="150" step="5" data-storage-key="uiScale"
                         data-storage-type="settings" aria-label="Adjust Size">
@@ -36,52 +36,76 @@
         <div class="card">
             <h2>Cloud AI Settings</h2>
             <div>
-                <label>Cloud Service</label>
-                <div class="segmented-control">
-                    <input type="radio" id="cloud-select-gemini" name="cloudSelection" value="gemini" checked>
-                    <label for="cloud-select-gemini">Gemini</label>
-                    <input type="radio" id="cloud-select-gateway" name="cloudSelection" value="gateway">
-                    <label for="cloud-select-gateway">Vertex AI</label>
-                    <input type="radio" id="cloud-select-mistral" name="cloudSelection" value="mistral">
-                    <label for="cloud-select-mistral">Mistral</label>
+                <div class="form-group">
+                    <label>Cloud Service</label>
+                    <div class="segmented-control">
+                        <input type="radio" id="cloud-select-gemini" name="cloudSelection" value="gemini" checked>
+                        <label for="cloud-select-gemini">Gemini</label>
+                        <input type="radio" id="cloud-select-gateway" name="cloudSelection" value="gateway">
+                        <label for="cloud-select-gateway">Vertex AI</label>
+                        <input type="radio" id="cloud-select-azure-foundry" name="cloudSelection" value="azure-foundry">
+                        <label for="cloud-select-azure-foundry">AI Foundry</label>
+                        <input type="radio" id="cloud-select-mistral" name="cloudSelection" value="mistral">
+                        <label for="cloud-select-mistral">Mistral</label>
+                    </div>
                 </div>
-            </div>
-            <div id="cloud-settings-container">
-                <div id="proxy-url-container" class="hidden">
-                    <label for="cloud-proxy-url-input">API Gateway Endpoint</label>
-                    <input type="text" id="cloud-proxy-url-input" data-storage-key="cloudProxyUrl"
-                        data-storage-type="settings" placeholder="Enter your API Gateway Endpoint here">
-                </div>
-                <div id="gcp-api-key-container" class="hidden">
-                    <label for="gcp-api-key-input">GCP API Key</label>
-                    <input type="password" id="gcp-api-key-input" data-storage-key="gcpApiKey"
-                        data-storage-type="settings" placeholder="Enter your GCP API Key">
-                </div>
-                <div id="gemini-api-key-container">
-                    <label for="cloud-api-key-input">Gemini API Key</label>
-                    <input type="password" id="cloud-api-key-input" data-storage-key="cloudApiKey"
-                        data-storage-type="settings" placeholder="Enter your API Key">
-                </div>
-                <div id="gemini-model-container">
-                    <label for="cloud-model-name-input">Gemini Model Name</label>
-                    <select id="cloud-model-name-input" data-storage-key="cloudModelName" data-storage-type="settings">
-                        <option value="gemini-2.5-pro">gemini-2.5-pro</option>
-                        <option value="gemini-2.5-flash">gemini-2.5-flash</option>
-                        <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
-                    </select>
-                </div>
-                <div id="mistral-api-key-container" class="hidden">
-                    <label for="mistral-api-key-input">Mistral API Key</label>
-                    <input type="password" id="mistral-api-key-input" data-storage-key="mistralApiKey"
-                        data-storage-type="settings" placeholder="Enter your Mistral API Key">
-                </div>
-                <div id="mistral-model-container" class="hidden">
-                    <label for="mistral-model-name-select">Mistral Model Name</label>
-                    <select id="mistral-model-name-select" data-storage-key="mistralModelName"
-                        data-storage-type="settings">
-                        <option value="pixtral-large-latest">Pixtral Large</option>
-                        <option value="mistral-medium-latest">Mistral Medium</option>
-                    </select>
+                <div id="cloud-settings-container">
+                    <div id="proxy-url-container" class="form-group hidden">
+                        <label for="cloud-proxy-url-input">API Gateway Endpoint</label>
+                        <input type="text" id="cloud-proxy-url-input" data-storage-key="cloudProxyUrl"
+                            data-storage-type="settings" placeholder="Enter your API Gateway Endpoint here">
+                    </div>
+                    <div id="gcp-api-key-container" class="form-group hidden">
+                        <label for="gcp-api-key-input">GCP API Key</label>
+                        <input type="password" id="gcp-api-key-input" data-storage-key="gcpApiKey"
+                            data-storage-type="settings" placeholder="Enter your GCP API Key">
+                    </div>
+                    <div id="gemini-api-key-container" class="form-group">
+                        <label for="cloud-api-key-input">Gemini API Key</label>
+                        <input type="password" id="cloud-api-key-input" data-storage-key="cloudApiKey"
+                            data-storage-type="settings" placeholder="Enter your API Key">
+                    </div>
+                    <div id="gemini-model-container" class="form-group">
+                        <label for="cloud-model-name-input">Gemini Model Name</label>
+                        <select id="cloud-model-name-input" data-storage-key="cloudModelName"
+                            data-storage-type="settings">
+                            <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+                            <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+                            <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
+                        </select>
+                    </div>
+                    <div id="mistral-api-key-container" class="form-group hidden">
+                        <label for="mistral-api-key-input">Mistral API Key</label>
+                        <input type="password" id="mistral-api-key-input" data-storage-key="mistralApiKey"
+                            data-storage-type="settings" placeholder="Enter your Mistral API Key">
+                    </div>
+                    <div id="mistral-model-container" class="form-group hidden">
+                        <label for="mistral-model-name-select">Mistral Model Name</label>
+                        <select id="mistral-model-name-select" data-storage-key="mistralModelName"
+                            data-storage-type="settings">
+                            <option value="pixtral-large-latest">Pixtral Large</option>
+                            <option value="mistral-medium-latest">Mistral Medium</option>
+                        </select>
+                    </div>
+                    <div id="azure-foundry-container" class="hidden">
+                        <div class="form-group">
+                            <label for="apim-endpoint-input">APIM Endpoint</label>
+                            <input type="text" id="apim-endpoint-input" data-storage-key="apimEndpoint"
+                                data-storage-type="settings" placeholder="Enter your APIM Endpoint URL">
+                        </div>
+                        <div class="form-group">
+                            <label for="apim-subscription-key-input">APIM Subscription Key</label>
+                            <input type="password" id="apim-subscription-key-input"
+                                data-storage-key="apimSubscriptionKey" data-storage-type="settings"
+                                placeholder="Enter your APIM Subscription Key">
+                        </div>
+                        <div class="form-group">
+                            <label for="azure-foundry-model-name-input">AI Foundry Model Name</label>
+                            <input type="text" id="azure-foundry-model-name-input"
+                                data-storage-key="azureFoundryModelName" data-storage-type="settings"
+                                placeholder="Enter your model deployment name">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -89,100 +113,110 @@
         <div class="card">
             <h2>Local AI Settings</h2>
             <div>
-                <label>Local AI Service</label>
-                <div class="segmented-control">
-                    <input type="radio" id="local-select-ollama" name="localApiModeSelection" value="ollama" checked>
-                    <label for="local-select-ollama">Ollama</label>
-                    <input type="radio" id="local-select-lmstudio" name="localApiModeSelection" value="lmstudio">
-                    <label for="local-select-lmstudio">LM Studio</label>
-                    <input type="radio" id="local-select-vllm" name="localApiModeSelection" value="vllm">
-                    <label for="local-select-vllm">vLLM</label>
-                    <input type="radio" id="local-select-gemini-nano" name="localApiModeSelection" value="gemini-nano">
-                    <label for="local-select-gemini-nano">Gemini Nano</label>
+                <div class="form-group">
+                    <label>Local AI Service</label>
+                    <div class="segmented-control">
+                        <input type="radio" id="local-select-ollama" name="localApiModeSelection" value="ollama"
+                            checked>
+                        <label for="local-select-ollama">Ollama</label>
+                        <input type="radio" id="local-select-lmstudio" name="localApiModeSelection" value="lmstudio">
+                        <label for="local-select-lmstudio">LM Studio</label>
+                        <input type="radio" id="local-select-vllm" name="localApiModeSelection" value="vllm">
+                        <label for="local-select-vllm">vLLM</label>
+                        <input type="radio" id="local-select-gemini-nano" name="localApiModeSelection"
+                            value="gemini-nano">
+                        <label for="local-select-gemini-nano">Gemini Nano</label>
+                    </div>
                 </div>
-            </div>
-            <div id="vllm-url-container" class="hidden">
-                <label for="vllm-url-input">vLLM Server URL</label>
-                <input type="text" id="vllm-url-input" data-storage-key="localApiUrl" data-storage-type="settings"
-                    placeholder="e.g., http://localhost:8000">
-            </div>
-            <div id="ollama-model-container" class="hidden">
-                <label for="ollama-model-name-select">Ollama Model Name</label>
-                <select id="ollama-model-name-select" data-storage-key="localMultimodalModel"
-                    data-storage-type="settings">
-                    <optgroup label="Gemma">
-                        <option value="gemma3:4b">gemma3:4b</option>
-                        <option value="gemma3:12b">gemma3:12b</option>
-                        <option value="gemma3:27b">gemma3:27b</option>
-                    </optgroup>
-                    <optgroup label="Qwen">
-                        <option value="qwen2.5vl:3b">qwen2.5vl:3b</option>
-                        <option value="qwen2.5vl:7b">qwen2.5vl:7b</option>
-                        <option value="qwen2.5vl:32b">qwen2.5vl:32b</option>
-                    </optgroup>
-                    <optgroup label="Custom">
-                        <option value="custom">Custom</option>
-                    </optgroup>
-                </select>
-                <div id="custom-ollama-model-container" class="hidden">
-                    <input type="text" id="custom-ollama-model-input" placeholder="Enter custom Ollama model name">
+                <div id="vllm-url-container" class="form-group hidden">
+                    <label for="vllm-url-input">vLLM Server URL</label>
+                    <input type="text" id="vllm-url-input" data-storage-key="localApiUrl" data-storage-type="settings"
+                        placeholder="e.g., http://localhost:8000">
                 </div>
-            </div>
-            <div id="lmstudio-model-container" class="hidden">
-                <label for="lmstudio-model-name-select">LM Studio Model Name</label>
-                <select id="lmstudio-model-name-select" data-storage-key="lmstudioModelName"
-                    data-storage-type="settings">
-                    <optgroup label="Google">
-                        <option value="google/gemma-3-4b">google/gemma-3-4b</option>
-                        <option value="google/gemma-3-12b">google/gemma-3-12b</option>
-                        <option value="google/gemma-3-27b">google/gemma-3-27b</option>
-                    </optgroup>
-                    <optgroup label="Qwen">
-                        <option value="qwen/qwen2.5-vl-7b">qwen/qwen2.5-vl-7b</option>
-                    </optgroup>
-                    <optgroup label="Custom">
-                        <option value="custom">Custom</option>
-                    </optgroup>
-                </select>
-                <div id="custom-lmstudio-model-container" class="hidden">
-                    <input type="text" id="custom-lmstudio-model-input" placeholder="Enter custom LM Studio model name">
+                <div id="ollama-model-container" class="hidden">
+                    <div class="form-group">
+                        <label for="ollama-model-name-select">Ollama Model Name</label>
+                        <select id="ollama-model-name-select" data-storage-key="localMultimodalModel"
+                            data-storage-type="settings">
+                            <optgroup label="Gemma">
+                                <option value="gemma3:4b">gemma3:4b</option>
+                                <option value="gemma3:12b">gemma3:12b</option>
+                                <option value="gemma3:27b">gemma3:27b</option>
+                            </optgroup>
+                            <optgroup label="Qwen">
+                                <option value="qwen2.5vl:3b">qwen2.5vl:3b</option>
+                                <option value="qwen2.5vl:7b">qwen2.5vl:7b</option>
+                                <option value="qwen2.5vl:32b">qwen2.5vl:32b</option>
+                            </optgroup>
+                            <optgroup label="Custom">
+                                <option value="custom">Custom</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div id="custom-ollama-model-container" class="form-group hidden">
+                        <input type="text" id="custom-ollama-model-input" placeholder="Enter custom Ollama model name">
+                    </div>
                 </div>
-            </div>
-            <div id="vllm-model-container" class="hidden">
-                <label for="vllm-model-name-input">vLLM Model Name</label>
-                <input type="text" id="vllm-model-name-input" data-storage-key="vllmModelName"
-                    data-storage-type="settings" placeholder="Enter vLLM model name">
+                <div id="lmstudio-model-container" class="hidden">
+                    <div class="form-group">
+                        <label for="lmstudio-model-name-select">LM Studio Model Name</label>
+                        <select id="lmstudio-model-name-select" data-storage-key="lmstudioModelName"
+                            data-storage-type="settings">
+                            <optgroup label="Google">
+                                <option value="google/gemma-3-4b">google/gemma-3-4b</option>
+                                <option value="google/gemma-3-12b">google/gemma-3-12b</option>
+                                <option value="google/gemma-3-27b">google/gemma-3-27b</option>
+                            </optgroup>
+                            <optgroup label="Qwen">
+                                <option value="qwen/qwen2.5-vl-7b">qwen/qwen2.5-vl-7b</option>
+                            </optgroup>
+                            <optgroup label="Custom">
+                                <option value="custom">Custom</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div id="custom-lmstudio-model-container" class="form-group hidden">
+                        <input type="text" id="custom-lmstudio-model-input"
+                            placeholder="Enter custom LM Studio model name">
+                    </div>
+                </div>
+                <div id="vllm-model-container" class="form-group hidden">
+                    <label for="vllm-model-name-input">vLLM Model Name</label>
+                    <input type="text" id="vllm-model-name-input" data-storage-key="vllmModelName"
+                        data-storage-type="settings" placeholder="Enter vLLM model name">
+                </div>
             </div>
         </div>
 
         <div class="card">
             <h2>Preferences</h2>
-            <div class="llm-preferences">
-                <label for="role-select">Role</label>
-                <select id="role-select" data-storage-key="active_system_prompt_key" data-storage-type="prompts">
-                    <option value="web_assistant">Web Assistant</option>
-                    <option value="teacher">Study Mode</option>
-                </select>
-            </div>
-<<<<<<< HEAD
             <div>
-=======
-            <div class="llm-preferences">
-                <label for="response-language-select">AI Response Language</label>
-                <select id="response-language-select" data-storage-key="responseLanguage" data-storage-type="prompts">
-                </select>
-            </div>
+                <div class="llm-preferences form-group">
+                    <label for="role-select">Role</label>
+                    <select id="role-select" data-storage-key="active_system_prompt_key" data-storage-type="prompts">
+                        <option value="web_assistant">Web Assistant</option>
+                        <option value="teacher">Study Mode</option>
+                    </select>
+                </div>
+                <div class="llm-preferences form-group">
+                    <label for="response-language-select">AI Response Language</label>
+                    <select id="response-language-select" data-storage-key="responseLanguage"
+                        data-storage-type="prompts">
+                    </select>
+                </div>
 
-            <div class="voice-preferences">
->>>>>>> 2.0.18
-                <label for="stt-language-select">Voice Input Language</label>
-                <select id="stt-language-select" data-storage-key="sttLanguage" data-storage-type="voice">
-                </select>
-            </div>
-            <div class="voice-preferences">
-                <label for="tts-voice-select">Voice Output Language</label>
-                <select id="tts-voice-select" data-storage-key="ttsVoiceName" data-storage-type="voice">
-                </select>
+                <hr class="preferences-divider">
+
+                <div class="voice-preferences form-group">
+                    <label for="stt-language-select">Voice Input Language</label>
+                    <select id="stt-language-select" data-storage-key="sttLanguage" data-storage-type="voice">
+                    </select>
+                </div>
+                <div class="voice-preferences form-group">
+                    <label for="tts-voice-select">Voice Output Language</label>
+                    <select id="tts-voice-select" data-storage-key="ttsVoiceName" data-storage-type="voice">
+                    </select>
+                </div>
             </div>
             <div>
                 <label for="response-language-select">AI Response Language</label>

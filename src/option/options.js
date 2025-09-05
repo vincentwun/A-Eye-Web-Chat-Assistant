@@ -38,7 +38,8 @@ function getCloudContainers() {
         geminiApiKey: $('gemini-api-key-container'),
         geminiModel: $('gemini-model-container'),
         mistralApiKey: $('mistral-api-key-container'),
-        mistralModel: $('mistral-model-container')
+        mistralModel: $('mistral-model-container'),
+        azureFoundry: $('azure-foundry-container')
     };
 }
 
@@ -80,6 +81,8 @@ function updateCloudConfigVisibility() {
     } else if (selectedService === 'mistral') {
         toggleHidden(containers.mistralApiKey, false);
         toggleHidden(containers.mistralModel, false);
+    } else if (selectedService === 'azure-foundry') {
+        toggleHidden(containers.azureFoundry, false);
     }
 }
 
@@ -218,6 +221,9 @@ function saveOptions() {
     } else if (selectedCloudService === 'gateway') {
         settingsUpdate.cloudProvider = 'gemini';
         settingsUpdate.cloudApiMethod = 'proxy';
+    } else if (selectedCloudService === 'azure-foundry') {
+        settingsUpdate.cloudProvider = 'azure-foundry';
+        settingsUpdate.cloudApiMethod = 'direct';
     } else {
         settingsUpdate.cloudProvider = 'gemini';
         settingsUpdate.cloudApiMethod = 'direct';
@@ -256,7 +262,6 @@ function saveOptions() {
             } else {
                 showNotification('Saved successfully.');
                 currentVoiceSettings = finalData[voiceSettingsStorageKey];
-                loadOptions();
             }
         });
     });
@@ -282,6 +287,9 @@ function loadOptions() {
         cloudModelNameInput: $('cloud-model-name-input'),
         mistralApiKeyInput: $('mistral-api-key-input'),
         mistralModelSelect: $('mistral-model-name-select'),
+        apimEndpointInput: $('apim-endpoint-input'),
+        apimSubscriptionKeyInput: $('apim-subscription-key-input'),
+        azureFoundryModelNameInput: $('azure-foundry-model-name-input'),
         roleSelect: $('role-select'),
         responseLanguageSelect: $('response-language-select'),
         sttSelect: $('stt-language-select'),
@@ -345,6 +353,8 @@ function loadOptions() {
         let cloudRadio;
         if (savedCloudProvider === 'mistral') {
             cloudRadio = $('cloud-select-mistral');
+        } else if (savedCloudProvider === 'azure-foundry') {
+            cloudRadio = $('cloud-select-azure-foundry');
         } else if (savedCloudMethod === 'proxy') {
             cloudRadio = $('cloud-select-gateway');
         } else {
@@ -359,6 +369,10 @@ function loadOptions() {
 
         if (elements.mistralApiKeyInput) elements.mistralApiKeyInput.value = savedApiSettings.mistralApiKey ?? defaultApiSettings.mistralApiKey;
         if (elements.mistralModelSelect) elements.mistralModelSelect.value = savedApiSettings.mistralModelName ?? defaultApiSettings.mistralModelName;
+
+        if (elements.apimEndpointInput) elements.apimEndpointInput.value = savedApiSettings.apimEndpoint ?? '';
+        if (elements.apimSubscriptionKeyInput) elements.apimSubscriptionKeyInput.value = savedApiSettings.apimSubscriptionKey ?? '';
+        if (elements.azureFoundryModelNameInput) elements.azureFoundryModelNameInput.value = savedApiSettings.azureFoundryModelName ?? '';
 
         if (elements.roleSelect) {
             const activeKey = currentPrompts.active_system_prompt_key || 'web_assistant';

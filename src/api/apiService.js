@@ -4,6 +4,7 @@ import { sendVllmRequest } from './vllmApi.js';
 import { sendGeminiNanoRequest } from './geminiNanoApi.js';
 import { sendGeminiRequest } from './geminiApi.js';
 import { sendMistralRequest } from './mistralApi.js';
+import { sendAzureFoundryRequest } from './azureFoundryApi.js';
 
 const MAX_HISTORY_MESSAGES = 10;
 
@@ -123,6 +124,8 @@ export class ApiService {
             } else if (apiConfig.activeApiMode === 'cloud') {
                 if (apiConfig.cloudProvider === 'mistral') {
                     responseContent = await sendMistralRequest(apiConfig, standardMessages, mimeType);
+                } else if (apiConfig.cloudProvider === 'azure-foundry') {
+                    responseContent = await sendAzureFoundryRequest(apiConfig, standardMessages, mimeType);
                 } else {
                     responseContent = await sendGeminiRequest(apiConfig, standardMessages, mimeType);
                 }
