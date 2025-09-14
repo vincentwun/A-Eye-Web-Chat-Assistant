@@ -16,7 +16,7 @@
 </div>
 
 <p align="center">
-    <a href="./README.zh.md"><strong>Read in Chinese</strong></a>
+    <a href="./README_zh.md"><strong>Read in Chinese</strong></a>
 </p>
 
 ---
