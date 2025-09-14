@@ -185,9 +185,13 @@ A-Eye 將保障使用者隱私置於首位：
 -   **安全儲存**：您的設定與 API 金鑰僅會儲存於您瀏覽器的本機儲存空間，網站無法存取。
 -   **本地 AI 選項**：當您使用本地模式時，所有資料與 AI 運算皆完全在您自己的電腦上進行，絕不會傳送至雲端。
 
-## 第三方函式庫
-
--   **Readability.js**: 用於擷取文章內容。源碼：[mozilla/readability](https://github.com/mozilla/readability)。
+## Credits
+### Third-Party Libraries
+-   **readability.js**: [Source](https://github.com/mozilla/readability)
+-   **highlight.js**: [Source](https://highlightjs.org/)
+-   **marked.js**: [Source](https://github.com/markedjs/marked)
+-   **DOMPurify.js**: [Source](https://github.com/cure53/DOMPurify)
+-   **Font Awesome Free**: [Source](https://fontawesome.com)
 
 ## 授權條款
 
