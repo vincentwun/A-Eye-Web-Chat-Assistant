@@ -187,8 +187,12 @@ A-Eye is built with privacy as a priority:
 -   **Local AI Option**: When using Local Mode, all data and AI processing remain entirely on your machine. Nothing is sent to the cloud.
 
 ## Credits
-
--   **Readability.js**: For article content extraction. Source: [mozilla/readability](https://github.com/mozilla/readability).
+### Third-Party Libraries
+-   **readability.js**: [Source](https://github.com/mozilla/readability)
+-   **highlight.js**: [Source](https://highlightjs.org/)
+-   **marked.js**: [Source](https://github.com/markedjs/marked)
+-   **DOMPurify.js**: [Source](https://github.com/cure53/DOMPurify)
+-   **Font Awesome Free**: [Source](https://fontawesome.com)
 
 ## License
 
