@@ -137,7 +137,7 @@ A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變
 ---
 
 #### 雲端平台：Google Cloud Platform (Vertex AI)
-適合想自行管理 GCP 基礎設施的進階使用者。詳細步驟請參閱 [A-Eye Cloud Infra]([https://github.com/vincentwun/A-Eye-Cloud-Infra](https://github.com/vincentwun/A-Eye-Web-Chat-Assistant-Cloud-Infra))。
+適合想自行管理 GCP 基礎設施的進階使用者。詳細步驟請參閱 [A-Eye-Web-Chat-Assistant-Cloud-Infra](https://github.com/vincentwun/A-Eye-Web-Chat-Assistant-Cloud-Infra)。
 
 ---
 
