@@ -138,7 +138,7 @@ Ideal for maximum power and performance.
 
 ---
 #### Cloud Platform: Google Cloud Platform (Vertex AI)
-For advanced users who want to manage their own GCP infrastructure. See the [A-Eye Cloud Infra]([https://github.com/vincentwun/A-Eye-Cloud-Infra](https://github.com/vincentwun/A-Eye-Web-Chat-Assistant-Cloud-Infra)) for detailed instructions.
+For advanced users who want to manage their own GCP infrastructure. See the [A-Eye-Web-Chat-Assistant-Cloud-Infra](https://github.com/vincentwun/A-Eye-Web-Chat-Assistant-Cloud-Infra) for detailed instructions.
 
 ---
 
