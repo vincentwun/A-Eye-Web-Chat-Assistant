@@ -17,11 +17,10 @@
 
 ### GCP Terraform 部署指南
 
-1. 進入 Terraform 目錄：
+1. 安裝所需 CLI 工具
 
 ```bash
-cd gcp
-chmod +x ./*.sh
+./install.sh
 ```
 
 2. 登入 Google Cloud：

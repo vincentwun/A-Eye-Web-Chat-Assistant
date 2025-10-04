@@ -17,11 +17,10 @@ For the safest and latest installation, please refer to the official guides for 
 
 ### GCP Terraform Deployment Guide
 
-1. Enter the Terraform directory:
+1. Install required tools
 
 ```bash
-cd gcp
-chmod +x ./*.sh
+./install.sh
 ```
 
 2. Login to Google Cloud:
