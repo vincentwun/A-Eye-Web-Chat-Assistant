@@ -13,6 +13,10 @@
 ![Chrome Web Store Users](https://img.shields.io/chrome-web-store/users/cdjignhknhdkldbjijipaaamodpfjflp?style=for-the-badge)
 ![License](https://img.shields.io/github/license/vincentwun/A-Eye-Web-Chat-Assistant?style=for-the-badge)
 
+![Supports Windows](https://img.shields.io/badge/Supports-Windows-blue?style=for-the-badge)
+![Supports macOS](https://img.shields.io/badge/Supports-macOS-lightgrey?style=for-the-badge)
+![Supports Linux](https://img.shields.io/badge/Supports-Linux-green?style=for-the-badge)
+
 </div>
 
 <p align="center">
