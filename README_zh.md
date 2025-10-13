@@ -17,6 +17,9 @@
 ![Supports macOS](https://img.shields.io/badge/Supports-macOS-lightgrey?style=for-the-badge)
 ![Supports Linux](https://img.shields.io/badge/Supports-Linux-green?style=for-the-badge)
 
+![Supports Chrome](https://img.shields.io/badge/Supports-Chrome-blue?style=for-the-badge&logo=google-chrome)
+![Supports Edge](https://img.shields.io/badge/Supports-Edge-green?style=for-the-badge&logo=microsoft-edge)
+
 </div>
 
 <p align="center">
@@ -26,6 +29,8 @@
 ---
 
 A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變得更輕鬆、更無障礙，尤其適合視障使用者。透過直觀的 AI 聊天、強大的螢幕分析以及全面的語音控制，它將徹底改變您與網路互動的方式。您可以自由選擇注重隱私的本地 AI 服務（Gemini Nano, Ollama, LM Studio和vLLM）或功能強大的雲端 AI 服務 (Google Gemini和Mistral AI)。
+
+![architecture](images/architecture_v3.png)
 
 ## 主要功能
 
@@ -160,27 +165,6 @@ A-Eye 是一款免費、開源的 Chrome 擴充功能，旨在讓網頁瀏覽變
 | 分析網頁文字 | - | "Analyze content" |
 | 清除對話 | - | "Clear" |
 
-## 技術架構
-
-<details>
-<summary><strong>點擊此處展開技術細節</strong></summary>
-
-#### Chrome 擴充功能與 Web API
-*   **Scripting API**: 用於在網頁環境下執行內容指令碼（例如 Readability.js）。
-*   **Side Panel API**: 用於建構主要的使用者介面。
-*   **Canvas API**: 用於將多張截圖合成為一張「捲動截圖」。
-*   **Web Speech API**: 同時用於 `SpeechRecognition`（語音轉文字）及 `SpeechSynthesis`（文字轉語音）。
-
-#### 後端與 AI
-*   **本地模式**: 直接與本機運行的 AI 服務通訊，支援 Ollama、LM Studio 及 vLLM 等 OpenAI 相容的端點。
-*   **雲端模式**: 使用一個安全的 Google Cloud Platform 無伺服器後端來代理對雲端 AI 的請求，或直接連接到第三方 API。
-    *   **API Gateway**: 提供安全的 API 端點，並驗證 API 金鑰。
-    *   **Cloud Functions**: 接收請求並呼叫 AI 模型的無伺服器函數。
-    *   **Vertex AI**: 託管強大的 Gemini 模型以進行分析。
-
-![architecture](images/architecture_v3.png)
-
-</details>
 
 ## 隱私保障
 
@@ -188,14 +172,6 @@ A-Eye 將保障使用者隱私置於首位：
 -   **不收集資料**：本擴充功能不會收集或傳送任何個人資料或瀏覽紀錄至我們的伺服器。
 -   **安全儲存**：您的設定與 API 金鑰僅會儲存於您瀏覽器的本機儲存空間，網站無法存取。
 -   **本地 AI 選項**：當您使用本地模式時，所有資料與 AI 運算皆完全在您自己的電腦上進行，絕不會傳送至雲端。
-
-## Credits
-### Third-Party Libraries
--   **readability.js**: [Source](https://github.com/mozilla/readability)
--   **highlight.js**: [Source](https://highlightjs.org/)
--   **marked.js**: [Source](https://github.com/markedjs/marked)
--   **DOMPurify.js**: [Source](https://github.com/cure53/DOMPurify)
--   **Font Awesome Free**: [Source](https://fontawesome.com)
 
 ## 授權條款
 
