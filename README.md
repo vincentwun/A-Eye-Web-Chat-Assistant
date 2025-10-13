@@ -166,9 +166,6 @@ For advanced users who want to manage their own GCP infrastructure. See the [A-E
 | Analyze Text Content | - | "Analyze content" |
 | Clear Conversation | - | "Clear" |
 
-
-![architecture](images/architecture_v3.png)
-
 ## Privacy
 
 A-Eye is built with privacy as a priority:
