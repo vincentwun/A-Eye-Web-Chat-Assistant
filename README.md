@@ -17,17 +17,20 @@
 ![Supports macOS](https://img.shields.io/badge/Supports-macOS-lightgrey?style=for-the-badge)
 ![Supports Linux](https://img.shields.io/badge/Supports-Linux-green?style=for-the-badge)
 
-
+![Supports Chrome](https://img.shields.io/badge/Supports-Chrome-blue?style=for-the-badge&logo=google-chrome)
+![Supports Edge](https://img.shields.io/badge/Supports-Edge-green?style=for-the-badge&logo=microsoft-edge)
 
 </div>
 
 <p align="center">
-    <a href="./README_zh.md"><strong>Read in Chinese</strong></a>
+    <a href="./README_zh.md"><strong>中文說明</strong></a>
 </p>
 
 ---
 
 A-Eye is a free, open-source Chrome extension designed to make web browsing easier and more accessible, especially for users with visual impairments. Through intuitive AI chat, powerful screen analysis, and comprehensive voice control, it transforms how you interact with the web. You can freely choose between privacy-focused local AI services (Gemini Nano, Ollama, LM Studio and vLLM) or powerful cloud AI services (Google Gemini and Mistral AI).
+
+![architecture](images/architecture_v3.png)
 
 ## Key Features
 
@@ -88,7 +91,7 @@ Ideal for privacy. All processing happens on your computer.
 
 For more details, see the [Gemini Nano API](https://developer.chrome.com/docs/ai/prompt-api).
 
-Note: Gemini Nano's Multimodal capabilities are currently only supported in [Chrome Canary](https://www.google.com/chrome/canary/).
+Note: Gemini Nano's Multimodal capabilities are currently ONLY supported in [Chrome Canary](https://www.google.com/chrome/canary/).
 
 1.  **Open `chrome://flags` and enable:**
     | Flag | Value to set |
@@ -163,27 +166,8 @@ For advanced users who want to manage their own GCP infrastructure. See the [A-E
 | Analyze Text Content | - | "Analyze content" |
 | Clear Conversation | - | "Clear" |
 
-## Architecture and Technologies
-
-<details>
-<summary><strong>Click here for technical details</strong></summary>
-
-#### Chrome Extension & Web APIs
-*   **Scripting API**: To execute content scripts (like Readability.js) in the context of the webpage.
-*   **Side Panel API**: For the main user interface.
-*   **Canvas API**: To stitch together multiple captures for the "Scrolling Screenshot" feature.
-*   **Web Speech API**: For both `SpeechRecognition` (Speech-to-Text) and `SpeechSynthesis` (Text-to-Speech).
-
-#### Backend & AI
-*   **Local**: Communicates directly with locally running AI services, supporting OpenAI-compatible endpoints like Ollama, LM Studio, and vLLM.
-*   **Cloud**: UUses a secure Google Cloud Platform serverless backend to proxy requests to cloud AI, or connects directly to third-party APIs.
-    *   **API Gateway**: Provides a secure endpoint and validates API keys.
-    *   **Cloud Functions**: A serverless function that receives requests and calls the AI model.
-    *   **Vertex AI**: Hosts the powerful Gemini model for analysis.
 
 ![architecture](images/architecture_v3.png)
-
-</details>
 
 ## Privacy
 
@@ -191,14 +175,6 @@ A-Eye is built with privacy as a priority:
 -   **No Data Collection**: The extension does not collect or transmit any personal data or browsing history to our servers.
 -   **Secure Storage**: Your settings and API keys are stored only in your browser's local storage, inaccessible by websites.
 -   **Local AI Option**: When using Local Mode, all data and AI processing remain entirely on your machine. Nothing is sent to the cloud.
-
-## Credits
-### Third-Party Libraries
--   **readability.js**: [Source](https://github.com/mozilla/readability)
--   **highlight.js**: [Source](https://highlightjs.org/)
--   **marked.js**: [Source](https://github.com/markedjs/marked)
--   **DOMPurify.js**: [Source](https://github.com/cure53/DOMPurify)
--   **Font Awesome Free**: [Source](https://fontawesome.com)
 
 ## License
 
