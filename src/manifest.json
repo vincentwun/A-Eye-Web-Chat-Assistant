@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "A-Eye Web Chat Assistant",
-  "version": "2.0.19",
+  "version": "2.0.20",
   "description": "Analyzes screen content using local AI (Gemini Nano, Ollama, LM Studio, vLLM) and cloud AI (Gemini, Mistral).",
   "icons": {
     "16": "icons/icon-16.png",
@@ -19,9 +19,7 @@
     "tabs",
     "activeTab"
   ],
-  "host_permissions": [
-    "<all_urls>"
-  ],
+  "host_permissions": ["<all_urls>"],
   "side_panel": {
     "default_path": "main/sidepanel.html"
   },
@@ -68,12 +66,8 @@
   },
   "content_scripts": [
     {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "permission/permissionContent.js"
-      ],
+      "matches": ["<all_urls>"],
+      "js": ["permission/permissionContent.js"],
       "run_at": "document_end"
     }
   ],
@@ -83,9 +77,7 @@
         "permission/permission.html",
         "permission/requestPermission.js"
       ],
-      "matches": [
-        "<all_urls>"
-      ]
+      "matches": ["<all_urls>"]
     }
   ]
 }
