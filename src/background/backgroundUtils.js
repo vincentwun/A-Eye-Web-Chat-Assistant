@@ -15,30 +15,43 @@ export async function executeScriptOnTab(tabId, func, args = []) {
       target: { tabId: tabId },
       func: func,
       args: args,
-      world: 'MAIN'
+      world: "MAIN",
     });
 
-    if (chrome.runtime.lastError) throw new Error(chrome.runtime.lastError.message);
+    if (chrome.runtime.lastError)
+      throw new Error(chrome.runtime.lastError.message);
 
     if (!results || !Array.isArray(results) || results.length === 0) {
-      console.warn(`Script execution on tab ${tabId} (${func.name}) produced no results array.`);
+      console.warn(
+        `Script execution on tab ${tabId} (${func.name}) produced no results array.`
+      );
       return null;
     }
     const executionResult = results[0].result;
 
-    if (executionResult && typeof executionResult === 'object' && executionResult.error) {
+    if (
+      executionResult &&
+      typeof executionResult === "object" &&
+      executionResult.error
+    ) {
       throw new Error(executionResult.error);
     }
     return executionResult;
-
   } catch (error) {
-    console.error(`Error executing script on tab ${tabId} (function: ${func.name}):`, error);
-    throw new Error(`Script execution error for ${func.name || 'anonymous function'}: ${error.message}`);
+    console.error(
+      `Error executing script on tab ${tabId} (function: ${func.name}):`,
+      error
+    );
+    throw new Error(
+      `Script execution error for ${func.name || "anonymous function"}: ${
+        error.message
+      }`
+    );
   }
 }
 
 export function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export function waitForTabLoad(tabId) {
@@ -72,14 +85,16 @@ export function waitForTabLoad(tabId) {
     };
 
     const onUpdated = (updatedTabId, changeInfo) => {
-      if (updatedTabId === tabId && changeInfo.status === 'complete') {
+      if (updatedTabId === tabId && changeInfo.status === "complete") {
         done();
       }
     };
 
     const onRemoved = (closedTabId) => {
       if (closedTabId === tabId) {
-        fail(new Error(`Tab ${tabId} was closed while waiting for it to load.`));
+        fail(
+          new Error(`Tab ${tabId} was closed while waiting for it to load.`)
+        );
       }
     };
 
@@ -91,12 +106,15 @@ export function waitForTabLoad(tabId) {
           func: () => document.readyState,
         });
         const readyState = results[0]?.result;
-        if (readyState === 'interactive' || readyState === 'complete') {
+        if (readyState === "interactive" || readyState === "complete") {
           done();
         }
       } catch (error) {
         const message = error.message.toLowerCase();
-        if (message.includes('no tab with id') || message.includes('the tab was closed')) {
+        if (
+          message.includes("no tab with id") ||
+          message.includes("the tab was closed")
+        ) {
           fail(new Error(`Tab ${tabId} closed during readyState check.`));
         }
       }
@@ -110,7 +128,9 @@ export function waitForTabLoad(tabId) {
 
     timeoutId = setTimeout(() => {
       if (!resolved) {
-        console.warn(`waitForTabLoad timed out after 15 seconds for tab ${tabId}. Proceeding anyway.`);
+        console.warn(
+          `waitForTabLoad timed out after 15 seconds for tab ${tabId}. Proceeding anyway.`
+        );
         done();
       }
     }, 15000);
@@ -127,12 +147,12 @@ export async function getPageDimensions(tabId) {
         scrollHeight: document.documentElement.scrollHeight,
         clientHeight: document.documentElement.clientHeight,
         scrollWidth: document.documentElement.scrollWidth,
-        clientWidth: document.documentElement.clientWidth
-      })
+        clientWidth: document.documentElement.clientWidth,
+      }),
     });
     return results?.[0]?.result ?? null;
   } catch (error) {
-    console.error('Failed to execute script for page dimensions:', error);
+    console.error("Failed to execute script for page dimensions:", error);
     return null;
   }
 }

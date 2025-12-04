@@ -1,6 +1,8 @@
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "requestMicPermission") {
-    console.log("Received requestMicPermission message in permissionContent.js.");
+    console.log(
+      "Received requestMicPermission message in permissionContent.js."
+    );
 
     const existingIframe = document.getElementById("mic-permission-iframe");
     if (existingIframe) {

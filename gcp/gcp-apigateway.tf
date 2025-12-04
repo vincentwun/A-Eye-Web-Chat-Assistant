@@ -15,7 +15,7 @@ resource "google_api_gateway_api_config" "api_config" {
 
   openapi_documents {
     document {
-      path     = "openapi_spec.yaml"
+      path = "openapi_spec.yaml"
       contents = base64encode(
         templatefile("${path.module}/api-config.yaml.tftpl", {
           function_url = google_cloudfunctions2_function.gemini_proxy.service_config[0].uri

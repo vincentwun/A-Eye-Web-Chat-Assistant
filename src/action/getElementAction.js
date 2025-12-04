@@ -11,9 +11,22 @@ export class GetElementAction {
     this.setProcessing = dependencies.setProcessing;
     this.appendMessage = dependencies.appendMessage;
 
-    if (!this.uiManager || !this.voiceController || !this.apiService || !this.stateManager || !this.getApiConfig || !this.getHistoryToSend || !this.handleResponse || !this.handleError || !this.setProcessing || !this.appendMessage) {
+    if (
+      !this.uiManager ||
+      !this.voiceController ||
+      !this.apiService ||
+      !this.stateManager ||
+      !this.getApiConfig ||
+      !this.getHistoryToSend ||
+      !this.handleResponse ||
+      !this.handleError ||
+      !this.setProcessing ||
+      !this.appendMessage
+    ) {
       console.error("GetElementAction missing dependencies:", dependencies);
-      throw new Error("GetElementAction initialized with missing dependencies.");
+      throw new Error(
+        "GetElementAction initialized with missing dependencies."
+      );
     }
     console.log("GetElementAction initialized successfully.");
   }
@@ -23,15 +36,23 @@ export class GetElementAction {
     this.setProcessing(true);
 
     try {
-      const response = await chrome.runtime.sendMessage({ type: 'findElements' });
+      const response = await chrome.runtime.sendMessage({
+        type: "findElements",
+      });
 
       if (!response || !response.success || !Array.isArray(response.elements)) {
-        throw new Error(response?.error || 'Failed to retrieve elements from background script.');
+        throw new Error(
+          response?.error ||
+            "Failed to retrieve elements from background script."
+        );
       }
 
       const elements = response.elements;
       if (elements.length === 0) {
-        this.appendMessage('assistant', "I couldn't find any interactable elements on the page.");
+        this.appendMessage(
+          "assistant",
+          "I couldn't find any interactable elements on the page."
+        );
         this.voiceController.speakText("No interactable elements found.");
         this.setProcessing(false);
         return;
@@ -39,7 +60,7 @@ export class GetElementAction {
 
       const elementsJsonString = JSON.stringify(elements, null, 2);
       const formattedJson = this.uiManager.escapeHTML(elementsJsonString);
-      await this.uiManager.appendPreviewMessage('text', formattedJson);
+      await this.uiManager.appendPreviewMessage("text", formattedJson);
 
       this.uiManager.showThinkingIndicator();
       await this.voiceController.speakText("Analyzing...");
@@ -52,8 +73,10 @@ export class GetElementAction {
       const payload = { prompt: fullPrompt };
       const apiConfig = this.getApiConfig();
       const historyToSend = this.getHistoryToSend();
-      const activeSystemPromptKey = allPrompts.active_system_prompt_key || 'web_assistant';
-      const systemPromptForTask = allPrompts.system_prompt[activeSystemPromptKey];
+      const activeSystemPromptKey =
+        allPrompts.active_system_prompt_key || "web_assistant";
+      const systemPromptForTask =
+        allPrompts.system_prompt[activeSystemPromptKey];
 
       const responseContent = await this.apiService.sendRequest(
         apiConfig,
@@ -63,9 +86,8 @@ export class GetElementAction {
         systemPromptForTask
       );
       await this.handleResponse(responseContent);
-
     } catch (error) {
-      this.handleError('Element analysis failed', error);
+      this.handleError("Element analysis failed", error);
     } finally {
       if (this.stateManager.isProcessing()) {
         this.setProcessing(false);
