@@ -1,0 +1,54 @@
+name: Continuous Delivery
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cd
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/ci.yml
+
+  package:
+    name: Package Extension
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: a-eye-web-chat-assistant
+          path: .output/chrome-mv3
+
+      - name: ZIP Extension
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          VERSION=$(jq -er '.version' .output/chrome-mv3/manifest.json)
+          ZIP="a-eye-web-chat-assistant-v${VERSION}-chrome.zip"
+
+          mkdir -p release
+
+          cd .output/chrome-mv3
+          zip -qr "../../release/$ZIP" .
+
+          cd ../../release
+          unzip -t "$ZIP"
+          sha256sum "$ZIP" > SHA256SUMS
+
+      - name: Upload Release Assets
+        uses: actions/upload-artifact@v7
+        with:
+          name: a-eye-web-chat-release
+          path: release/
+          retention-days: 1
+          if-no-files-found: error
+          compression-level: 0

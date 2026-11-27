@@ -1,0 +1,61 @@
+name: ci
+
+on:
+  push:
+    branches: [main, refactor-dev]
+  pull_request:
+    branches: [main, refactor-dev]
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "24.16.0"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - run: npm ci # Install dependencies
+      - run: npm run typecheck
+      - run: npm audit --audit-level=high # SCA - Dependency audit
+      - run: npm test
+
+  build:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm run verify:build
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: a-eye-web-chat-assistant
+          path: .output/chrome-mv3/
+          if-no-files-found: error
+          retention-days: 1

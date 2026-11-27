@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "allowJs": true,
+    "allowImportingTsExtensions": true,
+    "types": ["chrome"],
+    "noEmit": true,
+    "lib": ["ES2022", "DOM"],
+    "skipLibCheck": true
+  },
+  "include": [
+    "src/option/**/*.tsx",
+    "src/option/*.ts",
+    "src/components/commandMap.ts",
+    "src/components/configValidator.ts",
+    "src/components/stateManager.ts",
+    "src/components/actionFlowController.ts",
+    "src/background/backgroundRuntime.ts",
+    "src/permission/*.ts",
+    "src/voice/*.ts",
+    "src/api/*.ts",
+    "entrypoints/readability.ts",
+    "entrypoints/requestPermission.ts",
+    "entrypoints/sidepanel/main.tsx"
+  ]
+}
